@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-weighscale-connect"
+description = "Enables the weighscale_connect command without any pre-configured scope."
+commands.allow = ["weighscale_connect"]
+
+[[permission]]
+identifier = "deny-weighscale-connect"
+description = "Denies the weighscale_connect command without any pre-configured scope."
+commands.deny = ["weighscale_connect"]

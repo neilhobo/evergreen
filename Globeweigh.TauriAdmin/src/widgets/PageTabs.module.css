@@ -1,0 +1,55 @@
+/* Page tabs: a compact navy strip under the card header (after the specgauge Collection
+   Planner's tab strip). The selected tab is the sidebar's selected item: a white wash and a
+   green bar. */
+
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--sidebar-bg);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  font: 500 12px/1 var(--ui-font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab:focus-visible {
+  outline: 2px solid #7cc0ff;
+  outline-offset: -2px;
+}
+
+.active,
+.active:hover {
+  color: #fff;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.active::after {
+  content: "";
+  width: 3px;
+  height: 14px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+}

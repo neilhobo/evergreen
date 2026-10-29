@@ -1,0 +1,13 @@
+4. Insufficient Permissions
+The API may not have access to the shared Sage data folder.
+Solution:
+Ensure the API is running under a user with full read/write permissions to \\fileserver1\sage\Company.000\ACCDATA.
+If running under IIS, set the application pool identity to a domain user with access:
+Open IIS Manager.
+Go to Application Pools → Select your API's App Pool.
+Click Advanced Settings → Set Identity to a domain user.
+Alternatively, run your API as an Administrator to test.
+
+
+
+Enable 32 bit application on Application Pools

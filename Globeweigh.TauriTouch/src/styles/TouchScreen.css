@@ -1,0 +1,997 @@
+/* Touch-screen design system for Globeweigh.TauriTouch. Big hit targets, full-screen kiosk
+   layout, on its own dark backdrop. Reuses the green palette tokens from App.css (--primary,
+   --primary-rgb, --sidebar-bg). All classes are prefixed `tt-` to avoid clashing. */
+
+:root {
+  --tt-bg: #0d1624;
+  --tt-panel: #16243a;
+  --tt-panel-2: #1d3050;
+  --tt-line: #294063;
+  --tt-text: #e8ecf1;
+  --tt-text-dim: #93a0b4;
+  --tt-green: var(--primary, #16a34a);
+  --tt-green-rgb: var(--primary-rgb, 22, 163, 74);
+  --tt-red: #dc2626;
+  --tt-amber: #d97706;
+  --tt-blue: #3b82f6;
+  --tt-blue-rgb: 59, 130, 246;
+  --tt-font: var(--app-font, "Poppins", "Segoe UI", system-ui, sans-serif);
+}
+
+* { box-sizing: border-box; }
+
+/* Touch-friendly scrollbars: roughly double the default width so they can be dragged with
+   a finger (product pickers, grids, monitors). Scoped to the touch app only. */
+.tt-app ::-webkit-scrollbar { width: 30px; height: 30px; }
+.tt-app ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); border-radius: 10px; }
+.tt-app ::-webkit-scrollbar-thumb {
+  background: var(--tt-panel-2);
+  border: 2px solid var(--tt-line);
+  border-radius: 10px;
+}
+.tt-app ::-webkit-scrollbar-thumb:hover,
+.tt-app ::-webkit-scrollbar-thumb:active { background: var(--tt-line); }
+
+.tt-app {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at top, #152338 0%, #0d1624 55%, #070d16 100%);
+  color: var(--tt-text);
+  font-family: var(--tt-font);
+  display: flex;
+  flex-direction: column;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ---- Top bar (brand + clock + back/home) ---- */
+.tt-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 22px;
+  background: rgba(0, 0, 0, 0.22);
+  border-bottom: 1px solid var(--tt-line);
+  min-height: 66px;
+}
+.tt-topbar .tt-brand { display: flex; align-items: center; gap: 10px; }
+.tt-topbar .tt-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex: none;
+  filter: drop-shadow(0 0 6px rgba(var(--tt-green-rgb), 0.7));
+}
+.tt-topbar .tt-wordmark { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+.tt-topbar .tt-wordmark .wg { color: #ffffff; }
+.tt-topbar .tt-wordmark .ww { color: var(--tt-green); }
+.tt-topbar .tt-title { font-size: 18px; font-weight: 600; color: var(--tt-text-dim); }
+.tt-topbar .tt-spacer { flex: 1; }
+.tt-topbar .tt-clock { font-size: 16px; color: var(--tt-text-dim); font-variant-numeric: tabular-nums; }
+.tt-topbar .tt-user { font-size: 15px; color: var(--tt-text-dim); }
+
+.tt-body { flex: 1; overflow: auto; padding: 16px; position: relative; }
+.tt-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 26px; }
+
+/* Home menu: the buttons are the only in-flow child, so they stay vertically
+   centred whether or not a PC name is shown. */
+.tt-home-menu {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Friendly PC name (Screen Settings > PC Name), shown big above the Home menu
+   buttons — absolute, so it never pushes them off centre. */
+.tt-pc-name {
+  position: absolute;
+  bottom: calc(100% + 26px);
+  left: 0;
+  right: 0;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* ---- Big buttons ---- */
+.tt-bigbtn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 22px;
+  width: 100%;
+  max-width: 900px;
+}
+.tt-bigbtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 170px;
+  padding: 24px;
+  border: 1px solid var(--tt-line);
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--tt-panel) 0%, var(--tt-panel-2) 100%);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.tt-bigbtn:active { transform: scale(0.97); }
+.tt-bigbtn:hover { border-color: var(--tt-green); box-shadow: 0 6px 22px rgba(var(--tt-green-rgb), 0.25); }
+.tt-bigbtn.tt-green { background: linear-gradient(160deg, #15803d 0%, #0f5f2e 100%); border-color: #1b9e4b; }
+.tt-bigbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tt-bigbtn:disabled:hover { border-color: var(--tt-line); box-shadow: none; }
+.tt-bigbtn .tt-ico { font-size: 46px; line-height: 1; display: flex; color: var(--tt-text-dim); transition: color 0.15s ease; }
+.tt-bigbtn:hover .tt-ico { color: var(--tt-green); }
+.tt-bigbtn.tt-green .tt-ico { color: rgba(255, 255, 255, 0.85); }
+.tt-bigbtn .tt-sub { font-size: 13px; font-weight: 400; color: var(--tt-text-dim); }
+
+/* Action buttons (footers, confirm) */
+.tt-btn {
+  min-height: 60px;
+  padding: 0 30px;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: var(--tt-panel-2);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tt-btn:active { transform: scale(0.97); }
+.tt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tt-btn.tt-primary { background: var(--tt-green); border-color: var(--tt-green); }
+.tt-btn.tt-danger { background: var(--tt-red); border-color: var(--tt-red); }
+.tt-btn.tt-ghost { background: transparent; }
+/* Exit (quit app) — subtle red tint so it reads as a destructive corner action. */
+.tt-btn.tt-exit { color: var(--tt-red); border-color: var(--tt-red); }
+.tt-btn.tt-exit:active { background: var(--tt-red); color: #fff; }
+.tt-btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+/* ---- Weight gauge (green 7-seg style) ---- */
+.tt-gauge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 30px;
+  background: #03110a;
+  border: 1px solid #0c3b22;
+  border-radius: 14px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+.tt-gauge .tt-gauge-val {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #2bff8a;
+  text-shadow: 0 0 14px rgba(43, 255, 138, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+.tt-gauge.tt-stale .tt-gauge-val { color: #6b7280; text-shadow: none; }
+.tt-gauge .tt-gauge-unit { font-size: 16px; color: #2bff8a; opacity: 0.7; }
+.tt-gauge .tt-gauge-status { font-size: 12px; color: var(--tt-text-dim); }
+.tt-gauge .tt-gauge-status.tt-bad { color: var(--tt-amber); }
+
+/* ---- Keypad / Keyboard ---- */
+.tt-pad-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 16, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+.tt-pad {
+  background: var(--tt-panel);
+  border: 1px solid var(--tt-line);
+  border-radius: 18px;
+  padding: 22px;
+  width: min(560px, 94vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  /* Portaled to document.body (outside .tt-app), so set the text colour explicitly. */
+  color: var(--tt-text);
+  font-family: var(--tt-font);
+}
+.tt-pad-kbd { width: min(880px, 96vw); }
+.tt-pad-header { font-size: 18px; font-weight: 600; margin-bottom: 6px; text-align: center; }
+.tt-pad-display {
+  height: 64px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #0a1424;
+  border: 1px solid var(--tt-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+/* Keypad limit hint ("Max 100"); both it and the display go red once the entry is over. */
+.tt-pad-max { color: var(--tt-text-dim); text-align: center; margin: -8px 0 12px; font-size: 15px; font-weight: 600; }
+.tt-pad-display.tt-pad-over { color: var(--tt-red); border-color: var(--tt-red); }
+.tt-pad-max.tt-pad-over { color: var(--tt-red); }
+.tt-pad-error { color: var(--tt-amber); text-align: center; min-height: 22px; margin-bottom: 8px; font-size: 14px; }
+.tt-pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tt-key {
+  min-height: 80px;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: var(--tt-panel-2);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tt-key:active { transform: scale(0.95); background: var(--tt-line); }
+.tt-key.tt-key-wide { grid-column: span 1; }
+.tt-key.tt-ok { background: var(--tt-green); border-color: var(--tt-green); }
+.tt-key.tt-cancel { background: transparent; }
+
+/* On-screen keyboard rows */
+.tt-kbd-rows { display: flex; flex-direction: column; gap: 10px; }
+.tt-kbd-row { display: flex; gap: 8px; justify-content: center; }
+.tt-kbd-key {
+  flex: 1;
+  min-width: 0;
+  min-height: 62px;
+  border: 1px solid var(--tt-line);
+  border-radius: 10px;
+  background: var(--tt-panel-2);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tt-kbd-key:active { transform: scale(0.95); background: var(--tt-line); }
+.tt-kbd-key.tt-flex2 { flex: 2; }
+.tt-kbd-key.tt-flex3 { flex: 3; }
+.tt-kbd-key.tt-flex5 { flex: 5; }
+
+/* ---- Form rows (label left, value/field right) ---- */
+.tt-field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--tt-line);
+}
+.tt-field > .tt-label { width: 180px; font-size: 17px; color: var(--tt-text-dim); }
+.tt-field > .tt-value {
+  flex: 1;
+  min-height: 58px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: var(--tt-panel-2);
+  cursor: pointer;
+}
+.tt-field > .tt-value.tt-placeholder { color: var(--tt-text-dim); }
+.tt-field > .tt-value.tt-readonly { cursor: default; background: transparent; }
+/* Mandatory field: a starred label, and an amber box until it is filled in — it is the
+   reason the Weigh button next to it is disabled. */
+.tt-field > .tt-label .tt-req { color: var(--tt-amber); font-weight: 700; }
+.tt-field > .tt-value.tt-missing { border-color: var(--tt-amber); background: rgba(217, 119, 6, 0.1); }
+.tt-field > .tt-value.tt-missing.tt-placeholder { color: var(--tt-amber); }
+
+/* Select list (haulier/product/supplier/bog/orders) */
+/* Right padding keeps items clear of the wide touch scrollbar. */
+.tt-list { display: flex; flex-direction: column; gap: 8px; max-height: 100%; overflow: auto; padding-right: 12px; }
+.tt-list-item {
+  padding: 16px 18px;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: var(--tt-panel-2);
+  font-size: 18px;
+  cursor: pointer;
+}
+.tt-list-item:active { transform: scale(0.99); }
+.tt-list-item.tt-selected { border-color: var(--tt-green); background: rgba(var(--tt-green-rgb), 0.16); }
+
+/* Columns grid (DevExpress GridControl equivalent) */
+.tt-grid-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.tt-grid { width: 100%; border-collapse: collapse; font-size: 15px; }
+.tt-grid thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 12px 12px;
+  color: var(--tt-text-dim);
+  font-weight: 600;
+  background: var(--tt-panel);
+  border-bottom: 1px solid var(--tt-line);
+  white-space: nowrap;
+}
+.tt-grid tbody td { padding: 13px 12px; border-bottom: 1px solid var(--tt-line); white-space: nowrap; }
+.tt-grid tbody tr { cursor: pointer; }
+.tt-grid tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+.tt-grid tbody tr.tt-selected { background: rgba(var(--tt-blue-rgb), 0.35); }
+.tt-grid .tt-col-grow { white-space: normal; width: 100%; }
+.tt-grid .tt-center-col { text-align: center; }
+/* Best-fit variant: every column hugs its content (1px + nowrap can't shrink below
+   the content width), and the single .tt-col-grow column soaks up all the slack. */
+.tt-grid.tt-bestfit th, .tt-grid.tt-bestfit td { width: 1px; }
+.tt-grid.tt-bestfit .tt-col-grow { width: auto; }
+.tt-badge { display: inline-block; padding: 3px 9px; border-radius: 5px; font-size: 12px; font-weight: 600; }
+.tt-badge.in { background: #123d22; color: #3ddc84; }
+.tt-badge.out { background: #3d1822; color: #ff8aa3; }
+.tt-tick { color: var(--tt-green); font-size: 18px; }
+/* Prominent sample-taken tick: white check on a green rounded square (WPF green-tick-square). */
+.tt-tick-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--tt-green);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(var(--tt-green-rgb), 0.45);
+}
+
+/* Duplicate pallet rows — yellow highlight (WPF used #FFFFDF68). */
+/* Scanned pallets show the green a selected row used to have (selection is now blue);
+   a duplicate's amber warning still wins (rules below). */
+.tt-grid tbody tr.tt-scanned { background: rgba(var(--tt-green-rgb), 0.45); color: #fff; }
+.tt-grid tbody tr.tt-scanned .tt-tick { color: #fff; }
+.tt-grid tbody tr.tt-scanned.tt-selected { background: rgba(var(--tt-blue-rgb), 0.45); }
+.tt-grid tbody tr.tt-dup { background: rgba(234, 179, 8, 0.20); }
+.tt-grid tbody tr.tt-dup.tt-selected { background: rgba(234, 179, 8, 0.34); }
+/* Missed scan (unscanned but a later pallet was scanned) — most urgent, beats duplicate. */
+.tt-grid tbody tr.tt-missed { background: rgba(220, 38, 38, 0.40); color: #fff; }
+.tt-grid tbody tr.tt-missed.tt-selected { background: rgba(220, 38, 38, 0.60); }
+/* Missed scan whose alarm has been silenced — still red, but muted: "known problem,
+   alarm dealt with". Must follow the tt-missed rules to win. */
+.tt-grid tbody tr.tt-missed.tt-alarm-acked { background: rgba(220, 38, 38, 0.15); color: inherit; }
+.tt-grid tbody tr.tt-missed.tt-alarm-acked.tt-selected { background: rgba(220, 38, 38, 0.32); }
+.tt-swatch { display: inline-block; width: 18px; height: 18px; border-radius: 5px; background: rgba(234, 179, 8, 0.6); vertical-align: middle; }
+.tt-swatch.tt-swatch-red { background: rgba(220, 38, 38, 0.7); }
+.tt-swatch.tt-swatch-red-dim { background: rgba(220, 38, 38, 0.25); }
+
+/* Live poll indicator — a softly pulsing green dot. */
+.tt-live { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; color: var(--tt-text-dim); }
+.tt-live-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2bff8a;
+  box-shadow: 0 0 0 0 rgba(43, 255, 138, 0.65);
+  animation: tt-live-pulse 1.4s infinite;
+}
+@keyframes tt-live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(43, 255, 138, 0.6); opacity: 1; }
+  70% { box-shadow: 0 0 0 10px rgba(43, 255, 138, 0); opacity: 0.7; }
+  100% { box-shadow: 0 0 0 0 rgba(43, 255, 138, 0); opacity: 1; }
+}
+
+.tt-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tt-text);
+  padding: 0 0 12px;
+}
+
+/* An obviously-editable text box (light, like a real input) that opens a keypad on tap. */
+.tt-textbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+.tt-textbox:hover { border-color: var(--tt-green); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(var(--tt-green-rgb), 0.25); }
+.tt-textbox.tt-empty { color: #94a3b8; }
+
+.tt-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; }
+.tt-col-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--tt-text-dim); margin-bottom: 8px; }
+
+.tt-panel {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--tt-line);
+  border-radius: 16px;
+  padding: 22px;
+}
+.tt-select-user-ico { font-size: 56px; opacity: 0.3; line-height: 1; }
+.tt-error { color: var(--tt-amber); font-size: 16px; text-align: center; }
+.tt-note { color: var(--tt-text-dim); font-size: 15px; }
+.tt-h2 { font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+
+/* ---- Success / countdown overlay ---- */
+.tt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  padding: 40px;
+}
+.tt-overlay.tt-success { background: linear-gradient(160deg, #15803d 0%, #0b5024 100%); }
+.tt-overlay .tt-overlay-ico { font-size: 90px; }
+.tt-overlay .tt-overlay-title { font-size: 32px; font-weight: 700; }
+.tt-overlay .tt-overlay-sub { font-size: 18px; opacity: 0.9; }
+.tt-overlay .tt-countdown { font-size: 70px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- Home bottom bar (weighscale status left; the fixed settings gear sits in it on the right) ---- */
+.tt-bottombar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  padding: 8px 62px 8px 16px; /* right padding clears the fixed gear */
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 1px solid var(--tt-line);
+}
+.tt-scale-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--tt-line);
+  background: var(--tt-panel-2);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tt-scale-status:active { transform: scale(0.97); }
+.tt-scale-status:hover { border-color: var(--tt-green); }
+.tt-scale-status .tt-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--tt-red); flex: none; }
+.tt-scale-status.tt-configured .tt-dot { background: var(--tt-amber); }
+.tt-scale-status.tt-live .tt-dot { background: var(--tt-green); }
+.tt-scale-status .tt-port { color: var(--tt-text-dim); font-weight: 400; }
+
+/* ---- Weighscale setup ---- */
+/* Compact overrides scoped to the setup page: it's a technician screen, denser than the
+   operator kiosk screens, so a 5-COM-port PC still fits without scrolling. */
+.tt-scale-setup .tt-btn { min-height: 38px; padding: 0 14px; font-size: 14px; border-radius: 10px; }
+.tt-scale-setup .tt-panel { padding: 14px 16px; border-radius: 12px; }
+.tt-scale-setup .tt-col-title { font-size: 11px; letter-spacing: 0.8px; }
+.tt-scale-setup .tt-list { gap: 6px; }
+.tt-scale-setup .tt-list-item { padding: 8px 12px; font-size: 15px; border-radius: 10px; }
+.tt-scale-setup .tt-input { min-height: 38px; font-size: 15px; border-radius: 10px; padding: 0 12px; }
+.tt-scale-setup .tt-note { font-size: 12px; }
+.tt-scale-setup .tt-error { font-size: 13px; }
+.tt-scale-setup .tt-monitor { font-size: 12px; line-height: 1.45; padding: 8px 10px; }
+.tt-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  background: var(--tt-panel-2);
+  color: var(--tt-text);
+  font-family: inherit;
+  font-size: 18px;
+}
+.tt-input:focus { outline: none; border-color: var(--tt-green); }
+.tt-monitor {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--tt-line);
+  border-radius: 12px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #7ee787;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ---- Pallet label preview (15 × 10 cm landscape, as it will print) ----
+   Mirrors the master customer label template (TauriAdmin > Admin > Customer Label):
+   logo + pallet no + DataMatrix in the header, product row, weights + customer columns,
+   "Made in Ireland" / order no + production date footer. */
+.tt-label-preview {
+  width: 15cm;
+  height: 10cm;
+  flex: none;
+  background: #ffffff;
+  color: #111111;
+  border-radius: 4px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+  padding: 0.5cm 0.6cm;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, "Segoe UI", sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tt-label-preview .lbl-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 3px solid #111;
+  padding-bottom: 6px;
+}
+.tt-label-preview .lbl-logo { height: 1.7cm; width: auto; filter: grayscale(1); }
+.tt-label-preview .lbl-pallet-no { font-size: 17px; font-weight: 700; white-space: nowrap; margin-left: auto; }
+.tt-label-preview .lbl-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+.tt-label-preview .lbl-product { font-size: 26px; font-weight: 700; line-height: 1.15; }
+/* Row below the product: Net Weight + Volume stacked in column 1, customer in column 2. */
+.tt-label-preview .lbl-mid {
+  display: flex;
+  gap: 0.5cm;
+  margin-top: 12px;
+}
+.tt-label-preview .lbl-mid > * { flex: 1; min-width: 0; }
+.tt-label-preview .lbl-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tt-label-preview .lbl-field .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: #444; }
+.tt-label-preview .lbl-field .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tt-label-preview .lbl-field .v.big { font-size: 30px; }
+.tt-label-preview .lbl-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+}
+.tt-label-preview .lbl-origin { font-size: 16px; font-weight: 700; }
+.tt-label-preview .lbl-order-date { font-size: 15px; font-weight: 600; white-space: nowrap; }
+/* Production reprint variant (lbl-prod): no date, no weight/size fields, no "Made in Ireland" —
+   just the big centred description ("60L Multipurpose Compost 80pp") with the 3 cm DataMatrix
+   centred below it. Mirrors renderProductionLabelCanvas, which does the printing. */
+/* 30px on the 15 cm preview = 63px on the 203 dpi print canvas (×2.11) — keep the two in step. */
+.tt-label-preview.lbl-prod .lbl-product { text-align: center; font-size: 30px; }
+.tt-label-preview.lbl-prod .lbl-code {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tt-label-preview.lbl-prod .lbl-footer { justify-content: flex-end; align-items: flex-end; }
+
+/* ---- Production missed-scan alarm popup (ProductionAlarmAgent) ----
+   Sits above everything (pills 250, keypads, print overlays) — an alarm outranks them all. */
+.tt-alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.tt-alarm-panel {
+  background: #380d0d;
+  border: 3px solid #dc2626;
+  border-radius: 18px;
+  padding: 34px 52px;
+  max-width: 680px;
+  max-height: 100%;
+  overflow: hidden;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: tt-alarm-pulse 1.1s ease-in-out infinite;
+}
+@keyframes tt-alarm-pulse {
+  0%, 100% { border-color: #dc2626; box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65); }
+  50% { border-color: #ff6b6b; box-shadow: 0 24px 70px rgba(220, 38, 38, 0.45); }
+}
+.tt-alarm-ico { font-size: 64px; line-height: 1; flex: 0 0 auto; }
+.tt-alarm-title { font-size: 36px; font-weight: 800; letter-spacing: 2px; }
+.tt-alarm-sub { font-size: 17px; color: rgba(255, 255, 255, 0.85); }
+/* The one part allowed to grow: it scrolls inside the panel so a long list of
+   missed pallets can never push the Silence button off the bottom of the screen. */
+.tt-alarm-pallets {
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fecaca;
+  white-space: pre-wrap;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+}
+.tt-alarm-more { font-size: 15px; font-weight: 600; color: rgba(255, 255, 255, 0.7); flex: 0 0 auto; }
+.tt-alarm-btn {
+  margin-top: 10px;
+  flex: 0 0 auto;
+  min-height: 64px;
+  padding: 0 44px;
+  font-size: 20px;
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+.tt-alarm-btn:hover { background: #b91c1c; }
+
+/* ---- Touch confirm dialog (touchConfirmDialog) ----
+   Operator-facing confirmations, sized for a gloved finger at arm's length. Sits above the
+   screens and their pills but BELOW the missed-scan alarm (400) — an alarm outranks a prompt. */
+.tt-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 380;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.tt-confirm-panel {
+  background: var(--tt-panel);
+  border: 2px solid var(--tt-line);
+  border-radius: 20px;
+  padding: 40px 56px;
+  width: min(720px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  text-align: center;
+  color: var(--tt-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.tt-confirm-ico { font-size: 60px; line-height: 1; }
+.tt-confirm-title { font-size: 34px; font-weight: 800; letter-spacing: 0.5px; }
+.tt-confirm-detail {
+  font-size: 30px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--tt-green);
+}
+.tt-confirm-msg {
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--tt-text-dim);
+  white-space: pre-wrap;
+  max-width: 34em;
+}
+.tt-confirm-actions {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+  width: 100%;
+}
+/* Big enough to hit without looking; both options the same size so neither is the
+   accidental one. */
+.tt-confirm-btn { min-height: 76px; min-width: 230px; font-size: 21px; flex: 1 1 230px; }
+
+/* ---- Discrete Super Admin gear ---- */
+.tt-gear {
+  position: fixed;
+  bottom: 10px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--tt-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+}
+.tt-gear:hover { color: rgba(255, 255, 255, 0.7); border-color: var(--tt-green); }
+
+/* UI build number, sitting just left of the gear (same dim treatment). */
+.tt-build-ver {
+  position: fixed;
+  bottom: 10px;
+  right: 58px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ---- Barrier pill ---- */
+.tt-barrier {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--tt-line);
+  font-size: 15px;
+}
+.tt-barrier .tt-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--tt-red); }
+.tt-barrier.tt-open .tt-dot { background: var(--tt-green); }
+
+/* Compact overrides for the Screen Settings page: Login + 5 Home buttons + Hardware +
+   Alerts must all fit the 1024-high touch screen without scrolling. */
+.tt-device-config .tt-toggle-row { padding: 7px 4px; font-size: 16px; }
+.tt-device-config .tt-toggle { width: 52px; height: 28px; flex: none; }
+.tt-device-config .tt-toggle .tt-knob { width: 20px; height: 20px; }
+.tt-device-config .tt-toggle.tt-on .tt-knob { left: 27px; }
+.tt-device-config .tt-col-title { font-size: 12px; margin-bottom: 4px; }
+.tt-device-config .tt-panel { padding: 12px 16px; }
+
+/* ---- Toggle rows (device config) ---- */
+.tt-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--tt-line);
+  font-size: 18px;
+}
+.tt-toggle {
+  width: 64px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--tt-line);
+  background: var(--tt-panel-2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.tt-toggle.tt-on { background: var(--tt-green); border-color: var(--tt-green); }
+.tt-toggle .tt-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s ease;
+}
+.tt-toggle.tt-on .tt-knob { left: 33px; }
+
+.tt-spinner-lg {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.85);
+  animation: tt-spin 0.8s linear infinite;
+}
+@keyframes tt-spin { to { transform: rotate(360deg); } }
+
+/* ---- Update pills (kiosk variants) ----
+   The base .update-notice / .update-pill styles (App.css) were authored for the
+   TauriAdmin sidebar / top bar. Touch has neither, so float them over the kiosk:
+   the server-published UI notice bottom-left, the shell updater bottom-right.
+   The full-screen .update-popup-overlay (App.css) already suits the kiosk as-is. */
+.tt-update-notice {
+  position: fixed;
+  left: 16px;
+  bottom: 74px; /* above the Home bottom bar's top line, clear of the weighscale pill */
+  margin: 0;
+  z-index: 250;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Shell-update badge: same .update-notice look as the UI notice, floated bottom-right
+   above the settings gear and clear of the Home bottom bar. */
+.tt-update-notice-shell {
+  position: fixed;
+  right: 16px;
+  bottom: 74px; /* clears the settings gear + the Home bottom bar */
+  margin: 0;
+  z-index: 250;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+.tt-update-notice-shell:disabled { cursor: default; animation: none; opacity: 0.9; }
+
+/* ---- Full-height selection step (Weigh In → Delivery: haulier/product/supplier/bog) ----
+   Without this the whole page scrolls as one, which on a touch screen means dragging the
+   screen scrollbar to reach an item in any column. Here the step fills the body, each
+   column owns its own scrollbar, and the Next button stays pinned under them. */
+.tt-select-step { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.tt-select-step > .tt-cols { flex: 1; min-height: 0; }
+.tt-select-step .tt-col { display: flex; flex-direction: column; min-height: 0; }
+.tt-select-step .tt-col > .tt-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  /* Breathing room so the last item isn't flush against the bottom of the scroll box. */
+  padding-bottom: 4px;
+}
+/* Weigh panel: the gauge stretches to the panel, so the live weight and the Weigh button
+   under it are the same width instead of the readout sitting narrow in the middle. */
+/* ---- Screen footer: a strip of its own for the build number, settings gear and (dev) DB
+   switcher. Those three are fixed to the viewport corner everywhere else, which puts them
+   on top of any panel that runs to the bottom of the screen — in here they sit in the flow
+   and the content above keeps its full height. ---- */
+.tt-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 1px solid var(--tt-line);
+}
+.tt-footer .tt-build-ver,
+.tt-footer .tt-gear,
+.tt-footer .tt-devbar { position: static; flex: none; }
+.tt-footer .tt-build-ver { margin-left: auto; }
+
+/* ---- Weigh-Out pending list: grid on the left, the screen's actions in a panel of their
+   own on the right, stacked (the WPF WeighbridgeOutView split). ---- */
+.tt-weighout-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 16px;
+  height: 100%;
+}
+/* Data rows a size up and 20px taller than the shared grid (headers stay put) — this one is
+   read from the cab window, not at a desk. */
+.tt-weighout-list .tt-grid tbody td { font-size: 19px; padding-block: 23px; }
+.tt-weighout-actions { display: flex; flex-direction: column; gap: 18px; }
+.tt-weighout-actions .tt-btn { width: 100%; min-height: 76px; }
+/* Weigh Out is the one control the operator uses with a lorry on the bridge — sized like
+   the weigh step's button so it is never the accidental tap. */
+.tt-weighout-actions .tt-btn.tt-primary { min-height: 120px; font-size: 28px; }
+
+.tt-weigh-side .tt-gauge { display: flex; width: 100%; }
+/* Taller readout and a Weigh button twice the standard height — this is the one control the
+   operator uses with a lorry on the bridge. */
+.tt-weigh-side .tt-gauge { padding-block: 43px; }
+.tt-weigh-side .tt-btn { min-height: 120px; }
+
+/* "Do you have a Docket?" — the one question the delivery screen puts to the driver, so it
+   is sized as a question and not as another field. Unanswered it goes amber and breathes;
+   once answered it drops back to the panel's own colours. */
+.tt-ask {
+  margin: 16px 0;
+  padding: 18px 20px;
+  border: 2px solid var(--tt-line);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+}
+.tt-ask-q { font-size: 30px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+.tt-ask-btns { display: flex; gap: 18px; }
+.tt-btn.tt-ask-btn { flex: 1; min-height: 96px; font-size: 30px; font-weight: 700; letter-spacing: 1px; }
+.tt-ask.tt-ask-unanswered {
+  border-color: var(--tt-amber);
+  background: rgba(217, 119, 6, 0.12);
+  animation: tt-ask-pulse 1.8s ease-in-out infinite;
+}
+.tt-ask.tt-ask-unanswered .tt-ask-q { color: var(--tt-amber); }
+@keyframes tt-ask-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+  50% { box-shadow: 0 0 0 7px rgba(217, 119, 6, 0.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tt-ask.tt-ask-unanswered { animation: none; }
+}
+
+/* Second line inside a list item (the delivery address under a customer name). */
+.tt-list-item .tt-list-sub { margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--tt-text-dim); }
+
+/* Orders on a collection load: both lines 4px up on the shared sizes — read standing at
+   the bridge, not sitting at a desk. */
+.tt-orders-list .tt-list-item { font-size: 22px; }
+.tt-orders-list .tt-list-item .tt-list-sub { font-size: 18px; }
+/* Delivery-order number badge to the left of each order on a collection load. */
+.tt-drop-item { display: flex; align-items: flex-start; gap: 16px; }
+.tt-drop-no {
+  flex: none; width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tt-green); color: #fff; font-weight: 700; font-size: 22px;
+}
+
+/* The collection reference keypad is the whole page rather than a dialog over one, so its
+   heading is doubled to be read at arm's length from the cab. */
+.tt-pad-lg .tt-pad-header { font-size: 36px; margin-bottom: 12px; }
+/* And the entry field is double height, so the typed reference is unmistakable. */
+.tt-pad-lg .tt-pad-display { height: 118px; font-size: 52px; }
+
+/* Weigh-In menu: Delivery and Collection sit side by side and the barrier tile spans the
+   row under them — the WPF screen's three-button stack, in the shared tile style. Shorter
+   than the square pair so the menu still clears a 1024-high screen. */
+.tt-wb-menu > .tt-bigbtn:nth-child(3) { grid-column: 1 / -1; min-height: 120px; }
+
+/* Next sits below the columns, right-aligned so it lands under the last (Bog) column —
+   outside the lists, never scrolling with them, and always in the same corner. */
+.tt-select-step > .tt-btn-row { flex: none; justify-content: flex-end; }
+/* A list in two columns, filled top-to-bottom down the first and then across. The grid row
+   gives the list the definite height column-fill: auto needs. It never scrolls vertically; a
+   list too long for two columns flows into further columns that scroll sideways rather than
+   being clipped. Used by the haulier step and by Supplier beside it. */
+.tt-select-step .tt-col.tt-col-2col { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.tt-select-step .tt-col.tt-col-2col > .tt-list {
+  display: block;
+  height: 100%;
+  column-count: 2;
+  column-gap: 22px;
+  column-fill: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-right: 0;
+}
+.tt-select-step .tt-col.tt-col-2col > .tt-list > .tt-list-item { break-inside: avoid; margin-bottom: 8px; }
+
+/* Supplier runs in two columns next to two single-column lists, so shade it: the wash says
+   the two runs of names are one list, not two. Painted by a pseudo-element that bleeds out
+   into the column gaps, so the column keeps NO padding of its own and its title and first
+   row stay level with Product and Bog. */
+.tt-col-boxed { position: relative; }
+.tt-col-boxed::before {
+  content: "";
+  position: absolute;
+  inset: -12px -14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+.tt-col-boxed > * { position: relative; }
+
+/* Haulier-on-its-own step: the list takes the full width of the step. */
+.tt-haulier-full > .tt-col { flex: 1; min-height: 0; }
+/* 22px, up from the 18px shared list item — read from the far side of the cab. */
+.tt-haulier-full .tt-list-item { font-size: 22px; }
+
+/* Delivery step after the haulier (3 columns, 22px gaps): Product and Bog are each 100px
+   narrower than an even third and Supplier takes the whole 200px — it holds the long names
+   and runs in two columns. The three maxima still add up to the full row, so it fits
+   whatever the window width. */
+.tt-cols-psb {
+  grid-template-columns:
+    minmax(0, calc((100% - 44px) / 3 - 100px))
+    minmax(0, calc((100% - 44px) / 3 + 200px))
+    minmax(0, calc((100% - 44px) / 3 - 100px));
+}

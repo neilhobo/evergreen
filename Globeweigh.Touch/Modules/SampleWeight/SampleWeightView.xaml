@@ -1,0 +1,142 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+	         xmlns:internal="http://schemas.devexpress.com/winfx/2008/xaml/windowsui/internal"
+	         xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:userControls="clr-namespace:Globeweigh.Touch.UserControls"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+            xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+             md:DialogServiceViews.IsRegistered="True" 
+	         x:Class="Globeweigh.Touch.SampleWeightView"
+             mc:Ignorable="d"
+             d:DesignHeight="1024" d:DesignWidth="1280"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding SampleWeightView, Source={StaticResource Locator}}" Background="White"
+             >
+    <UserControl.Resources>
+
+
+
+
+
+            <converters:PercentageConverter x:Key="PercentageConverter"/>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+            <converters:NullToVisibleConverter x:Key="NullToVisibilityConverter"/>
+
+
+            <DataTemplate x:Key="SampleTakenCellTemplate">
+                <Grid Visibility="{Binding RowData.Row.SampleCollected, Converter={StaticResource TrueToVisibilityConverter}}">
+                    <Image Source="/Globeweigh.Touch;component/Images/green-tick-square-48.png" Margin="0,4"/>
+                </Grid>
+            </DataTemplate>
+
+
+
+            <Style TargetType="{x:Type dxg:GridColumnHeader}">
+                <Setter Property="Height" Value="40"></Setter>
+                <Setter Property="Foreground" Value="Black" />
+                <Setter Property="FontSize" Value="16" />
+            </Style>
+
+
+
+    </UserControl.Resources>
+    <Border  Margin="15" Background="White">
+        <Grid Background="{DynamicResource MainContentGrey}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Border Background="{DynamicResource GlobeweighBlueBrush}">
+                <Grid   Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
+                        <!-- <Button Width="60" Height="60" Style="{DynamicResource BackButtonStyle}" Margin="6,0,0,0" Command="{Binding HomeCommand}"/> -->
+                        <internal:BackButton Margin="2,2,10,2" VerticalAlignment="Center" Command="{Binding HomeCommand}" StrokeThickness="4" Width="66" Height="66"  />
+                        <TextBlock Text="Sample Weight" Margin="10,0,0,0" Style="{DynamicResource HeaderTextBlockStyle}" Foreground="White"/>
+                    </StackPanel>
+                    <userControls:DateFilter Grid.Column="1" FilterDate="{Binding FilterDate}" FilterDateBackCommand="{Binding FilterDateBackCommand}" FilterDateForwardCommand="{Binding FilterDateForwardCommand}"  HorizontalAlignment="Right" FontSize="30" Width="400" Foreground="White" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="0,6,0,0" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="350"/>
+                    <!--<ColumnDefinition Width="260"/>-->
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="White" BorderThickness="4" Margin="0,0,0,4"  >
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border BorderThickness="0,0,0,4" BorderBrush="White">
+                            <TextBlock Text="Deliveries (No test weight recorded)" Style="{DynamicResource GroupHeaderTextBlockStyle}" Margin="10,0,0,0" />
+                        </Border>
+                        <Grid Grid.Row="1">
+
+                            <dxg:GridControl x:Name="grdPending"   ItemsSource="{Binding RecordList}" SelectedItem="{Binding SelectedRecord}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="5">
+                                <dxg:GridControl.View>
+                                    <dxg:TableView x:Name="tvPending" />
+                                </dxg:GridControl.View>
+                                <dxg:GridColumn FieldName="HaulierName" Header="Haulier" />
+                                <dxg:GridColumn FieldName="VehicleReg" Header="Vehicle Reg" Width="96"  FixedWidth="True"/>
+                                <dxg:GridColumn FieldName="Product"  Width="96"  FixedWidth="True"/>
+                                <dxg:GridColumn FieldName="Supplier"  Width="96"  FixedWidth="True"/>
+                                <dxg:GridColumn FieldName="BogName" Header="Bog"  Width="96"  FixedWidth="True"/>
+                                <dxg:GridColumn HorizontalHeaderContentAlignment="Center" Header="Sample" FixedWidth="True"  Width="84" CellTemplate="{StaticResource SampleTakenCellTemplate}" />
+
+
+
+
+                            </dxg:GridControl>
+
+
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border BorderBrush="White" BorderThickness="4" Margin="4,0,4,4" Grid.Column="1" Visibility="{Binding SelectedRecord, Converter={StaticResource NullToCollapsedConverter}}" >
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="80"/>
+                        </Grid.RowDefinitions>
+                        <Border BorderThickness="0,0,0,4" BorderBrush="White">
+                            <TextBlock Text="Sample Weight" Style="{DynamicResource GroupHeaderTextBlockStyle}" Margin="10,0,0,0" />
+                        </Border>
+                        <Grid Grid.Row="1">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0">
+                                <TextBlock Text="Sample Weight (kg)" VerticalAlignment="Center" FontSize="30" Grid.Row="2" HorizontalAlignment="Center" />
+                                <controls:TransactionContentControl x:Name="TestWeight" Text="{Binding SampleWeight}" FontSize="30" Style="{DynamicResource TextBlockPopupContentStyle}" Width="220" HorizontalAlignment="Left" Margin="0,30,0,0" Height="80" Grid.Column="1" Grid.Row="2"/>
+
+                            </StackPanel>
+                        </Grid>
+                        <Border  Grid.Column="1" BorderBrush="White" BorderThickness="0,4,0,0" Background="{DynamicResource MainContentGrey}" Grid.Row="3">
+                            <Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <Button Command="{Binding OrderDetailsCommand}" Style="{DynamicResource PrimaryButtonStyleAction}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdOrders}" Content="Order Details"  HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0,0,4,0" Height="60" Width="200"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>
+

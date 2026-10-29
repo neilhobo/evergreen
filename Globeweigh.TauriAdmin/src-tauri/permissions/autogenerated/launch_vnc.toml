@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-launch-vnc"
+description = "Enables the launch_vnc command without any pre-configured scope."
+commands.allow = ["launch_vnc"]
+
+[[permission]]
+identifier = "deny-launch-vnc"
+description = "Denies the launch_vnc command without any pre-configured scope."
+commands.deny = ["launch_vnc"]

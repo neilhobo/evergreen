@@ -1,0 +1,147 @@
+/* The bits of the Product detail panel (ProductDetailPanel.tsx) that the shared detail-panel look
+   (widgets/DetailPanel.module.css) does not already have: the grid headers' action buttons and
+   the "vs zone" difference on a customer price. */
+
+/* The buttons riding a grid's header row, right-aligned — the same 17px pill as DetailPanel's
+   .showAll so the header rows keep their height. */
+.headActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex: none;
+}
+
+.headBtn {
+    height: 19px;
+    padding: 0 9px;
+    border: 1px solid #c7d2e0;
+    border-radius: 999px;
+    background: #ffffff;
+    font: 600 10.5px/1 var(--ui-font);
+    color: #0a5aa8;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.headBtn:hover:enabled {
+    background: #f1f6fb;
+    border-color: #9dbbd8;
+}
+
+.headBtn:disabled {
+    color: #9ca3af;
+    border-color: #e5e7eb;
+    cursor: default;
+}
+
+.headBtnPrimary {
+    border-color: #0a5aa8;
+    background: #0a5aa8;
+    color: #ffffff;
+}
+
+.headBtnPrimary:hover:enabled {
+    background: #084a8b;
+    border-color: #084a8b;
+}
+
+.headBtnDanger {
+    color: #b42318;
+}
+
+.headBtnDanger:hover:enabled {
+    background: #fef3f2;
+    border-color: #f0b4ae;
+}
+
+.count {
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eef2f7;
+    font: 600 10px/1 var(--ui-font);
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Customer price against the customer's zone price: under it is a discount (amber, the thing
+   worth a second look), over it green. */
+.diffBelow {
+    color: #b45309;
+    font-variant-numeric: tabular-nums;
+}
+
+.diffAbove {
+    color: #15803d;
+    font-variant-numeric: tabular-nums;
+}
+
+.diffSame {
+    color: #94a3b8;
+}
+
+.strong {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.sub {
+    margin-left: 6px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+/* The grid's empty state: what the column is for, and the way to fill it. */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+    padding: 24px;
+    text-align: center;
+    font: 400 12px/1.5 var(--ui-font);
+    color: #64748b;
+}
+
+.empty strong {
+    color: #334155;
+    font-weight: 600;
+}
+
+/* Customer price dialog: the chosen customer's zone and zone price, set above the price box. */
+.ref {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    row-gap: 6px;
+    margin: 12px 0 4px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #f8fafc;
+    font: 400 12px/1.3 var(--ui-font);
+}
+
+.refLabel {
+    color: #64748b;
+}
+
+.priceRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+/* The customer grid pins every column but Customer, so on a narrow window it is the name that
+   gives up width (clamped with an ellipsis), never the price columns off the right edge. */
+.fixedGrid :global(.data-table) {
+    table-layout: fixed;
+}
+
+.fixedGrid :global(.data-table-wrap) {
+    overflow-x: hidden;
+}

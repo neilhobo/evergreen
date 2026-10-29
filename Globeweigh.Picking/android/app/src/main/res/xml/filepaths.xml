@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider paths for the ota_update plugin. It downloads the APK to the app's
+     internal files/ota_update/ directory and serves it to the package installer from
+     here. Referenced by the OtaUpdateFileProvider declared in AndroidManifest.xml. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="internal_apk_storage" path="ota_update/"/>
+</paths>

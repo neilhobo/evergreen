@@ -1,0 +1,353 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+             xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+             xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.DispatchOrderListView"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="1800"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding DispatchOrderListView, Source={StaticResource Locator}}" Background="{DynamicResource LightGreyBrush}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+
+            <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsedConverter"/>
+            <converters:NullToVisibleConverter x:Key="NullToVisibilityConverter"/>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+            <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter"/>
+            <converters:NullToFalseConverter x:Key="NullToFalseConverter"/>
+            
+            <system:Boolean x:Key="True">True</system:Boolean>
+            <system:Boolean x:Key="False">False</system:Boolean>
+
+            <Style x:Key="clearBackgroundCellStyle" TargetType="dxg:LightweightCellEditor" BasedOn="{StaticResource {dxgt:GridRowThemeKey ResourceKey=LightweightCellStyle}}">
+                <Style.Triggers>
+                    <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                        <Setter Property="Background" Value="White" />
+                        <!--<Setter Property="Foreground" Value="Black" />-->
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            
+            <Style  TargetType="{x:Type dxg:RowControl}" >
+                <Setter Property="Height" Value="24"></Setter>
+            </Style>
+
+            <DataTemplate x:Key="OrderAssignedCellTemplate">
+                <Grid Visibility="{Binding RowData.Row.Assigned, Converter={StaticResource TrueToVisibilityConverter}}">
+                    <Image Source="/Globeweigh.Admin;component/Images/green-tick-square-48.png" Margin="0,1" Width="20"/>
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ExportedToSageCellTemplate">
+                <Grid Visibility="{Binding RowData.Row.ExportedToSage, Converter={StaticResource TrueToVisibilityConverter}}">
+                    <Image Source="/Globeweigh.Admin;component/Images/green-tick-square-48.png" Margin="0,1" Width="20"/>
+                </Grid>
+            </DataTemplate>
+       
+            <Style x:Key="FocusedCellStyle" TargetType="dxg:LightweightCellEditor" BasedOn="{StaticResource {dxgt:GridRowThemeKey ResourceKey=LightweightCellStyle}}">
+                <Setter Property="Background" Value="White" />
+                <Style.Triggers>
+                    <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                        <Setter Property="Background" Value="White" />
+                        <!--<Setter Property="Foreground" Value="Black" />-->
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <DataTemplate x:Key="WeightTypeShortCellTemplate">
+                <Grid >
+                    <Border x:Name="bdIncoming" Background="#FFE2F6F2" Margin="2" CornerRadius="3" Grid.Column="1" >
+                        <TextBlock  Text="IN" Foreground="#FF58AD63" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+                    <Border x:Name="bd" Background="#FFFADFED" Margin="2" CornerRadius="3" Grid.Column="1" Visibility="Collapsed">
+                        <TextBlock Text="OUT" Foreground="#FFE76884" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+                </Grid>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RowData.Row.IsOutgoing}" Value="true">
+                        <Setter TargetName="bd" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="bdIncoming" Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <DataTemplate x:Key="WeightTypeCellTemplate">
+                <Grid >
+                    <Border x:Name="bdIncoming" Background="#FFE2F6F2" Margin="2" CornerRadius="3" Grid.Column="1" >
+                        <TextBlock  Text="INCOMING" Foreground="#FF58AD63" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+                    <Border x:Name="bd" Background="#FFFADFED" Margin="2" CornerRadius="3" Grid.Column="1" Visibility="Collapsed">
+                        <TextBlock Text="OUTGOING" Foreground="#FFE76884" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+
+                </Grid>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RowData.Row.IsOutgoing}" Value="True">
+                        <Setter TargetName="bd" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="bdIncoming" Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <DataTemplate x:Key="OutgoingCellTemplate">
+                <Grid >
+                    <!--<dxe:HyperlinkEdit x:Name="link" Text="Weigh Out" Command="{Binding Path=Column.DataContext.WeighOutCommand}" CommandParameter="{Binding Path=Value}" IsEnabled="{Binding RowData.Row.DatePickingComplete, Converter={StaticResource NullToFalseConverter}}"/>-->
+                    <dxe:HyperlinkEdit x:Name="link" Text="Weigh Out" Command="{Binding Path=Column.DataContext.WeighOutCommand}" CommandParameter="{Binding Path=Value}" />
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ViewLoadCellTemplate">
+                <Grid >
+                    <dxe:HyperlinkEdit x:Name="link" Text="View Load" Command="{Binding Path=Column.DataContext.ViewLoadCommand}" CommandParameter="{Binding Path=Value}"/>
+                </Grid>
+            </DataTemplate>
+
+
+            <DataTemplate x:Key="PickingCompleteCellTemplate">
+                <Grid Visibility="{Binding RowData.Row.DatePickingComplete, Converter={StaticResource NullToCollapsedConverter}}">
+                    <Image Source="/Globeweigh.Admin;component/Images/green-tick-square-48.png" Margin="0,1" Width="20"/>
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="DeliveryDateCellTemplate">
+                <TextBlock VerticalAlignment="Center" Margin="4,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding RowData.Row.DeliveryDate, StringFormat=dd/MM/yyyy}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding RowData.Row.DeliveryDate}" Value="{x:Null}">
+                                    <Setter Property="Text" Value="ASAP"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource GlobeweighBlueBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PrintDeliveryNoteCellTemplate">
+                <Grid >
+                    <dxe:HyperlinkEdit x:Name="link" Text="Print Delivery" Command="{Binding Path=Column.DataContext.PrintDeliveryNoteCommand}" CommandParameter="{Binding Path=Value}" />
+                </Grid>
+            </DataTemplate>
+
+            
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400"/>
+            <ColumnDefinition Width="400"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Margin="0,0,2,0" BorderBrush="White" BorderThickness="3" >
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Open Orders" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                        <StackPanel Orientation="Horizontal"   HorizontalAlignment="Right" Grid.Column="3" >
+                            <controls:ImageButton Content="Add"  Command="{Binding CreateDispatchOrderCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                            <controls:ImageButton Content="Edit"  Command="{Binding EditDispatchOrderCommand}"  IsEnabled="{Binding SelectedItems.Count, ElementName=grdDispatchOrders}" Style="{DynamicResource ToolbarButtonStyle}"/>
+                            <controls:ImageButton Content="Delete"  Command="{Binding DeleteDispatchOrderCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdDispatchOrders}"  Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <dxg:GridControl x:Name="grdDispatchOrders" ItemsSource="{Binding OpenOrderList}" ShowLoadingPanel="{Binding IsBusy}" SelectedItem="{Binding SelectedDispatchOrder}" Margin="4" Grid.Row="1" >
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvDispatchOrders">
+                        </dxg:TableView>
+                    </dxg:GridControl.View>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="OrderNoDisplay" Header="Order" FixedWidth="True"  Width="50">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+
+                        <dxg:GridColumn FieldName="CustomerName"  Header="Customer" />
+                        <dxg:GridColumn Header="Delivery" FixedWidth="True" Width="80" CellTemplate="{DynamicResource DeliveryDateCellTemplate}" />
+                        <dxg:GridColumn Header="Assigned" HorizontalHeaderContentAlignment="Center" FixedWidth="True" Width="58" CellTemplate="{DynamicResource OrderAssignedCellTemplate}" />
+                    </dxg:GridControl.Columns>
+
+
+                </dxg:GridControl>
+            </Grid>
+        </Border>
+        <Border Grid.Column="1" Margin="2,0,0,0" BorderBrush="White" BorderThickness="3" >
+            <Grid  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Loads" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                        <StackPanel Orientation="Horizontal"   HorizontalAlignment="Right" Grid.Column="3" >
+                            <controls:ImageButton Content="Add New"  Command="{Binding AddLoadCommand}" Style="{DynamicResource ToolbarButtonStyle}"/>
+                            <controls:ImageButton Content="Edit"  Command="{Binding EditLoadCommand}"  IsEnabled="{Binding SelectedItems.Count, ElementName=grdLoads}" Style="{DynamicResource ToolbarButtonStyle}"/>
+                            <controls:ImageButton Content="Delete"  Command="{Binding DeleteLoadCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdLoads}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <dxg:GridControl x:Name="grdLoads" ItemsSource="{Binding LoadList}" ShowLoadingPanel="{Binding IsBusy}" SelectedItem="{Binding SelectedLoad}" Margin="4" Grid.Row="1">
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvLoads"/>
+                    </dxg:GridControl.View>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="IdRef" Header="ID" FixedWidth="True"  Width="50">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="HaulierName"  Header="Haulier" />
+                        <dxg:GridColumn FieldName="CollectionDate" Header="Week Commencing" FixedWidth="True"  Width="116">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="OrderCount"  Header="Orders" FixedWidth="True"  Width="50"/>
+                        <!--<dxg:GridColumn Header="Assigned" HorizontalHeaderContentAlignment="Center" FixedWidth="True" Width="58" CellTemplate="{DynamicResource OrderAssignedCellTemplate}" />-->
+                    </dxg:GridControl.Columns>
+                </dxg:GridControl>
+            </Grid>
+        </Border>
+        <Grid Grid.Column="2" Margin="5,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="300"/>
+                <RowDefinition Height="69*"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="White" BorderThickness="3" >
+                <Grid >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="White" BorderThickness="0,0,0,3">
+                        <Grid Margin="8,0,4,0" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Pending:" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" HorizontalAlignment="Right" Grid.Column="1" >
+                                <Button Content="Add Outgoing" Command="{Binding AddOutgoingCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                                <!--<Button Content="Add Incoming" Command="{Binding AddIncomingCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>-->
+                                <Button Content="Complete Picking"  Command="{Binding CompletePickingCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdPending}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                                <Button Content="Edit"  Command="{Binding EditPendingCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdPending}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                                <Button Content="Delete" Command="{Binding DeletePendingCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdPending}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                                <Button Content="Refresh" Margin="2,0,0,0"  Command="{Binding RefreshPendingCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Grid Margin="2" Grid.Row="1">
+                        <dxg:GridControl x:Name="grdPending" ItemsSource="{Binding PendingList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                            SelectedItem="{Binding SelectedPending}" ShowBorder="False" Margin="4">
+                            <dxg:GridControl.View>
+                                <dxg:TableView x:Name="tvPending"/>
+                            </dxg:GridControl.View>
+                            <dxg:GridColumn FixedWidth="True" Width="40" Header=" "  CellTemplate="{DynamicResource WeightTypeShortCellTemplate}" HorizontalHeaderContentAlignment="Center"/>
+                            <dxg:GridColumn FieldName="PendingWeighDate" Width="90" Header="Weigh Date" FixedWidth="True">
+                                <dxg:GridColumn.EditSettings>
+                                    <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                                </dxg:GridColumn.EditSettings>
+                            </dxg:GridColumn>
+                            <dxg:GridColumn FieldName="HaulierName" Header="Haulier"  />
+                            <dxg:GridColumn FieldName="TrailerNo" FixedWidth="True" Width="90"/>
+                            <dxg:GridColumn FieldName="WeightIn" Header="Weight" FixedWidth="True" Width="70"/>
+                            <dxg:GridColumn FieldName="OrderCount" Header="Orders" FixedWidth="True" Width="50" />
+                            <dxg:GridColumn Header="Picked" HorizontalHeaderContentAlignment="Center" FixedWidth="True" Width="50" CellTemplate="{DynamicResource PickingCompleteCellTemplate}" />
+                            <dxg:GridColumn Header=" " CellTemplate="{StaticResource ViewLoadCellTemplate}" Width="66" FixedWidth="True" CellStyle="{DynamicResource clearBackgroundCellStyle}"/>
+                            <dxg:GridColumn Header=" " CellTemplate="{StaticResource OutgoingCellTemplate}" Width="70" FixedWidth="True" CellStyle="{DynamicResource clearBackgroundCellStyle}"/>
+                 
+                        </dxg:GridControl>
+                    </Grid>
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" Margin="0" BorderBrush="White" BorderThickness="3,0,3,3" Grid.Row="1" >
+                <Grid  >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                        <Grid Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Completed Weighbridge Records" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                            <StackPanel Orientation="Horizontal"   HorizontalAlignment="Right" Grid.Column="3" >
+                                <!--<controls:ImageButton Content="Edit"  Command="{Binding EditDispatchOrderHaulierAssignedCommand}"  IsEnabled="{Binding SelectedItems.Count, ElementName=grdOrdersHaulierAssigned}" Style="{DynamicResource ToolbarButtonStyle}"/>-->
+                                <controls:ImageButton Content="Refresh"  Command="{Binding RefreshCompletedCommand}"  Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                                <!--<controls:ImageButton Content="Export To Sage"  Command="{Binding ExportToSageCommand}" IsEnabled="False" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>-->
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <dxg:GridControl x:Name="grdCompletedOrders" ItemsSource="{Binding CompletedWeighbridgeRecordList}" ShowBorder="False"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedCompletedWeighbridgeRecord}" Margin="4,10,4,4" Grid.Row="1">
+                        <dxg:GridControl.View>
+                            <dxg:TableView x:Name="tvCompletedOrders" />
+                        </dxg:GridControl.View>
+                        <dxg:GridColumn FieldName="HaulierName" Header="Haulier" />
+                        <dxg:GridColumn FieldName="TrailerNo" Header="Vehicle Reg"/>
+                        <dxg:GridColumn FieldName="WeightIn" Header="Weight In (Kg)">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="DateWeightOut" Width="160" Header="Outgoing Weigh Date">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="WeightOut" Header="Weight Out (Kg)">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <!--<dxg:GridColumn Header=" " CellTemplate="{StaticResource PrintDeliveryNoteCellTemplate}" Width="80" FixedWidth="True" CellStyle="{DynamicResource clearBackgroundCellStyle}"/>-->
+
+
+                    </dxg:GridControl>
+                </Grid>
+            </Border>
+
+
+        </Grid>
+
+
+
+    </Grid>
+</UserControl>

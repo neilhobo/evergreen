@@ -1,0 +1,168 @@
+<!doctype html>
+<!--
+  Thin-shell loader. This tiny page is the ONLY frontend bundled into the installed
+  Globeweigh WMS exe. On launch it checks the server is reachable and then navigates
+  the webview to the server-hosted UI (deployed with deploy-admin-ui.ps1), so UI
+  releases are a file copy on the server — clients never reinstall.
+
+  The target URL can be overridden per-machine via localStorage("adminUiUrl")
+  (open devtools on this page: localStorage.setItem("adminUiUrl", "http://host/SpiceOLifeApi/admin/")).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Globeweigh WMS</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        background: linear-gradient(160deg, #0d1624 0%, #1a2332 100%);
+        color: #e8ecf1;
+        font-family: "Poppins", "Segoe UI", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      /* Custom title bar — the window runs decorations:false (Server 2012 can't theme
+         the OS caption dark). Matches the React app's .title-bar. */
+      .titlebar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #1a2332;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .titlebar-brand { display: flex; align-items: center; gap: 8px; padding-left: 10px; }
+      .titlebar-brand .tb-globe { font-size: 16px; }
+      .titlebar-brand .tb-text { font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
+      .titlebar-controls { display: flex; height: 100%; }
+      .tb-btn {
+        width: 44px; height: 100%;
+        border: none; background: transparent;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 13px; line-height: 1; cursor: pointer;
+      }
+      .tb-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+      .tb-close:hover { background: #e11d48; color: #fff; }
+      .panel { text-align: center; }
+      .globe {
+        font-size: 44px;
+        line-height: 1;
+        margin-bottom: 14px;
+        filter: drop-shadow(0 0 14px rgba(22, 163, 74, 0.45));
+      }
+      .brand { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 22px; }
+      .brand .wms { color: #16a34a; }
+      .status { font-size: 13px; color: #93a0b4; min-height: 20px; }
+      .spinner {
+        width: 22px; height: 22px;
+        border: 3px solid rgba(22, 163, 74, 0.25);
+        border-top-color: #16a34a;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .retry-box { display: none; }
+      .retry-box .msg { font-size: 14px; color: #e8ecf1; margin-bottom: 6px; }
+      .retry-box .target { font-size: 11px; color: #5b6878; margin-bottom: 16px; word-break: break-all; }
+      button {
+        background: #16a34a; color: #fff; border: none; border-radius: 4px;
+        font: 600 13px "Poppins", "Segoe UI", sans-serif;
+        padding: 7px 22px; cursor: pointer;
+      }
+      button:hover { background: #15803d; }
+    </style>
+  </head>
+  <body>
+    <div class="titlebar" data-tauri-drag-region>
+      <div class="titlebar-brand" data-tauri-drag-region>
+        <span class="tb-globe">&#127757;</span>
+        <span class="tb-text">Globeweigh WMS</span>
+      </div>
+      <div class="titlebar-controls">
+        <button class="tb-btn" id="tb-min" title="Minimize">&#9472;</button>
+        <button class="tb-btn" id="tb-max" title="Maximize">&#9633;</button>
+        <button class="tb-btn tb-close" id="tb-close" title="Close">&#10005;</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="globe">&#127757;</div>
+      <div class="brand">Globeweigh <span class="wms">WMS</span></div>
+      <div id="connecting">
+        <div class="spinner"></div>
+        <div class="status">Connecting to server&hellip;</div>
+      </div>
+      <div id="retry" class="retry-box">
+        <div class="msg">Cannot reach the server</div>
+        <div class="target" id="target-url"></div>
+        <button id="retry-btn">Retry now</button>
+        <div class="status" id="countdown" style="margin-top: 10px;"></div>
+      </div>
+    </div>
+    <script>
+      // Production server LAN IP. The "evergreen" hostname only resolves from the dev
+      // PC (Tailscale), so the shipped shell must target the IP. Override per-machine
+      // with localStorage("adminUiUrl") if a box needs a different host.
+      const DEFAULT_URL = "http://192.168.250.5:5099/admin/";
+      const url = localStorage.getItem("adminUiUrl") || DEFAULT_URL;
+      document.getElementById("target-url").textContent = url;
+
+      const RETRY_SECONDS = 5;
+      let countdownTimer = null;
+
+      async function tryConnect() {
+        document.getElementById("connecting").style.display = "block";
+        document.getElementById("retry").style.display = "none";
+        try {
+          // no-cors: an opaque response still proves the server answered; a network
+          // failure rejects. Avoids needing CORS headers on the API.
+          await fetch(url, { method: "GET", mode: "no-cors", cache: "no-store" });
+          window.location.replace(url);
+        } catch {
+          showRetry();
+        }
+      }
+
+      function showRetry() {
+        document.getElementById("connecting").style.display = "none";
+        document.getElementById("retry").style.display = "block";
+        let remaining = RETRY_SECONDS;
+        const cd = document.getElementById("countdown");
+        cd.textContent = "Retrying in " + remaining + "s";
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(countdownTimer);
+            tryConnect();
+          } else {
+            cd.textContent = "Retrying in " + remaining + "s";
+          }
+        }, 1000);
+      }
+
+      document.getElementById("retry-btn").addEventListener("click", () => {
+        clearInterval(countdownTimer);
+        tryConnect();
+      });
+
+      // Wire the custom title bar to the Tauri window (withGlobalTauri enables __TAURI__).
+      const tw = window.__TAURI__ && window.__TAURI__.window;
+      if (tw) {
+        const win = tw.getCurrentWindow();
+        document.getElementById("tb-min").addEventListener("click", () => win.minimize());
+        document.getElementById("tb-max").addEventListener("click", () => win.toggleMaximize());
+        document.getElementById("tb-close").addEventListener("click", () => win.close());
+      }
+
+      tryConnect();
+    </script>
+  </body>
+</html>

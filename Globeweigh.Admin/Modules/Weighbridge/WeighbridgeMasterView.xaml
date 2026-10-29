@@ -1,0 +1,51 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:admin="clr-namespace:Globeweigh.Admin"
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.WeighbridgeMasterView"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="700"
+             shared:ViewModelBehavior.LoadUnload="True"
+             Background="White">
+    <UserControl.Resources>
+
+        <DataTemplate DataType="{x:Type admin:WeighbridgeViewModel}">
+            <admin:WeighbridgeView/>
+        </DataTemplate>
+
+
+        <DataTemplate DataType="{x:Type admin:WeighbridgeSetupViewModel}">
+            <admin:WeighbridgeSetupView/>
+        </DataTemplate>
+
+
+    </UserControl.Resources>
+    <UserControl.DataContext>
+        <Binding Path="WeighbridgeMasterView" Source="{StaticResource Locator}"/>
+    </UserControl.DataContext>
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1" >
+            <ListBox Background="{x:Null}" SelectedItem="{Binding SelectedNavItem}"  ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0" Grid.Row="1" ItemContainerStyle="{DynamicResource HorizontalTabItemContainerStyleBase}" Margin="0,2,0,6" >
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBoxItem x:Name="weighbridgeRecords" Content="Weighbridge In/Out" IsSelected="True"  />
+                <ListBoxItem x:Name="dataSetup" Content="Data Setup" Margin="10,0,0,0"  />
+            </ListBox>
+        </Border>
+        <ContentControl Content="{Binding CurrentViewModel}" Grid.Row="1" Background="{DynamicResource MainContentGrey}"/>
+    </Grid>
+</UserControl>
+

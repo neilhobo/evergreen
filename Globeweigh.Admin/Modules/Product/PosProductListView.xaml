@@ -1,0 +1,124 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+             md:DialogServiceViews.IsRegistered="True"
+           xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+           xmlns:admin="clr-namespace:Globeweigh.Admin"
+           xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+           x:Class="Globeweigh.Admin.PosProductListView"
+             mc:Ignorable="d"  
+             d:DesignHeight="500" d:DesignWidth="1200"
+             shared:ViewModelBehavior.LoadUnload="True" Background="{DynamicResource LightGreyBrush}"
+             DataContext="{Binding PosProductListView, Source={StaticResource Locator}}" SnapsToDevicePixels="True">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Globeweigh.Admin;component/Resources/GridControlResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+            <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+
+            <Style x:Key="RefDataEntityItemContainerStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource LeftMenuItemContainerStyleBase}">
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <Grid Background="{TemplateBinding Background}"  Height="22">
+                                <TextBlock Text="{Binding TypeDescription}" TextWrapping="Wrap" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FFE4E4E4"/>
+                                </Trigger>
+                                <Trigger Property="Selector.IsSelected" Value="True">
+                                    <!--<Setter Property="Foreground" Value="#FF0063B1"/>-->
+                                    <Setter Property="Background" Value="{DynamicResource GreyBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="CusomterSupplierHeader">
+                <Grid>
+                    <TextBlock DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type admin:ProductListView}}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Supplier(s)"/>
+                                    <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedProductType.id}" Value="2">
+                                            <Setter Property="Text" Value="Customer(s)"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedProductType.id}" Value="8">
+                                             <Setter Property="Text" Value="Customer(s)"/>
+                                         </DataTrigger>
+                                      </Style.Triggers>
+                                     </Style>
+                                                </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </DataTemplate>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border Margin="0,0,2,0" BorderBrush="White" BorderThickness="0,3,3,3" >
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                <Grid Margin="4,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding SelectedProductType.PluralDescription}"  Style="{DynamicResource HeaderTextBlockStyle}" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"  HorizontalAlignment="Right" Grid.Column="1" >
+                        <Button Content="Add" Command="{Binding AddCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" />
+                        <Button Content="Delete"  Command="{Binding DeleteCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grd}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" Visibility="{Binding IsChecked, Converter={StaticResource TrueToCollapsedConverter}, ElementName=chkShowDeletes}" />
+                        <Button Content="Restore" Command="{Binding DeleteCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grd}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" Visibility="{Binding IsChecked, Converter={StaticResource TrueToVisibilityConverter}, ElementName=chkShowDeletes}" />
+                        <Button Content="Edit" Command="{Binding EditCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grd}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" />
+                        <!--<Button Content="Compare with Opera" ImageSource="/Images\Compare-32.png" Command="{Binding CompareWithOperaCommand}" IsEnabled="{Binding ElementName=chkGroupCodes, Path=IsChecked, Converter={StaticResource TrueToFalseConverter}}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>-->
+                        <Button Content="Print / Export"  Command="{Binding GlobalPrintExportCommand}" CommandParameter="{Binding ElementName=tvGrid}" IsEnabled="{Binding VisibleRowCount, ElementName=grd}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+
+
+            </Border>
+            <dxg:GridControl x:Name="grd" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1"  AllowLiveDataShaping="True" Margin="4">
+                <dxg:GridControl.View>
+                    <dxg:TableView x:Name="tvGrid" ShowSearchPanelMode="Never" NavigationStyle="Row"  >
+                        <dxmvvm:Interaction.Behaviors>
+                            <dxmvvm:EventToCommand PassEventArgsToCommand="False" Command="{Binding EditCommand}" EventName="RowDoubleClick"/>
+                        </dxmvvm:Interaction.Behaviors>
+                        <!--<b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="RowUpdated">
+                                        <b:InvokeCommandAction Command="{Binding RowUpdatedCommand}" CommandParameter="{Binding SelectedProduct}"/>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>-->
+                    </dxg:TableView>
+                </dxg:GridControl.View>
+                <dxg:GridColumn FieldName="Description" AutoFilterCriteria="Contains" />
+                <dxg:GridColumn FieldName="DateDeleted" Visible="{Binding IsChecked, ElementName=chkShowDeletes}" Width="150" FixedWidth="True" >
+                    <dxg:GridColumn.EditSettings>
+                        <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                    </dxg:GridColumn.EditSettings>
+                </dxg:GridColumn>
+                <dxg:GridColumn Header=" "/>
+            </dxg:GridControl>
+        </Grid>
+    </Border>
+</UserControl>

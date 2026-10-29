@@ -1,0 +1,1241 @@
+/* The detail fly-in: a header with Back, then the record itself down a fixed left column and
+   everything belonging to it down the right. It covers the whole content card — ContentCard's
+   .page is the positioned ancestor — so the sidebar and the title bar stay put and only the page
+   slides. Which is why a panel is rendered by the page that OWNS the card, never by a tab inside
+   it (see DispatchPage).
+
+   Shared by every such panel so they stay one design: completed-orders/OrderDetailPanel and
+   dispatch/LoadDetailPanel today. The pieces that go with it are widgets/DetailPanel.tsx (the
+   shell and a label/value row), widgets/OrderGrids.tsx (an order's lines beside its pallets) and
+   widgets/AuditTrailBar.tsx (the trail, as a strip under the lines or a card down the far right). */
+
+.panel {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    background: #f6f8fb;
+    /* The card's own corners, since the panel stands in its place. */
+    border-radius: 8px;
+    overflow: hidden;
+    animation: flyIn 0.22s ease-out;
+}
+
+@keyframes flyIn {
+    from { transform: translateX(3%); opacity: 0; }
+    to   { transform: translateX(0);  opacity: 1; }
+}
+
+/* Respect a machine set to reduce motion — the panel still appears, it just does not travel. */
+@media (prefers-reduced-motion: reduce) {
+    .panel { animation: none; }
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    padding: 0 14px;
+    flex: none;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #d3dae4;
+    border-radius: 6px;
+    background: #fff;
+    font: 500 12px/1 var(--ui-font);
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.backBtn:hover {
+    background: #f1f5f9;
+    border-color: #bcc6d3;
+}
+
+.backBtn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.headerTitle {
+    min-width: 0;
+    font: 600 13px/1 var(--ui-font);
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.headerRef {
+    margin-left: auto;
+    flex: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    font: 500 11px/1 var(--ui-font);
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Content ── */
+.content {
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    min-height: 0;
+    padding: 10px;
+    overflow: hidden;
+}
+
+/* ── Left: the record ── */
+.leftPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: none;
+    width: 320px;
+    padding: 12px 14px 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow-y: auto;
+}
+
+/* ── Left-hand sections ── */
+.section {
+    display: flex;
+    flex-direction: column;
+}
+
+.sectionTitle {
+    margin: 0 0 4px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #eef2f7;
+    font: 600 11px/1 var(--ui-font);
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* A heading that carries something on its right (the order's status). */
+.sectionTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 5px;
+}
+
+/* Where the order has got to — the first thing the office reads an order by, so it rides the
+   heading rather than taking a field row of its own. */
+.statusTag {
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 7px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #475569;
+    font: 600 10px/1 var(--ui-font);
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+.statusDispatched {
+    border-color: #bfe3cb;
+    background: #e4f4e9;
+    color: #1f7a3d;
+}
+
+.statusDeleted {
+    border-color: #f0c2bd;
+    background: #fdeceb;
+    color: #b42318;
+}
+
+/* Label and value on one line, ruled apart from the row below only by the leading — the office
+   reads a whole section at a glance and every extra pixel here pushes the comments off-screen. */
+.field {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: baseline;
+    padding: 1px 0;
+    font: 400 11.5px/1.5 var(--ui-font);
+}
+
+.fieldLabel {
+    color: #64748b;
+}
+
+.fieldValue {
+    color: #0f172a;
+    font-weight: 600;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+/* In the fly-in's left column the label column is only as wide as that section's longest label,
+   so a short one like "Load Ref" sits beside its value rather than a fixed 104px from it. The
+   section is the grid and its fields dissolve into it (display: contents), which is what lets the
+   labels within a section still line up while the column is a different width from one section
+   to the next. Whatever is not a field — the heading, an email list, the photos — spans both
+   columns. The dialogs keep the fixed column above: their fields hold inputs, and a form wants
+   one straight edge down its whole length. */
+.leftPanel .section {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: baseline;
+}
+
+.leftPanel .section > :not(.field) {
+    grid-column: 1 / -1;
+}
+
+.leftPanel .field {
+    display: contents;
+}
+
+.leftPanel .fieldLabel,
+.leftPanel .fieldValue {
+    padding: 1px 0;
+}
+
+/* Comments are typed prose, not a figure: they keep their line breaks and lose the tabular
+   numerals and the bold the other values wear. */
+.prose {
+    white-space: pre-line;
+    font-weight: 400;
+    font-variant-numeric: normal;
+}
+
+.muted {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+/* A figure worked out here from the pallets' own weights, shown beside one the bridge gave —
+   orange so the two are never read as the same kind of number. */
+.calc {
+    color: #c2410c;
+    font-weight: 500;
+}
+
+.warn {
+    color: #b45309;
+}
+
+.bad {
+    color: #b42318;
+}
+
+/* ── Right: what was ordered, picked and changed ──
+   Two columns of one panel, parted by a hairline: the order's lines (with the audit trail as a
+   strip along the bottom of them) and the pallets picked against them. Side by side rather than
+   stacked because the right column ANSWERS the left one — select a line and the pallets beside
+   it become that line's — and nobody should have to look up and down to make that connection.
+   The load panel runs no strip: its trail is the card down the far right of the page
+   (.auditPanel). */
+.rightPanel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* A floor, so that on a narrow window it is the load panel's audit card (.auditPanel) that
+       gives up width first, not the grids — below this the lines grid has no product column
+       left to speak of. */
+    min-width: 680px;
+    min-height: 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* The two grids themselves (widgets/OrderGrids). A row INSIDE .rightPanel rather than being it,
+   so a panel can put something above them — the load panel puts its order tabs and the selected
+   order's summary there, while the order panel has nothing above and the row simply fills it. */
+.gridsRow {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* The lines get the larger share — their grid carries the money columns. */
+.itemsCol {
+    flex: 1.25 1 0;
+}
+
+.palletsCol {
+    flex: 1 1 0;
+    border-left: 1px solid #e5e7eb;
+}
+
+/* Neither grid ever scrolls sideways — a column too narrow for its text clamps with an ellipsis
+   instead, which is what the cells already do. */
+.col :global(.data-table-wrap) {
+    overflow-x: hidden;
+}
+
+/* The lines grid pins every column but the product, so a fixed layout is what makes those widths
+   stick and hands the remainder to the product. The pallets grid does NOT get this: its columns
+   best-fit, which needs the browser to measure the content. */
+.itemsCol :global(.data-table) {
+    table-layout: fixed;
+}
+
+/* The header of each grid: the same row as the left panel's first section title — the same
+   type, the same pale rule under it, set in from the column edges by the left panel's 14px and
+   starting the same 12px down. That title is a .sectionTitleRow carrying the 17px status tag
+   with 5px under it, so this row is held to the same height — 17px of tag, 5px of padding and
+   the 1px rule, 23px in the border box — and the rules under ORDER DETAILS, ORDER ITEMS and
+   PICKED PALLETS fall on one pixel row across both panels (measured, not assumed: 36px from the
+   panel top in all three). It carries what the grid is, and on the pallets column the way back
+   to all of them. */
+.blockHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    min-height: 23px;
+    margin: 12px 14px 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.blockTitle {
+    margin: 0;
+    min-width: 0;
+    font: 600 11px/1 var(--ui-font);
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Back to every pallet on the order. Only there while a line is selected — with nothing filtered
+   it would be a button that does nothing. */
+.showAll {
+    margin-left: auto;
+    flex: none;
+    height: 17px;
+    padding: 0 9px;
+    border: 1px solid #c7d2e0;
+    border-radius: 999px;
+    background: #ffffff;
+    font: 600 10.5px/1 var(--ui-font);
+    color: #0a5aa8;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.showAll:hover {
+    background: #f1f6fb;
+    border-color: #9dbbd8;
+}
+
+/* ── The audit trail ──
+   A strip along the bottom of the lines column, because most of what it records IS a change to a
+   line. Shut, it is a bar and a count taking as little room as it can; open, it rises to about
+   half the column. Faint enough not to compete with the order, plain enough that anyone can see
+   it is there. */
+.auditRow {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 34px;
+    min-height: 0;
+    border-top: 1px solid #e5e7eb;
+    background: #fbfcfe;
+    transition: flex-basis 0.18s ease;
+}
+
+.auditRowOpen {
+    flex-basis: 46%;
+    background: #f8fafc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auditRow { transition: none; }
+}
+
+.auditToggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    width: 100%;
+    height: 34px;
+    padding: 0 14px;
+    border: 0;
+    background: transparent;
+    font: 600 11.5px/1 var(--ui-font);
+    color: #94a3b8;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.auditToggle:hover {
+    color: #475569;
+}
+
+.auditChevron {
+    width: 12px;
+    height: 12px;
+    flex: none;
+    transition: transform 0.18s ease;
+}
+
+.auditChevronOpen {
+    transform: rotate(90deg);
+}
+
+.auditTitle {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The count is the whole point of the shut state: whether this record has been touched, without
+   anyone having to open anything. Nothing to see stays grey; anything at all goes blue. */
+.auditCount {
+    margin-left: auto;
+    flex: none;
+    min-width: 18px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #94a3b8;
+    font: 600 10.5px/1.2 var(--ui-font);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.auditCountSome {
+    background: #e2ecf9;
+    color: #0a5aa8;
+}
+
+.auditBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 14px 10px;
+}
+
+.auditEmpty {
+    margin: 0 0 8px;
+    font: 400 11.5px/1.5 var(--ui-font);
+    color: #94a3b8;
+}
+
+.auditList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* One change per ROW rather than per card: the strip is wide and short, so a change reads across
+   instead of down. Three columns and not four — who and when are one thought and share the
+   right-hand one, which leaves the from → to pair enough width to stay on one line, and that is
+   the part anybody is actually reading. */
+.auditItem {
+    display: grid;
+    grid-template-columns: minmax(0, 168px) minmax(0, 1fr) minmax(0, 150px);
+    align-items: baseline;
+    gap: 2px 14px;
+    padding: 5px 2px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+/* Who did it, and when — stacked and right-aligned so the trail has a clean right edge. */
+.auditMeta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    min-width: 0;
+}
+
+.auditItem:last-child {
+    border-bottom: 0;
+}
+
+.auditField {
+    min-width: 0;
+    font: 600 11.5px/1.35 var(--ui-font);
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}
+
+/* Which LINE of the order it was about, on the field name's line after a dash — "Price – Topsoil":
+   an item's "Quantity" says nothing without the product, and the pair reads as one label. Lighter
+   than the field name, so the field still leads. */
+.auditScope {
+    font-weight: 400;
+    color: #64748b;
+    overflow-wrap: anywhere;
+}
+
+.auditChange {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+    font: 400 11.5px/1.45 var(--ui-font);
+    overflow-wrap: anywhere;
+}
+
+.auditFrom {
+    color: #64748b;
+    text-decoration: line-through;
+    text-decoration-color: #cbd5e1;
+}
+
+.auditArrow {
+    color: #94a3b8;
+    flex: none;
+}
+
+.auditTo {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* A whole line added or dropped, rather than a field edited — the only rows where the from/to
+   pair would be half empty, so they say what happened instead. */
+.auditActionTag {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font: 600 9.5px/1 var(--ui-font);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    flex: none;
+}
+
+.auditActionAdded {
+    background: #e4f4e9;
+    color: #1f7a3d;
+}
+
+.auditActionRemoved {
+    background: #fdeceb;
+    color: #b42318;
+}
+
+.auditWho {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+    font: 400 10.5px/1.35 var(--ui-font);
+    color: #64748b;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.auditWhen {
+    font: 400 10.5px/1.35 var(--ui-font);
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ── The audit trail as a column (AuditTrailColumn) ──
+   The load panel's choice: the same rows down a card of their own on the far right — the left
+   column's twin: the same width, the same white, the same title, with the count riding it where
+   the status rides LOAD DETAILS — and always open. The card pads the top only; the title and the
+   list set their own sides, so the list's scrollbar hugs the card's edge rather than sitting in
+   from it. The rows stack, since the strip's three columns across would leave each a word wide
+   at this width. */
+.auditPanel {
+    display: flex;
+    flex-direction: column;
+    /* The left column's 320px, given up down to 240px on a narrow window once the middle panel
+       is at its floor — the stacked rows still read at that width; the grids would not. */
+    flex: 0 1 320px;
+    min-width: 240px;
+    padding: 12px 0 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.auditPanelTitle {
+    flex: none;
+    margin: 0 14px 4px;
+}
+
+/* The count, held to the status tag's 17px so the rule under AUDIT TRAIL falls on the same pixel
+   row as the one under LOAD DETAILS. */
+.auditCountTitle {
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 7px;
+    margin-left: 0;
+}
+
+.auditColBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 14px 16px;
+}
+
+/* The count and the fold button together at the title's right end. */
+.auditTitleRight {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* The fold / unfold button: the strip's faint chevron in a hit box the height of the title row. */
+.auditFoldBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 17px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.auditFoldBtn:hover {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+/* Folded: a rail down the right edge — the chevron to bring it back, the count, and the name
+   written down the rail — and the card's width goes to the grids. */
+.auditPanelCollapsed {
+    flex: none;
+    width: 34px;
+    min-width: 34px;
+    padding: 8px 0 0;
+}
+
+.auditRail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.auditRailLabel {
+    writing-mode: vertical-rl;
+    font: 600 11px/1 var(--ui-font);
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* One change per card: the field, then from → to, then who and when, read down not across. */
+.auditListStacked .auditItem {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 6px 0;
+}
+
+/* Who, then when, on one line — the trail's clean right edge is the timestamp here. */
+.auditListStacked .auditMeta {
+    flex-direction: row-reverse;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.auditListStacked .auditWho {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+/* ── An event on the trail (AuditEvent) ──
+   Something done to the record rather than a field edited — an email sent for the load. A
+   tinted card of its own so it reads apart from the from → to rows: what happened on the first
+   line, every address it went to on a line each under it, then who and when. Compact: one line
+   per address, nothing else. */
+.auditEvent {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 150px);
+    gap: 2px 14px;
+    margin: 3px 0;
+    padding: 5px 8px;
+    border-bottom: 0;
+    border-radius: 5px;
+    background: #f1f8f3;
+}
+
+.auditListStacked .auditEvent {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 5px 8px;
+}
+
+.auditEventBody {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.auditEventTitle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font: 600 11px/1.35 var(--ui-font);
+    color: #1f7a3d;
+}
+
+.auditEventTitle svg {
+    width: 12px;
+    height: 12px;
+    flex: none;
+}
+
+.auditEventLine {
+    font: 400 11px/1.35 var(--ui-font);
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}
+
+/* The pallet's own code, the handle it is known by on the yard — a code, not another figure. */
+.code {
+    font-family: "Consolas", "Courier New", monospace;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* A pallet put on the order by hand because the scanner never read it. */
+.estTag {
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 7px;
+    border: 1px solid #f3d9a4;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font: 600 10px/1 var(--ui-font);
+    letter-spacing: 0.02em;
+    cursor: help;
+}
+
+/* A tap-picked line (POS board, cubic meter peat) — picked, or still waiting. Same pill as estTag. */
+.pickedTag,
+.notPickedTag {
+    display: inline-flex;
+    align-items: center;
+    height: 17px;
+    padding: 0 7px;
+    border-radius: 999px;
+    font: 600 10px/1 var(--ui-font);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.pickedTag {
+    border: 1px solid #b7e4c7;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.notPickedTag {
+    border: 1px solid #f5c2c0;
+    background: #fee4e2;
+    color: #b42318;
+}
+
+/* Delivery Note, under the comments — the one action on an otherwise read-only panel, so it sits
+   quietly rather than as a primary button. */
+.docketBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    height: 30px;
+    margin-top: 10px;
+    padding: 0 12px;
+    border: 1px solid #c7d2e0;
+    border-radius: 6px;
+    background: #ffffff;
+    font: 600 12px/1 var(--ui-font);
+    color: #0a5aa8;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.docketBtn:hover {
+    background: #f1f6fb;
+    border-color: #9dbbd8;
+}
+
+.docketBtn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ══ Load panel additions ══
+   A load is a lorry with several orders on it, so its panel carries one thing the order panel
+   does not: a way to move between them. What belongs to the LOAD (its weights, its photos) stays
+   in the left column; what belongs to one order sits on the right, under the tabs. */
+
+/* The orders on the load, as a tab strip over the order's own detail. In delivery sequence — the
+   first tab is the first drop — and scrolls sideways rather than wrapping, so a load with a dozen
+   drops never pushes the grids down the page. */
+.orderTabs {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    flex: none;
+    padding: 0 8px;
+    border-bottom: 1px solid #e5e7eb;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.orderTab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: none;
+    max-width: 260px;
+    height: 36px;
+    padding: 0 11px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font: 500 12px/1 var(--ui-font);
+    color: #64748b;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.orderTab:hover {
+    color: #0f172a;
+}
+
+.orderTabActive {
+    color: #0f172a;
+    border-bottom-color: var(--primary);
+}
+
+/* The drop's place in the sequence. A numeral, not a label — the tab order already says it, and
+   this is only here so the number is readable when the strip is scrolled. */
+.orderTabNo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #64748b;
+    font: 600 10px/1 var(--ui-font);
+    font-variant-numeric: tabular-nums;
+}
+
+.orderTabActive .orderTabNo {
+    background: #e2ecf9;
+    color: #0a5aa8;
+}
+
+.orderTabName {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The selected order's own details, above its grids. A band rather than a column: the left column
+   is already spoken for by the load, and these are the six things somebody checks before reading
+   the lines. */
+.orderSummary {
+    display: flex;
+    gap: 30px;
+    flex: none;
+    padding: 9px 14px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8fafc;
+    font: 400 11.5px/1.45 var(--ui-font);
+}
+
+/* Two halves, each its own label/value grid rather than one grid of four tracks: the halves then
+   fill independently, so the left can run to five rows while the right runs to two. The long
+   values — the typed-in notes — live on the right, where they lengthen their own column instead
+   of spanning the band and pushing the grids down the page. */
+.summaryCol {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    align-content: start;
+    column-gap: 12px;
+    row-gap: 3px;
+    min-width: 0;
+}
+
+/* The order's own facts: best-fit, so the column is as wide as the longest of a customer name,
+   an address line and a PO number and no wider. A fixed half would leave a gutter down the
+   middle of the band on most orders. It may still shrink if the panel gets tight. */
+.summaryColFit {
+    flex: 0 1 auto;
+}
+
+/* The notes take everything the left column leaves, which is the point of putting them here. */
+.summaryColFill {
+    flex: 1 1 0;
+}
+
+.summaryLabel {
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.summaryValue {
+    color: #0f172a;
+    font-weight: 600;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* An address or a comment keeps its line breaks and loses the bold the figures wear. */
+.summaryProse {
+    white-space: pre-line;
+    font-weight: 400;
+}
+
+/* The strip of buttons at the end of the summary (the order's delivery note). */
+.summaryActions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+/* ── Load photos ──
+   At the root of the load and nowhere else: they are pictures of a lorry, not of an order, and
+   putting them under one of its orders would say something untrue. Two to a row in the left
+   column, which is as large as a thumbnail can be there and still be a thumbnail. */
+.photoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.photo {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s;
+}
+
+.photo:hover {
+    border-color: #9dbbd8;
+}
+
+.photo img {
+    display: block;
+    width: 100%;
+    height: 74px;
+    object-fit: cover;
+    background: #f1f5f9;
+}
+
+.photoCaption {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 6px 5px;
+    min-width: 0;
+}
+
+.photoName {
+    font: 600 10.5px/1.3 var(--ui-font);
+    color: #334155;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.photoDate {
+    font: 400 9.5px/1.3 var(--ui-font);
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── The photo lightbox ──
+   Its own overlay INSIDE the panel rather than an app modal, so Back still means "back to the
+   load" and the picture does not escape the page it belongs to. */
+.lightbox {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    /* Nearly opaque: at 0.8 the panel header behind it showed through the lightbox’s own title
+       line and the two collided. */
+    background: rgba(15, 23, 42, 0.94);
+}
+
+/* Solid, not tinted: it sits exactly over the panel's own header, and anything showing through
+   would collide with this bar's title line. */
+.lightboxBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+    height: 44px;
+    padding: 0 14px;
+    background: #0f172a;
+    color: #f8fafc;
+    font: 600 12.5px/1 var(--ui-font);
+}
+
+.lightboxWhen {
+    font: 400 11.5px/1 var(--ui-font);
+    color: #cbd5e1;
+    font-variant-numeric: tabular-nums;
+}
+
+.lightboxActions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.lightboxBtn {
+    height: 26px;
+    padding: 0 11px;
+    border: 1px solid rgba(248, 250, 252, 0.35);
+    border-radius: 6px;
+    background: transparent;
+    font: 600 11.5px/1 var(--ui-font);
+    color: #f8fafc;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.lightboxBtn:hover:not(:disabled) {
+    background: rgba(248, 250, 252, 0.14);
+    border-color: rgba(248, 250, 252, 0.6);
+}
+
+.lightboxBtn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.lightboxStage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px 16px;
+}
+
+.lightboxStage img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+/* Swapping two photos' captions: the picking app files them by slot, and a driver who photographs
+   them out of order leaves the labels crossed. Picking the other picture is the whole gesture, so
+   the choice is the pictures themselves. */
+.swapNote {
+    flex: none;
+    margin: 0;
+    padding: 0 16px 10px;
+    font: 400 11.5px/1.45 var(--ui-font);
+    color: #cbd5e1;
+}
+
+.swapGrid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 10px;
+    padding: 0 16px 16px;
+    align-content: start;
+}
+
+.swapBusy {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* A small button in the summary band (the order's delivery note). */
+.summaryBtn {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 11px;
+    border: 1px solid #c7d2e0;
+    border-radius: 6px;
+    background: #ffffff;
+    font: 600 11.5px/1 var(--ui-font);
+    color: #0a5aa8;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.summaryBtn:hover {
+    background: #f1f6fb;
+    border-color: #9dbbd8;
+}
+
+/* Pre-Commercial Invoice (a load not yet picked): lavender, so the estimate never passes for
+   the real invoice. */
+.summaryBtn.summaryBtnPre {
+    background: #e9e3fb;
+    border-color: #c9bcef;
+    color: #4c3799;
+}
+
+.summaryBtn.summaryBtnPre:hover {
+    background: #ddd4f8;
+    border-color: #b3a2e0;
+}
+
+/* An icon-only action (the pre-commercial email): square, the icon centred. */
+.summaryBtn.summaryBtnIcon {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+}
+
+.summaryBtnIcon svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* A load with nothing on it yet, or one that would not load at all. */
+.paneEmpty {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font: 500 12.5px/1.4 var(--ui-font);
+    color: #94a3b8;
+    text-align: center;
+}
+
+/* "No photos" reads as a sentence in the section, not as a dash in a field. */
+.photoEmpty {
+    padding: 2px 0;
+    font: 400 11.5px/1.5 var(--ui-font);
+}
+
+/* A photo whose bytes will not load. The row is real — the picking app filed it — so the tile
+   stays and says the picture is missing, rather than collapsing and leaving a gap in the set. */
+.photoMissing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 74px;
+    background: #f1f5f9;
+    font: 500 10.5px/1 var(--ui-font);
+    color: #94a3b8;
+}
+
+.lightboxMissing {
+    font: 500 13px/1.4 var(--ui-font);
+    color: #cbd5e1;
+}
+
+/* ── A field's "view" link, and the list it unfolds ──
+   The load panel's Emailed row: the last send's time, then a link that opens the sends below
+   it — each one's time, sender and the addresses it went to — in the field column. */
+.inlineLink {
+    margin-left: 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 10.5px/1 var(--ui-font);
+    color: #0a5aa8;
+    cursor: pointer;
+}
+
+.inlineLink:hover {
+    text-decoration: underline;
+}
+
+/* A record number inside a value that opens that record — the order panel's "(Load #1234)".
+   Takes the value's own font so it reads as part of the sentence, just blue. */
+.refLink {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: #0a5aa8;
+    cursor: pointer;
+}
+
+.refLink:hover {
+    text-decoration: underline;
+}
+
+.refNote {
+    margin-left: 8px;
+    color: #64748b;
+}
+
+.sentTo {
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}

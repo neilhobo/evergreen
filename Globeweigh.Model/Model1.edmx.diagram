@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="6abe7990a0f54b0397595882caf021a0" Name="Diagram1">
+        <EntityTypeShape EntityType="GlobeweighModel.ChangeLog" Width="1.5" PointX="10.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CodicoPallet" Width="1.5" PointX="4.75" PointY="10.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CostingZone" Width="1.5" PointX="6.75" PointY="10.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CostingZoneGroup" Width="1.5" PointX="8.75" PointY="10.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CostingZonePrice" Width="1.5" PointX="10.75" PointY="10.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CostingZonePriceHistory" Width="1.5" PointX="12.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CustomerSupplier_Address" Width="1.5" PointX="10" PointY="5" />
+        <EntityTypeShape EntityType="GlobeweighModel.CustomerSupplier" Width="1.5" PointX="7.75" PointY="5.625" />
+        <EntityTypeShape EntityType="GlobeweighModel.Device" Width="1.5" PointX="0.75" PointY="12.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.DispatchOrder" Width="1.5" PointX="2.75" PointY="6.125" />
+        <EntityTypeShape EntityType="GlobeweighModel.DispatchOrder_Picked" Width="1.5" PointX="12.75" PointY="4.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.DispatchOrderItem" Width="1.5" PointX="5" PointY="7.5" />
+        <EntityTypeShape EntityType="GlobeweighModel.EntityType" Width="1.5" PointX="12.75" PointY="8.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.EntityTypeField" Width="1.5" PointX="12.75" PointY="12.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.ErrorLog" Width="1.5" PointX="6.75" PointY="13.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Globeweigh_Role" Width="1.5" PointX="8" PointY="2" />
+        <EntityTypeShape EntityType="GlobeweighModel.GlobeweighUser" Width="1.5" PointX="5.75" PointY="1" />
+        <EntityTypeShape EntityType="GlobeweighModel.Haulier" Width="1.5" PointX="8.75" PointY="13.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Invoice" Width="1.5" PointX="14.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.InvoiceLine" Width="1.5" PointX="2.75" PointY="14.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.OnHoldNotification" Width="1.5" PointX="14.75" PointY="8.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Pallet" Width="1.5" PointX="14.75" PointY="12.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.PalletHistory" Width="1.5" PointX="16.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Product" Width="1.5" PointX="16.75" PointY="4.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Product_Supplier" Width="1.5" PointX="16.75" PointY="9.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.ProductNew" Width="1.5" PointX="2.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.ProductType" Width="1.5" PointX="10.75" PointY="16.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.ReferenceData" Width="1.5" PointX="16.75" PointY="12.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Setting" Width="1.5" PointX="12.75" PointY="16.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.StockHistory" Width="1.5" PointX="4.75" PointY="17.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.StockLocation" Width="1.5" PointX="14.75" PointY="17.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.StockTake" Width="1.5" PointX="16.75" PointY="17.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.StockTakePallet" Width="1.5" PointX="18.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.Supplier_Bog" Width="1.5" PointX="0.75" PointY="18.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.WeighbridgeRecord" Width="1.5" PointX="0.75" PointY="1.125" />
+        <EntityTypeShape EntityType="GlobeweighModel.WeighbridgeRecord_Order" Width="1.5" PointX="3" PointY="2.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.CostingZonePriceView" Width="1.5" PointX="18.75" PointY="4.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCodicoPallet" Width="1.5" PointX="18.75" PointY="13.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCostingZonePrice" Width="1.5" PointX="18.75" PointY="18.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCurrentStockLocation" Width="1.5" PointX="6.75" PointY="19.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCurrentStockSummary" Width="1.5" PointX="20.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCurrentStockSummaryByLocation" Width="1.5" PointX="2.75" PointY="20.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwCustomerSupplier" Width="1.5" PointX="20.75" PointY="4.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwDispatchOrder" Width="1.5" PointX="20.75" PointY="7.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwDispatchOrderItem" Width="1.5" PointX="8.75" PointY="20.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwDispatchOrderItemPicked" Width="1.5" PointX="10.75" PointY="20.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwDispatchOrderPicked" Width="1.5" PointX="12.75" PointY="20.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwFinishedProductWithStock" Width="1.5" PointX="14.75" PointY="20.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwGlobeweighUser" Width="1.5" PointX="20.75" PointY="15.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwGlobeweighUserFactory" Width="1.5" PointX="20.75" PointY="18.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwIntakePalletSummaryView" Width="1.5" PointX="20.75" PointY="21.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwOpenDispatchOrderUnnasigned" Width="1.5" PointX="22.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwPalletCurrentStock" Width="1.5" PointX="22.75" PointY="4.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwPalletHistory" Width="1.5" PointX="4.75" PointY="22.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwPalletView" Width="1.5" PointX="22.75" PointY="9.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwPendingAssigned" Width="1.5" PointX="22.75" PointY="14.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwProduct" Width="1.5" PointX="16.75" PointY="22.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwProduct_Supplier" Width="1.5" PointX="22.75" PointY="18.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwProductionSummaryPalletView" Width="1.5" PointX="22.75" PointY="21.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwStockTake" Width="1.5" PointX="24.75" PointY="0.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwWeighbridgeComplete" Width="1.5" PointX="0.75" PointY="24.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwWeighbridgeOrderAssigned" Width="1.5" PointX="24.75" PointY="3.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwWeighbridgePending" Width="1.5" PointX="24.75" PointY="7.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwWeighbridgePreLoad" Width="1.5" PointX="24.75" PointY="13.75" />
+        <EntityTypeShape EntityType="GlobeweighModel.vwWeighbridgeRecordsToBeSampled" Width="1.5" PointX="24.75" PointY="17.75" />
+        <AssociationConnector Association="GlobeweighModel.FK_CustomerSupplier_Address_CustomerSuppliers1" />
+        <AssociationConnector Association="GlobeweighModel.FK_DispatchOrderItem_DispatchOrder" />
+        <AssociationConnector Association="GlobeweighModel.FK_Globeweigh_Role_GlobeweighUser" />
+        <AssociationConnector Association="GlobeweighModel.FK_WeighbridgeRecord_Order_WeighbridgeRecord" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

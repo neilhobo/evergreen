@@ -1,0 +1,348 @@
+/* Ledger grid kit — the skin of the Production Planning design mock (2026-09-24), copied
+   across as-is: a toolbar strip, a bordered grid with a tinted sticky header, cell
+   separators, zebra rows, a sticky totals row, click-to-expand rows with their detail rows
+   inline, and the status pills. Segoe UI throughout, 11px in the grid.
+
+   Since 2026-09-24 this look is the app's default: App.css's DataTable skin, form controls
+   and toolbar rules carry the same values. This kit (lg-* classes, nothing page-specific)
+   remains for the hand-built tables that DataTable cannot draw — Production Planning's
+   expand rows and its per-cell-coloured horizon grid. */
+
+/* ── Page: the tab's content, toolbar over body ── */
+.lg-page {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  font: 12px/1.4 var(--ui-font);
+  color: #0f172a;
+}
+
+/* ── Toolbar ── */
+.lg-tb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+.lg-tb label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 12px var(--ui-font);
+  color: #475569;
+}
+.lg-tb select,
+.lg-tb input[type="search"],
+.lg-tb input[type="number"] {
+  height: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #f8fafc;
+  font: 12px var(--ui-font);
+  color: #0f172a;
+  padding: 0 8px;
+}
+.lg-tb input[type="search"] {
+  width: 190px;
+}
+.lg-tb .lg-sp {
+  flex: 1;
+}
+.lg-tb-note {
+  font-size: 11px;
+  color: #64748b;
+}
+.lg-btn {
+  height: 26px;
+  padding: 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  font: 500 10px var(--ui-font);
+  color: #0f172a;
+  cursor: pointer;
+}
+.lg-btn:disabled {
+  color: #94a3b8;
+  cursor: default;
+}
+.lg-btn.blue {
+  background: #087eef;
+  color: #fff;
+  border-color: #087eef;
+  font-weight: 600;
+}
+
+/* ── Body under the toolbar ── */
+.lg-body {
+  padding: 10px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Grid ── */
+.lg-grid-wrap {
+  border: 1px solid #bcc6d3;
+  border-radius: 6px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+}
+table.lg-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+}
+table.lg-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #e8edf4;
+  color: #111827;
+  font-weight: 500;
+  font-size: 10.5px;
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #bcc6d3;
+  border-right: 1px solid #d3dae4;
+  white-space: nowrap;
+}
+table.lg-grid td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #d3dae4;
+  border-right: 1px solid #d3dae4;
+  white-space: nowrap;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+table.lg-grid tbody tr:nth-child(even) td {
+  background: #fafbfc;
+}
+table.lg-grid tbody tr:hover td {
+  background: #f1f5f9;
+}
+table.lg-grid tbody tr.sel td {
+  background: #fff3e0;
+}
+table.lg-grid td.r,
+table.lg-grid th.r {
+  text-align: right;
+}
+table.lg-grid td.c,
+table.lg-grid th.c {
+  text-align: center;
+}
+table.lg-grid tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: #ececf0;
+  font-weight: 700;
+  border-top: 1px solid #bcc6d3;
+}
+table.lg-grid td.neg {
+  color: #b91c1c;
+  font-weight: 600;
+}
+table.lg-grid td.dim {
+  color: #94a3b8;
+}
+table.lg-grid td.lg-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 18px;
+}
+.lg-muted {
+  color: #64748b;
+}
+
+/* ── Click-to-expand rows: the chevron in the first cell, detail rows beneath ── */
+.lg-exp {
+  cursor: pointer;
+}
+.lg-exp td:first-child::before {
+  content: "▸";
+  display: inline-block;
+  width: 12px;
+  color: #94a3b8;
+  font-size: 9px;
+}
+.lg-exp.open td:first-child::before {
+  content: "▾";
+}
+tr.lg-sub td {
+  background: #f8fafc !important;
+  color: #475569;
+  font-size: 10.5px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+tr.lg-sub td:first-child {
+  padding-left: 28px;
+}
+
+/* ── Status pills: the word is always there, the glyph shape doubles the colour ── */
+.lg-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.lg-pill.good {
+  background: #dcfce7;
+  color: #15803d;
+}
+.lg-pill.warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+.lg-pill.bad {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.lg-pill.later {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.lg-pill::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background: currentColor;
+  vertical-align: 1px;
+}
+.lg-pill.bad::before {
+  border-radius: 1px;
+}
+.lg-pill.warn::before {
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+/* ── Segmented switch (Production Planning: Ledger | Horizon) ── */
+.lg-seg {
+  display: inline-flex;
+  height: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+}
+.lg-seg button {
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font: 500 12px var(--ui-font);
+  padding: 0 12px;
+  cursor: pointer;
+}
+.lg-seg button[aria-pressed="true"] {
+  background: #1a2332;
+  color: #fff;
+}
+.lg-seg button:focus-visible {
+  outline: 2px solid #087eef;
+  outline-offset: -2px;
+}
+
+/* ── Horizon grid: a week per column, the cells coloured by whether the stock still reaches
+   them — green while it does, red with a rail at the week it runs out, pale red after. ── */
+table.lg-grid td.wk,
+table.lg-grid th.wk {
+  text-align: right;
+  min-width: 48px;
+}
+table.lg-grid td.wk.ok {
+  background: #ecfdf5 !important;
+  color: #166534;
+}
+table.lg-grid td.wk.brk {
+  background: #fee2e2 !important;
+  color: #991b1b;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+table.lg-grid td.wk.sh {
+  background: #fff1f2 !important;
+  color: #b91c1c;
+}
+table.lg-grid td.wk.z {
+  color: #cbd5e1;
+}
+table.lg-grid td.wk small {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #b91c1c;
+  line-height: 1;
+  margin-top: 1px;
+}
+table.lg-grid th.stk,
+table.lg-grid td.stk {
+  background: #f8fafc;
+}
+/* The product column stays put while the weeks scroll sideways. */
+table.lg-grid td.name {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+}
+table.lg-grid th.name {
+  left: 0;
+  z-index: 3;
+}
+table.lg-grid tbody tr:nth-child(even) td.name {
+  background: #fafbfc;
+}
+.lg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 11px;
+  color: #475569;
+}
+.lg-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: -1px;
+  margin-right: 5px;
+  border: 1px solid #d3dae4;
+}
+
+/* ── Hover tip: the orders inside a horizon cell ── */
+.lg-tip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  background: #1a2332;
+  color: #fff;
+  font: 11px/1.4 var(--ui-font);
+  padding: 6px 9px;
+  border-radius: 6px;
+  max-width: 260px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.lg-tip b {
+  display: block;
+  margin-bottom: 2px;
+}
+.lg-tip div {
+  white-space: nowrap;
+}

@@ -1,0 +1,72 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+      xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+      xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+      xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+      x:Class="Globeweigh.Admin.AddEditRefDataView"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="None"
+        Height="400" Width="600" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White">
+    <shared:WindowBase.Resources>
+        <converters:FalseToCollapsedConverter x:Key="FalseToCollapsedConverter"/>
+    </shared:WindowBase.Resources>
+    <Border Margin="0" CornerRadius="3" Background="White">
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource MainBorderBrush}" >
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Text="{Binding HeaderText, FallbackValue=Header Text}" Style="{DynamicResource TransactionHeaderTextBlockStyle}"/>
+                </Grid>
+            </Border>
+            <Border Grid.Row="1">
+                <Grid Margin="10" x:Name="ControlsGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="Code" Content="Code" Style="{DynamicResource DefaultLabelStyle}" Margin="0,5"/>
+                    <TextBox Text="{Binding CurrentRefData.Code, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Visibility="{Binding ElementName=Code, Path=Visibility}" Grid.Column="1" Margin="0,5"/>
+                    <Label x:Name="DisplayName" Content="DisplayName" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1" Margin="0,5"/>
+                    <TextBox Text="{Binding CurrentRefData.DisplayName, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Visibility="{Binding ElementName=DisplayName, Path=Visibility}" Grid.Row="1" Margin="0,5"  Grid.Column="1"/>
+                    <Label x:Name="IntData" Content="IntData" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="2" Margin="0,5"/>
+                    <TextBox Text="{Binding CurrentRefData.IntData, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Visibility="{Binding ElementName=IntData, Path=Visibility}" Grid.Row="2" Margin="0,5"  Grid.Column="1"/>
+                    <Label x:Name="ExtraData" Content="ExtraData" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="3" Margin="0,5"/>
+                    <TextBox Text="{Binding CurrentRefData.ExtraData, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}"  Visibility="{Binding ElementName=ExtraData, Path=Visibility}"  Grid.Row="3" Margin="0,5"  Grid.Column="1"/>
+                    <Label x:Name="DecimalData" Content="DecimalData" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="4" Margin="0,5"/>
+                    <TextBox Text="{Binding CurrentRefData.DecimalData, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}"  Visibility="{Binding ElementName=DecimalData, Path=Visibility}"  Grid.Row="4" Margin="0,5"  Grid.Column="1" HorizontalAlignment="Left" Width="100"/>
+                    <Label x:Name="BoolData" Content="BoolData" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="5" Margin="0,5"/>
+                    <dxe:CheckEdit IsChecked="{Binding CurrentRefData.BoolData, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding ElementName=BoolData, Path=Visibility}"  Grid.Row="5" Margin="0,5"  Grid.Column="1" HorizontalAlignment="Left" Width="100"/>
+
+                </Grid>
+
+            </Border>
+
+            <Border Grid.Row="2">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Save"  Width="100" Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}"/>
+                        <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</shared:WindowBase>

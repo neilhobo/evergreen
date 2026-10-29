@@ -1,0 +1,4 @@
+bin/
+obj/
+# Built web UI is deployed here by the Globeweigh.WebAdmin build — generated artifact.
+wwwroot/gate-web/

@@ -1,0 +1,187 @@
+<UserControl
+    x:Class="Globeweigh.Touch.CollectionWeighView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+    xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:dxga="http://schemas.devexpress.com/winfx/2008/xaml/gauges"
+    xmlns:internal="http://schemas.devexpress.com/winfx/2008/xaml/windowsui/internal"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+    xmlns:local="clr-namespace:Globeweigh.Touch"
+    xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+    d:DesignHeight="1024" d:DesignWidth="1280" md:DialogServiceViews.IsRegistered="True" shared:ViewModelBehavior.LoadUnload="True"
+    Background="{DynamicResource MainNavyBrush}"
+    DataContext="{Binding CollectionWeighView, Source={StaticResource Locator}}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter" />
+        <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter" />
+        <converters:NullToVisibleConverter x:Key="NullToVisibleConverter" />
+        <converters:TrueToFalseConverter x:Key="TrueToFalseConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <Border Background="{DynamicResource LightGreyBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="70" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <Border Background="{DynamicResource GlobeweighBlueBrush}">
+                    <Grid Margin="5">
+                        <StackPanel Margin="0" VerticalAlignment="Center" Orientation="Horizontal">
+                            <internal:BackButton Width="66" Height="66" Margin="0,0,10,0" VerticalAlignment="Center" Command="{Binding BackCommand}" StrokeThickness="4" />
+                            <TextBlock Margin="10,0,0,0" Foreground="White" Style="{DynamicResource HeaderTextBlockStyle}" Text="{Binding IdRef, StringFormat='Collection - Ref {0}'}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" BorderBrush="{DynamicResource WbPanelBorderBrush}" BorderThickness="4">
+                    <Grid Margin="0,0,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="550" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--  LEFT: record details + assigned orders  -->
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="60" />
+                                    <RowDefinition Height="60" />
+                                    <RowDefinition Height="120" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock FontSize="28" Style="{DynamicResource DefaultTextBlockStyle}" Text="Reference" />
+                                <TextBlock Grid.Column="1" FontSize="28" Style="{DynamicResource DefaultTextBlockContentStyle}" Text="{Binding IdRef}" />
+
+                                <TextBlock Grid.Row="1" FontSize="28" Style="{DynamicResource DefaultTextBlockStyle}" Text="Haulier" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" FontSize="28" Style="{DynamicResource DefaultTextBlockContentStyle}" Text="{Binding HaulierName}" />
+
+                                <TextBlock Grid.Row="2" VerticalAlignment="Center" FontSize="34" FontWeight="Bold" Style="{DynamicResource DefaultTextBlockStyle}" Text="Trailer No:" />
+                                <controls:TransactionContentControl
+                                    x:Name="TrailerNo" Grid.Row="2" Grid.Column="1" Width="320" Height="100" Margin="0" HorizontalAlignment="Left" FontSize="34" FontWeight="Bold"
+                                    Style="{DynamicResource TextBlockPopupContentStyle}"
+                                    NullText="Tap to enter"
+                                    Text="{Binding CurrentWeighbridgeRecord.TrailerNo, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+
+                            <Border Grid.Row="2" Margin="0,10,0,0" BorderBrush="{DynamicResource WbPanelBorderBrush}" BorderThickness="0,4,0,0">
+                                <TextBlock Margin="0,8,0,0" FontSize="24" FontFamily="Segoe UI Semibold" Style="{DynamicResource DefaultTextBlockStyle}" Text="Assigned Orders" />
+                            </Border>
+
+                            <dxg:GridControl Grid.Row="3" Margin="0,10,0,0" ItemsSource="{Binding AssignedOrders}">
+                                <dxg:GridControl.View>
+                                    <dxg:TableView x:Name="tvAssigned" AllowSorting="False" AllowEditing="False" ShowGroupPanel="False" NavigationStyle="None" />
+                                </dxg:GridControl.View>
+                                <dxg:GridColumn FieldName="OrderNoDisplay" Header="Order No" FixedWidth="True" Width="120" />
+                                <dxg:GridColumn FieldName="CustomerName" Header="Customer" />
+                                <dxg:GridColumn FieldName="TotalQuantityOrdered" Header="Qty" FixedWidth="True" Width="90" />
+                            </dxg:GridControl>
+                        </Grid>
+
+                        <!--  RIGHT: live weight + weigh button  -->
+                        <Border Grid.Column="1" Margin="0,0,5,0">
+                            <Grid Margin="20,20,0,20">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Border BorderBrush="{DynamicResource WbPanelBorderBrush}" BorderThickness="4">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="80" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Border BorderBrush="{DynamicResource WbPanelBorderBrush}" BorderThickness="0,0,0,4">
+                                            <TextBlock HorizontalAlignment="Center" FontFamily="Segoe UI Semibold" FontSize="40" Style="{DynamicResource DefaultTextBlockStyle}" Text="Weight" />
+                                        </Border>
+
+                                        <!-- Live weight. In sunlight mode: black digits on white — a dark glossy
+                                             panel mirrors outdoors. Two gauges carry the two segment palettes since
+                                             the DX presentation fill isn't themeable. -->
+                                        <Border Grid.Row="1" Margin="10,0.1,10,10" Background="{DynamicResource WbGaugePanelBrush}" BorderBrush="{DynamicResource WbGaugePanelBorderBrush}" BorderThickness="3" CornerRadius="3">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <dxga:DigitalGaugeControl Margin="6,10,0,10" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding LiveWeight}"
+                                                                          Visibility="{Binding IsSunlight, Source={x:Static local:ThemeManager.Instance}, Converter={StaticResource TrueToCollapsedConverter}}">
+                                                    <dxga:SevenSegmentsView>
+                                                        <dxga:SevenSegmentsView.Presentation>
+                                                            <dxga:DefaultSevenSegmentsPresentation FillActive="#FF43E64A" FillInactive="#0F555555" />
+                                                        </dxga:SevenSegmentsView.Presentation>
+                                                    </dxga:SevenSegmentsView>
+                                                </dxga:DigitalGaugeControl>
+                                                <dxga:DigitalGaugeControl Margin="6,10,0,10" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding LiveWeight}"
+                                                                          Visibility="{Binding IsSunlight, Source={x:Static local:ThemeManager.Instance}, Converter={StaticResource TrueToVisibilityConverter}}">
+                                                    <dxga:SevenSegmentsView>
+                                                        <dxga:SevenSegmentsView.Presentation>
+                                                            <dxga:DefaultSevenSegmentsPresentation FillActive="#FF111111" FillInactive="#10000000" />
+                                                        </dxga:SevenSegmentsView.Presentation>
+                                                    </dxga:SevenSegmentsView>
+                                                </dxga:DigitalGaugeControl>
+                                                <TextBlock Grid.Column="1" Margin="0,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Segoe UI Semibold" FontSize="50" Foreground="{DynamicResource WbGaugeTextBrush}" Text="Kg" />
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Row="1" BorderBrush="{DynamicResource WbPanelBorderBrush}" BorderThickness="4,0,4,4">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="60" />
+                                        </Grid.RowDefinitions>
+                                        <Button Width="400" Height="160" Margin="0" BorderThickness="4" Command="{Binding SaveCommand}" Content="Weigh" FontSize="60"
+                                                Style="{DynamicResource PrimaryButtonStyleAction}"
+                                                IsEnabled="{Binding IsBusy, Converter={StaticResource TrueToFalseConverter}}" />
+                                        <TextBlock Grid.Row="1" Margin="0" HorizontalAlignment="Center" FontSize="34" FontWeight="Bold" Foreground="Red" Style="{DynamicResource DefaultTextBlockStyle}" Text="Trailer No Required" Visibility="{Binding CurrentWeighbridgeRecord.TrailerNo, Converter={StaticResource NullToVisibleConverter}}" />
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border d:IsHidden="True" Background="#FFCDFFB3" BorderBrush="White" BorderThickness="4" Visibility="{Binding SuccessOverlayVisible, Converter={StaticResource TrueToVisibilityConverter}}">
+            <Grid Margin="20,0,20,100" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="100" Text="Weigh successful!" />
+                <TextBlock Grid.Row="1" Margin="0,100,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="40" Text="Please exit the weighbridge when ready" TextAlignment="Center" TextWrapping="Wrap" />
+            </Grid>
+        </Border>
+        <Border d:IsHidden="True" Background="#FFCDFFB3" BorderBrush="White" BorderThickness="4" Visibility="{Binding InCountdownMode, Converter={StaticResource TrueToVisibilityConverter}}">
+            <Grid Margin="20,0,20,100" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="100" Text="Weigh successful!" />
+                <TextBlock Grid.Row="1" Margin="0,10,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="250" Text="{Binding CountdownValue, FallbackValue=5}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

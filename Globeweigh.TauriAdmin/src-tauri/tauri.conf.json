@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Globeweigh WMS",
+  "version": "0.1.9",
+  "identifier": "com.globeweigh.evergreen",
+  "build": {
+    "beforeDevCommand": "npm run dev:vite",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "",
+    "frontendDist": "../loader"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Globeweigh WMS",
+        "width": 1800,
+        "height": 1024,
+        "center": true,
+        "theme": "Dark",
+        "decorations": false,
+        "backgroundColor": "#0d1624",
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --unsafely-treat-insecure-origin-as-secure=http://192.168.250.5:5099,http://192.168.250.5,http://evergreen:5099,http://evergreen,http://evergreen.tail9b21d.ts.net"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDczNUYwMEJFRDA3OTU5NTIKUldSU1dYblF2Z0JmYzRtSzBEQThtUW5yODlhSFBjWE1NN2xiU2hJdmprQWowVDgxVDJoVnZJYk8K",
+      "endpoints": ["http://192.168.250.5:5099/api/admin-app/latest.json"],
+      "dangerousInsecureTransportProtocol": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

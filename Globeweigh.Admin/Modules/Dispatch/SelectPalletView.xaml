@@ -1,0 +1,142 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.SelectPalletView"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="None"
+        Height="790" Width="1100" WindowStartupLocation="CenterOwner" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White"
+        dx:ThemeManager.ThemeName="MetropolisLight">
+
+    <shared:WindowBase.Resources>
+
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+
+
+        <converters:TrueToFalseConverter x:Key="TrueToFalseConverter"/>
+
+        <Style x:Key="rowStyle" TargetType="{x:Type dxg:RowControl}" >
+            <Setter Property="Height" Value="24"></Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Foreground" Value="Black" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Row.IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="Green" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Row.OnHold}" Value="True" >
+                    <Setter Property="Foreground" Value="Red"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="selectCellTemplate">
+            <dxe:CheckEdit IsChecked="{Binding Path=RowData.Row.IsSelected}" IsReadOnly="{Binding Path=RowData.Row.OnHold}" HorizontalAlignment="Center"></dxe:CheckEdit>
+        </DataTemplate>
+
+
+
+
+    </shared:WindowBase.Resources>
+    <Border Margin="0" CornerRadius="3" Background="White">
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource MainBorderBrush}" >
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Text="Select Pallets" Style="{DynamicResource TransactionHeaderTextBlockStyle}"/>
+                </Grid>
+            </Border>
+            <Grid Grid.Row="1">
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="500"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Background="White" BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1">
+                    <Grid Margin="10,10,10,10.2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="38"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border BorderThickness="0" BorderBrush="#FFB9B9B9">
+                            <TextBlock Text="Pallet List" Style="{DynamicResource HeaderTextBlockStyle}" Margin="0" Foreground="{DynamicResource GlobeweighBlueBrush}" FontSize="14"/>
+                        </Border>
+                        <dxg:GridControl x:Name="grdStock" ItemsSource="{Binding PalletList}"  ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionMode="None" FontSize="12" ShowBorder="False" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0,0,0,-0.2" Grid.Row="1" >
+                            <dxg:GridControl.View>
+                                <dxg:TableView x:Name="tvStock" AllowPerPixelScrolling="True" ShowColumnHeaders="True"  RowStyle="{DynamicResource rowStyle}" AutoWidth="True" ShowGroupPanel="False" 
+                                    ShowAutoFilterRow="True" ShowSearchPanelMode="Never" NavigationStyle="Cell" ShowFixedTotalSummary="False" EnableImmediatePosting="True" />
+                            </dxg:GridControl.View>
+                            <dxg:GridControl.TotalSummary>
+                                <dxg:GridSummaryItem SummaryType="Count" Alignment="Right" />
+                            </dxg:GridControl.TotalSummary>
+
+                            <dxg:GridColumn FieldName="IsSelected" Width="60"  Header="Selected" FixedWidth="True" AllowEditing="True" CellTemplate="{DynamicResource selectCellTemplate}"/>
+                            <dxg:GridColumn FieldName="PalletNo" Width="80" FixedWidth="True"/>
+                            <dxg:GridColumn FieldName="ProductName"  Header="Product" AutoFilterCriteria="Contains"/>
+                            <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True"/>
+                            <dxg:GridColumn FieldName="Upp"  Header="UPP" Width="60" FixedWidth="True"/>
+
+                        </dxg:GridControl>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Column="1" Margin="0,10,10,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="38"/>
+                        <RowDefinition Height="227*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderThickness="0" BorderBrush="#FFB9B9B9">
+                        <TextBlock Text="Select Summary" Style="{DynamicResource HeaderTextBlockStyle}" Margin="0" Foreground="{DynamicResource GlobeweighBlueBrush}" FontSize="14"/>
+                    </Border>
+                    <Border BorderThickness="0" Background="{DynamicResource LightGreyBrush}" BorderBrush="{DynamicResource MainBorderBrush}" Grid.Row="1" >
+                        <dxg:GridControl x:Name="grdSummary" ItemsSource="{Binding SummaryList}"  ScrollViewer.HorizontalScrollBarVisibility="Disabled" ShowBorder="False" SelectionMode="None" FontSize="12" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0" >
+                            <dxg:GridControl.View>
+                                <dxg:TableView AllowPerPixelScrolling="True" ShowColumnHeaders="True"  RowStyle="{DynamicResource rowStyle}"  AutoWidth="True" ShowGroupPanel="False" 
+                                                   ShowAutoFilterRow="True" ShowSearchPanelMode="Never"  NavigationStyle="Cell" ShowFixedTotalSummary="True" EnableImmediatePosting="True" />
+                            </dxg:GridControl.View>
+                            <dxg:GridColumn FieldName="ProductName"  Header="Product"  />
+                            <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True"/>
+                            <dxg:GridColumn FieldName="Upp"  Header="UPP" Width="60" FixedWidth="True"/>
+                            <dxg:GridColumn FieldName="PalletCount"  AllowEditing="False" Width="80" FixedWidth="True">
+                                <dxg:GridColumn.EditSettings>
+                                    <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                </dxg:GridColumn.EditSettings>
+                            </dxg:GridColumn>
+
+                            <dxg:GridControl.TotalSummary>
+                                <dxg:GridSummaryItem SummaryType="Sum" FieldName="PalletCount" Alignment="Right" DisplayFormat="Total Pallets: {0}" />
+                                <dxg:GridSummaryItem SummaryType="Sum" FieldName="UnitsCount" Alignment="Right" DisplayFormat="Total Units: {0}"/>
+                            </dxg:GridControl.TotalSummary>
+
+                        </dxg:GridControl>
+                    </Border>
+                </Grid>
+
+            </Grid>
+
+            <Border Grid.Row="2">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Select"  Width="100" Command="{Binding SelectCommand}" Style="{DynamicResource TransactionButtonStyleAction}"/>
+                        <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</shared:WindowBase>
+

@@ -1,0 +1,85 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+
+    <SolidColorBrush x:Key="GlobeweighBlueBrush" Color="#FF0063B1"/>
+    <SolidColorBrush x:Key="GlobeweighLightBlueBrush" Color="#FF3399FF"/>
+    <SolidColorBrush x:Key="GlobeweighShadeBlueBrush" Color="#FF75C3FF"/>
+    <Color x:Key="GlobeweighBlueColor">#FF0063B1</Color>
+
+    
+
+
+    <SolidColorBrush x:Key="DarkGreyBrush" Color="#FF424F5A"/>
+    <SolidColorBrush x:Key="IsSelectedGreyBrush" Color="#FF343F48"/>
+    <SolidColorBrush x:Key="LightGreyBrush" Color="#FFF2F2F2"/>
+    <SolidColorBrush x:Key="MainNavyBrush" Color="#FF343E51"/>
+    <SolidColorBrush x:Key="ItemBorderBrush" Color="#FFC2C4CB"/>
+    <SolidColorBrush x:Key="PinkBrush" Color="#FFED74A6" />
+    <SolidColorBrush x:Key="DividerLineGrayBrush" Color="#FFC2C4CB"/>
+    <SolidColorBrush x:Key="MainOrangeBrush" Color="#FFF78A09" />
+    <SolidColorBrush x:Key="MainBorderBrush" Color="#FFD9D9D9" />
+    <SolidColorBrush x:Key="TransactionHeaderFooterBorderBrush" Color="#FFF4F4F4"/>
+    <SolidColorBrush x:Key="MainContentGrey" Color="#FFEFEEF3"/>
+    <SolidColorBrush x:Key="DarkTurquoiseBrush" Color="#79B9C0"/>
+
+    <!--<Color x:Key="RenaGreenSelectionColor">#FFA4D3CA</Color>-->
+    <Color x:Key="MainContentGreyColor">#FFEFEEF3</Color>
+    <Color x:Key="LightGreyColor">#FFF2F2F2</Color>
+
+    <!-- ============================================================================
+         Weighbridge sunlight-theme hooks. These defaults ARE the original look; when
+         sunlight mode is toggled on (ThemeManager / SunlightResources.xaml) the same
+         keys are overridden with high-contrast values. Everything referencing them
+         uses DynamicResource, so the switch applies live.
+         ========================================================================== -->
+
+    <!-- Structural panel frames in the weighbridge views (originally hardcoded White) -->
+    <SolidColorBrush x:Key="WbPanelBorderBrush" Color="White"/>
+
+    <!-- Group/column header text (was GlobeweighBlueBrush inside GroupHeaderTextBlockStyle) -->
+    <SolidColorBrush x:Key="WbGroupHeaderTextBrush" Color="#FF0063B1"/>
+
+    <!-- WeighbridgeInView hero block (company name + date/time) -->
+    <SolidColorBrush x:Key="WbHeroPanelBrush" Color="#FFF9F9F9"/>
+    <SolidColorBrush x:Key="WbHeroTextBrush" Color="Black"/>
+
+    <!-- Haulier/Product/Supplier/Bog list rows (DeliveryInView) -->
+    <SolidColorBrush x:Key="WbListItemBrush" Color="White"/>
+    <SolidColorBrush x:Key="WbListItemTextBrush" Color="Black"/>
+
+    <!-- Live-weight gauge panel (border matches the panel colour here so the constant
+         3px border is invisible in the normal theme and layout never shifts) -->
+    <SolidColorBrush x:Key="WbGaugePanelBrush" Color="#FF424242"/>
+    <SolidColorBrush x:Key="WbGaugePanelBorderBrush" Color="#FF424242"/>
+    <SolidColorBrush x:Key="WbGaugeTextBrush" Color="White"/>
+
+    <!-- Barrier open/closed indicator -->
+    <SolidColorBrush x:Key="WbBarrierOpenBrush" Color="#FF00E000"/>
+    <SolidColorBrush x:Key="WbBarrierClosedBrush" Color="Red"/>
+    <SolidColorBrush x:Key="WbBarrierStrokeBrush" Color="White"/>
+
+    <!-- Docket YES/NO buttons (WeighbridgeWeighView) -->
+    <SolidColorBrush x:Key="WbYesNoCheckedBrush" Color="#FF2563EB"/>
+    <SolidColorBrush x:Key="WbYesNoCheckedBorderBrush" Color="#FF2563EB"/>
+
+    <!-- Pending list (WeighbridgeOutView): header band, body backdrop, text.
+         Defaults approximate the old DevExpress grid look (light header, white body). -->
+    <SolidColorBrush x:Key="WbGridTextBrush" Color="#FF1E1E1E"/>
+    <sys:Double x:Key="WbGridFontSize">18</sys:Double>
+    <SolidColorBrush x:Key="WbGridHeaderBrush" Color="#FFEDEDED"/>
+    <SolidColorBrush x:Key="WbGridBodyBrush" Color="White"/>
+
+    <!-- Haulier/Product/Supplier/Bog list rows (DeliveryInView) -->
+    <Thickness x:Key="WbListItemBorderThickness">0</Thickness>
+
+    <!-- Keypad keys (KeypadView) -->
+    <SolidColorBrush x:Key="WbKeyBrush" Color="#FF333333"/>
+    <SolidColorBrush x:Key="WbKeyTextBrush" Color="White"/>
+    <SolidColorBrush x:Key="WbKeyPressedBrush" Color="#FF898989"/>
+    <SolidColorBrush x:Key="WbKeyBorderBrush" Color="#FF333333"/>
+    <Thickness x:Key="WbKeyBorderThickness">0</Thickness>
+    <Thickness x:Key="WbKeyMargin">0</Thickness>
+
+</ResourceDictionary>

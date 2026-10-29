@@ -1,0 +1,140 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Touch.KeypadView"
+        mc:Ignorable="d" WindowStyle="None" ResizeMode="NoResize" 
+        Width="700" Height="860" WindowStartupLocation="CenterScreen" WindowState="Normal"  
+        Background="{DynamicResource MainNavyBrush}" md:DialogServiceViews.IsRegistered ="True">
+    <shared:WindowBase.Resources>
+
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+
+
+
+        <!-- Key colours come from the Wb* theme hooks: dark keys with white text normally;
+             in sunlight mode (ThemeManager) they flip to light keys with black text and dark
+             borders, because dark glossy keys wash out / mirror in direct sun. -->
+        <Style x:Key="KeyPadButtonStyle" TargetType="Button">
+            <Setter Property="Command" Value="{Binding KeypadCommand}"/>
+            <Setter Property="CommandParameter" Value="{Binding Content, RelativeSource={RelativeSource Self}}"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Foreground" Value="{DynamicResource WbKeyTextBrush}"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="Background" Value="{DynamicResource WbKeyBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Name="border" BorderThickness="{DynamicResource WbKeyBorderThickness}" Margin="{DynamicResource WbKeyMargin}" Padding="4,2" BorderBrush="{DynamicResource WbKeyBorderBrush}" Background="{TemplateBinding Background}">
+                            <Grid >
+                                <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center" Name="content"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource WbKeyPressedBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </shared:WindowBase.Resources>
+    <Border Background="White" Margin="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Border Style="{DynamicResource TransactionBorderHeaderStyle}" Height="80">
+                <!--<TextBlock Text="{Binding HeaderText}" VerticalAlignment="Center" FontSize="30" Grid.Row="0" HorizontalAlignment="Center" Margin="0"/>-->
+                <!-- In KeypadView.xaml -->
+                <TextBlock Text="{Binding HeaderText}"
+           FontSize="28"
+           FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="Black"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HeaderIsError}" Value="True">
+                                    <Setter Property="Foreground" Value="Red"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+            </Border>
+            <Grid Grid.Row="1">
+
+                <Grid Margin="0,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="120"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="20"/>
+                    </Grid.RowDefinitions>
+                    <Border Margin="10" Background="White" BorderThickness="1" Width="440" BorderBrush="Black">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding KeypadDisplayValue, FallbackValue=123456, StringFormat='N'}" d:IsHidden="True"  Foreground="Black" FontSize="50" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsTimePicker, Converter={StaticResource TrueToCollapsedConverter}}" Margin="0"/>
+                            <TextBlock Text="{Binding TimeValue}" Foreground="Black" FontSize="50" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsTimePicker, Converter={StaticResource TrueToVisibilityConverter}}" Background="{x:Null}" Margin="0"/>
+                            <controls:ImageButton Command="{Binding KeypadCommand}" CommandParameter="Clear" Style="{DynamicResource ImageOnlyButtonStyle}" ImageSource="/Globeweigh.Touch;component/Images/Clear-96.png" Grid.Column="1" Visibility="{Binding ShowMinus, Converter={StaticResource TrueToVisibilityConverter}}"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1" Margin="10" Width="440">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="2" Grid.Column="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="3" Grid.Column="2" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="4" Grid.Row="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="5" Grid.Row="1" Grid.Column="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="6" Grid.Row="1" Grid.Column="2" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="7" Grid.Row="2" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="8" Grid.Row="2" Grid.Column="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="9" Grid.Row="2" Grid.Column="2" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="." Grid.Row="4" FontWeight="Bold"  Visibility="{Binding IsDecimalPointVisible, Converter={StaticResource TrueToVisibilityConverter}}" Grid.Column="2"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="Del" Grid.Row="4" FontWeight="Bold"  Visibility="{Binding IsDecimalPointVisible, Converter={StaticResource TrueToCollapsedConverter}}" Grid.Column="2"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="0" Grid.Row="4" Grid.Column="1" FontWeight="Bold"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="-" Grid.Row="4" FontWeight="Bold" Visibility="{Binding ShowMinus, Converter={StaticResource TrueToVisibilityConverter}}"/>
+                        <Button Style="{DynamicResource KeyPadButtonStyle}" Content="Clear" Grid.Row="4" FontWeight="Bold" Visibility="{Binding ShowMinus, Converter={StaticResource TrueToCollapsedConverter}}"/>
+
+                    </Grid>
+                </Grid>
+
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Border Style="{DynamicResource TransactionBorderFooterStyle}">
+                    <StackPanel Orientation="Horizontal" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Command="{Binding OkCommand}" Width="180" Content="Ok" HorizontalAlignment="Left" Margin="0,0,80,0" Style="{DynamicResource PrimaryButtonStyleAction}" FontWeight="Bold" Height="60"/>
+                        <Button Command="{Binding CancelCommand}" Width="180" Content="Cancel" HorizontalAlignment="Right" Style="{DynamicResource PrimaryButtonStyleCancel}" FontWeight="Bold" Height="60"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</shared:WindowBase>

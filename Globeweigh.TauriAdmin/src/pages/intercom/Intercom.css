@@ -1,0 +1,219 @@
+/* Intercom page — reuses the Gate/Barrier panel + video layout (gb-*), adds its own bits. */
+
+.ic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ic-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.ic-row .ic-label {
+  margin-bottom: 0;
+}
+.ic-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+.ic-err {
+  color: #b91c1c;
+  margin-top: -12px;
+}
+
+.ic-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+.ic-pill-on { background: #dcfce7; color: #166534; }
+.ic-pill-off { background: #f3f4f6; color: #6b7280; }
+.ic-pill-bad { background: #fee2e2; color: #b91c1c; }
+
+.ic-bell {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+.ic-bell-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+.ic-bell-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.ic-bell-ringing {
+  background: #fef2f2;
+  border-color: #f87171;
+  animation: ic-pulse 1s ease-in-out infinite;
+}
+.ic-bell-ringing .ic-bell-title {
+  color: #b91c1c;
+}
+@keyframes ic-pulse {
+  50% { box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.35); }
+}
+
+.ic-rings,
+.ic-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ic-ring {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.ic-ring img,
+.ic-ring-noimg {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #e5e7eb;
+  flex: none;
+}
+.ic-ring-time {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ic-events li {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  padding: 2px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.ic-ev-time {
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+.ic-ev-code {
+  font-weight: 600;
+}
+.ic-ev-action {
+  color: #6b7280;
+}
+
+/* One row per intercom unit; click to put its camera on screen. */
+.ic-units {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ic-unit {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 8px 10px;
+  text-align: left;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+.ic-unit:hover { border-color: #cbd5e1; }
+.ic-unit:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.ic-unit-shown { border-color: #2563eb; background: #eff6ff; }
+.ic-unit-ringing { border-color: #f87171; background: #fef2f2; }
+.ic-unit-name { font-weight: 600; font-size: 13px; color: #111827; }
+.ic-unit .ic-sub { grid-column: 1 / -1; }
+.ic-err-inline { color: #b91c1c; }
+
+/* ---- Page layout: fixed left column, video fills the rest ---- */
+.ic-page {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+/* width + min-width: a flex item otherwise grows to its widest content (a long event line),
+   which is what used to squeeze the video. */
+.ic-side {
+  flex: 0 0 380px;
+  width: 380px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border-right: 1px solid #e5e7eb;
+  box-sizing: border-box;
+}
+.ic-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* The event log takes whatever height is left and scrolls inside itself. */
+.ic-log {
+  flex: 1;
+  min-height: 120px;
+}
+.ic-log .ic-events {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid #eef0f3;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.ic-events li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: baseline;
+}
+.ic-ev-what {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ic-ev-unit {
+  grid-column: 2;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.ic-video {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  margin: 6px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1624;
+  display: flex;
+}
+.ic-video-empty {
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.ic-video-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}

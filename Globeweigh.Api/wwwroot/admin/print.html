@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Delivery Note</title>
+    <!-- Relative URLs (hashed assets, and the logos the sheet loads as images/*.png) must
+         resolve against the deployed UI folder, NOT against the API route that serves this
+         page. Shipped as "./" so opening /admin/print.html directly works; the API rewrites
+         it to an absolute "/admin/" when it serves the page from /api/dispatch/... -->
+    <base href="./" />
+    <style>
+      /* No app chrome and no dark boot splash here — this document IS the note. White so
+         the sheet edges aren't framed by anything in a screenshot or a PDF. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+    </style>
+    <!--GW_NOTE_DATA-->
+    <script type="module" crossorigin src="./assets/print-BXiuySag.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/CommercialInvoiceSheet-DOM1XsRO.js">
+    <link rel="stylesheet" crossorigin href="./assets/CommercialInvoiceSheet-CNuOnMrv.css">
+    <link rel="stylesheet" crossorigin href="./assets/print-Dhj5G6_D.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

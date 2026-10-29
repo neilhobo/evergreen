@@ -1,0 +1,689 @@
+/* Weighbridge Records (Deliveries/Incoming). The page frame — card, page header, column
+   headers, hairlines — is the content-card template (styles/ContentCard.module.css) and the
+   row/column layout is WeighbridgePage.module.css. What is here is the live-weight read-out,
+   the gate/barrier controls, Remote Connect, the remote screen, and the page's dialogs. */
+
+/* Sub-heading inside the live-weight column ("Remote Connect") — the card template's
+   column-title look, so it reads as one family with the column headers. */
+.wb-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+/* Live weight readout — dark panel with green seven-seg-ish digits (WPF look) */
+.wb-weight {
+  background: #424242;
+  border-radius: 6px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* Two bridges side by side — smaller digits so both fit in the panel. */
+.wb-weights {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.wb-weight-block {
+  flex: 1;
+  min-width: 0;
+}
+.wb-weight-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+.wb-weights .wb-weight {
+  padding: 10px 12px;
+  gap: 6px;
+  margin-bottom: 0;
+}
+.wb-weights .wb-weight-value {
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+.wb-weights .wb-weight-unit {
+  font-size: 15px;
+}
+.wb-weight-value {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  color: #4ade80; /* bright touch-app green, lit like a display */
+  text-shadow:
+    0 0 6px rgba(74, 222, 128, 0.65),
+    0 0 16px rgba(34, 197, 94, 0.45);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+.wb-weight-value.stale {
+  color: #2f7d33;
+  text-shadow: none;
+}
+.wb-weight-unit {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Gate / barrier control rows */
+.wb-relay {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px;
+}
+.wb-relay-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wb-relay-label {
+  width: 70px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-label);
+}
+.wb-relay-btn {
+  min-width: 80px;
+  height: 30px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.wb-relay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.wb-relay-btn.open { background: var(--primary); }
+.wb-relay-btn.close { background: #dc2626; }
+.wb-relay-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.wb-relay-dot.on { background: #00e000; }
+.wb-relay-dot.off { background: #dc2626; }
+.wb-relay-status {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.wb-relay-status.ok {
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* Gate/barrier controls wrapper — anchors the IO-card fault overlay. */
+.wb-relay-controls {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Shaded error box over the controls + status lights when the relay (IO card)
+   is not connected. */
+.wb-relay-error {
+  position: absolute;
+  inset: -6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  /* Solid faded orange, like a selected grid row (#fff3e0). */
+  background: #fff3e0;
+  border: 1px solid #f0c890;
+  border-radius: 6px;
+}
+.wb-relay-error-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: #d97706;
+}
+.wb-relay-error-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+}
+.wb-relay-error-sub {
+  font-size: 11px;
+  color: #b45309;
+  opacity: 0.85;
+  margin-top: 1px;
+}
+
+/* Remote Connect — VNC links to the TOUCH-IN / TOUCH-OUT screens. */
+.wb-remote {
+  margin-top: 16px;
+}
+.wb-remote-links {
+  display: flex;
+  gap: 10px;
+}
+.wb-remote-link {
+  flex: 1;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent-blue);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.wb-remote-link:hover {
+  background: rgba(8, 126, 239, 0.06);
+  border-color: var(--accent-blue);
+}
+
+/* ---------- Embedded remote screen (noVNC) ---------- */
+.rs-stage {
+  position: relative;
+  width: 100%;
+  /* Fill the modal body so the remote view grows when the window is maximized. */
+  height: 100%;
+  min-height: 0;
+  background: #1a2332;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.rs-canvas {
+  width: 100%;
+  height: 100%;
+}
+.rs-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  align-self: center;
+}
+.rs-status.connected {
+  color: #15803d;
+  font-weight: 600;
+}
+.rs-status.error {
+  color: var(--error-text);
+  font-weight: 600;
+}
+.rs-cred,
+.rs-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(26, 35, 50, 0.92);
+  color: #fff;
+}
+.rs-cred h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rs-cred .form-input {
+  width: 240px;
+}
+.rs-overlay-msg {
+  font-size: 14px;
+  max-width: 70%;
+  text-align: center;
+}
+
+/* Add/Edit Weighbridge Record dialog — uses the shared .form-inline layout
+   (App.css). Pin the label column to a fixed 100px (fits the widest label,
+   "Weight Out (Kg)", + slack) so the left and right columns line up. */
+.wb-edit {
+  --label-col: 100px;
+}
+
+/* IN/OUT badge (WPF green/pink pills) */
+.io-badge {
+  display: inline-block;
+  min-width: 34px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+.io-badge.in {
+  background: #e2f6f2;
+  color: #58ad63;
+}
+.io-badge.out {
+  background: #fadfed;
+  color: #e76884;
+}
+
+/* "Export for Supplier" preview modal */
+.export-preview { max-height: 62vh; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.export-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.export-table th,
+.export-table td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; white-space: nowrap; }
+.export-table thead th { position: sticky; top: 0; background: #f1f5f9; font-weight: 600; color: var(--text-heading); }
+.export-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.export-table tfoot .export-total td { font-weight: 700; background: #f8fafc; }
+.export-table .export-empty { text-align: center; color: var(--text-secondary); padding: 18px; }
+
+/* Full-screen modal variant (used by the Export for Supplier preview). */
+.modal.modal-fullscreen {
+  width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  max-width: none;
+  max-height: none;
+}
+.modal.modal-fullscreen .modal-body { flex: 1; min-height: 0; }
+.modal.modal-fullscreen .export-preview { max-height: none; height: 100%; }
+
+/* ---------- Live Weight body (LiveWeightPanel.tsx) ---------- */
+/* The column body. The page's .liveBody is the scroll box around it and has no padding of its
+   own, so a skin can paint the whole column, edge to edge. */
+.wb-live {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+}
+
+/* ── "Dark dock" skin — Super Admin > Scale/Relay Styles (2026-09-24). The sidebar's navy in
+   the column, white digits with a live lamp per bridge, a state chip beside a plain Open/Close
+   button. Chosen from six mock-ups; the rules above it are the "current" skin and stay as the
+   fallback. Everything here is scoped under .wb-live--dock so nothing else changes. ── */
+.wb-live--dock {
+  background: var(--sidebar-bg);
+  color: #e2e8f0;
+  gap: 12px;
+  /* Inset like the grids beside it (App.css .content-area .data-table-wrap: 6px in from the
+     hairlines on a 3px frame), so the navy block sits in the column rather than filling it. */
+  margin: 6px;
+  border-radius: 3px;
+}
+.wb-live--dock .wb-weights {
+  margin-bottom: 0;
+}
+.wb-live--dock .wb-weight-block {
+  background: #141c29;
+  border: 1px solid #2b3648;
+  border-radius: 8px;
+  padding: 8px 10px 10px;
+}
+.wb-live--dock .wb-weight-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b9bb4;
+}
+/* Lit while readings are arriving (the bridge's "stale" flag is off). */
+.wb-weight-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b4759;
+}
+.wb-weight-led.on {
+  background: #22c55e;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.22),
+    0 0 8px rgba(34, 197, 94, 0.6);
+}
+.wb-live--dock .wb-weights .wb-weight {
+  background: transparent;
+  padding: 0;
+  gap: 5px;
+  align-items: baseline;
+}
+.wb-live--dock .wb-weights .wb-weight-value {
+  font: 600 30px/1 var(--app-font);
+  color: #4ade80; /* bright touch-app green, lit like a display */
+  text-shadow:
+    0 0 6px rgba(74, 222, 128, 0.65),
+    0 0 16px rgba(34, 197, 94, 0.45);
+  letter-spacing: 0;
+}
+.wb-live--dock .wb-weights .wb-weight-value.stale {
+  color: #5b6b85;
+  text-shadow: none;
+}
+.wb-live--dock .wb-weights .wb-weight-unit {
+  font: 500 12px var(--app-font);
+  color: #8b9bb4;
+}
+
+.wb-live--dock .wb-relay {
+  padding: 0;
+  gap: 8px;
+}
+.wb-live--dock .wb-relay-controls {
+  gap: 6px;
+}
+.wb-live--dock .wb-relay-row {
+  height: 36px;
+  padding: 0 10px;
+  gap: 10px;
+  background: #141c29;
+  border: 1px solid #2b3648;
+  border-radius: 8px;
+}
+.wb-live--dock .wb-relay-label {
+  flex: 1;
+  width: auto;
+  font-size: 12.5px;
+  color: #e2e8f0;
+}
+/* The relay's state in words; the lamp of the current skin is not drawn in this one. */
+.wb-relay-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.wb-relay-chip.on {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ade80;
+}
+.wb-live--dock .wb-relay-btn,
+.wb-live--dock .wb-relay-btn.open,
+.wb-live--dock .wb-relay-btn.close {
+  min-width: 0;
+  height: 26px;
+  padding: 0 14px;
+  border: 1px solid #3b4759;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  font: 600 11px var(--ui-font);
+  color: #fff;
+}
+.wb-live--dock .wb-relay-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.wb-live--dock .wb-relay-status.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 0;
+  font-weight: 500;
+  color: #4ade80;
+}
+.wb-live--dock .wb-relay-status.ok::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* The IO-card fault box keeps its orange; it reads as a warning on the navy too. */
+
+.wb-live--dock .wb-remote {
+  margin-top: 0;
+}
+.wb-live--dock .wb-remote-links {
+  gap: 8px;
+}
+.wb-live--dock .wb-remote-link {
+  height: 32px;
+  border-color: #2b3648;
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #60a5fa;
+}
+.wb-live--dock .wb-remote-link:hover {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: #60a5fa;
+}
+
+/* "Connecting to relay…" — shown over the gate/barrier rows until the first relay poll answers,
+   in place of the IO-card fault box, which is kept for a poll that has actually said "not
+   connected". Same footprint as the fault box, but in the column's own colour so it blends in. */
+.wb-relay-checking {
+  position: absolute;
+  inset: -6px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  font: 500 12px var(--ui-font);
+  color: #64748b;
+}
+.wb-relay-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  border-top-color: #64748b;
+  animation: wb-relay-spin 0.8s linear infinite;
+}
+@keyframes wb-relay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-relay-spinner {
+    animation-duration: 2.4s;
+  }
+}
+.wb-live--dock .wb-relay-checking {
+  background: rgba(26, 35, 50, 0.92);
+  color: #8b9bb4;
+}
+.wb-live--dock .wb-relay-spinner {
+  border-color: #3b4759;
+  border-top-color: #8b9bb4;
+}
+
+/* ── Under the readouts: two equal columns (2026-09-25) — the touchscreen buttons stacked on the
+   left, the gate/barrier rows and the relay status on the right. Both skins. ── */
+.wb-lower {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.wb-lower .wb-remote {
+  margin-top: 0;
+}
+.wb-lower .wb-remote-links {
+  flex-direction: column;
+  gap: 8px;
+}
+.wb-lower .wb-remote-link {
+  flex: none;
+  width: 100%;
+}
+/* Current skin: the relay rows shrink to half the column — label takes the slack, the button and
+   lamp get a little smaller. */
+.wb-lower .wb-relay {
+  padding: 0;
+}
+.wb-lower .wb-relay-row {
+  gap: 8px;
+}
+.wb-lower .wb-relay-label {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  font-size: 13px;
+}
+.wb-lower .wb-relay-btn {
+  min-width: 62px;
+}
+.wb-lower .wb-relay-dot {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+.wb-lower .wb-relay-error-sub {
+  font-size: 10.5px;
+}
+/* Dark dock: the rows and buttons at half width. */
+.wb-live--dock .wb-lower .wb-relay-row {
+  padding: 0 6px 0 10px;
+  gap: 6px;
+}
+.wb-live--dock .wb-lower .wb-relay-label {
+  font-size: 12px;
+}
+.wb-live--dock .wb-lower .wb-relay-chip {
+  padding: 2px 6px;
+  font-size: 9.5px;
+}
+.wb-live--dock .wb-lower .wb-relay-btn {
+  padding: 0 10px;
+}
+.wb-live--dock .wb-lower .wb-remote-link {
+  height: 36px;
+}
+
+/* "No data for 4m" under a bridge that has stopped sending (Gate/Barrier passes it). */
+.wb-weight-lost {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--error-text);
+  text-align: right;
+}
+.wb-live--dock .wb-weight-lost {
+  margin-top: 4px;
+  color: #f87171;
+}
+
+/* ---------- Remote Connect: "Show Camera" (2026-09-25) ---------- */
+/* Always present around the VNC stage so the stage keeps its element; with the camera on it
+   splits the full-screen dialog in two equal halves — touchscreen left, main camera right. */
+.rs-split {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+}
+.rs-split > .rs-stage {
+  flex: 1;
+  min-width: 0;
+}
+.rs-camera {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #0d1624;
+}
+.rs-camera-head {
+  flex: none;
+  padding: 7px 12px;
+  font: 600 10.5px/1.2 var(--ui-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b9bb4;
+  background: #141c29;
+  border-bottom: 1px solid #2b3648;
+}
+/* Camera picker in the header: this lane's intercom first, then the Gate/Barrier cameras. */
+.rs-camera-pick {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: #c8d3e4;
+  background: #1c2636;
+  border: 1px solid #2b3648;
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+.rs-camera-pick:focus-visible { outline: 2px solid #4f8cff; outline-offset: 1px; }
+.rs-camera-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rs-camera-note {
+  max-width: 360px;
+  padding: 0 16px;
+  text-align: center;
+  font: 400 13px/1.5 var(--ui-font);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* The switch in the footer. */
+.rs-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  font: 500 12px var(--ui-font);
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+.rs-switch-track {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #eef2f7;
+  cursor: pointer;
+  transition: background 0.16s, border-color 0.16s;
+}
+.rs-switch-track.on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.rs-switch-track:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.rs-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.25);
+  transition: transform 0.16s;
+}
+.rs-switch-track.on .rs-switch-knob {
+  transform: translateX(15px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-switch-track,
+  .rs-switch-knob {
+    transition: none;
+  }
+}

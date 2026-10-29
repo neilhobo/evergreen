@@ -1,0 +1,210 @@
+/* Oil Tanks (pages/oil-tanks). Every class is ot-* so nothing here reaches another page. */
+
+.ot-muted { font: 400 12px/1.35 var(--ui-font); color: #64748b; }
+
+.ot-header-actions { display: flex; align-items: center; gap: 10px; }
+.ot-btn {
+  font: 500 12px var(--ui-font);
+  padding: 6px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1a2332;
+  cursor: pointer;
+}
+.ot-btn:hover:not(:disabled) { background: #f1f5f9; }
+.ot-btn:disabled { color: #94a3b8; cursor: default; }
+
+.ot-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 40px 24px;
+  font: 13px/1.5 var(--ui-font);
+  color: #475569;
+}
+
+.ot-scroll { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+.ot-scroll > * { flex: none; }
+
+/* The blueprint grid the tanks stand on. */
+.ot-grid-bg,
+.ot-farm {
+  background-color: #f6f8fb;
+  background-image: linear-gradient(#e9eef5 1px, transparent 1px), linear-gradient(90deg, #e9eef5 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.ot-chip {
+  font: 600 11px/1 var(--ui-font);
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.ot-chip-green { background: #dcfce7; color: #14532d; }
+.ot-chip-amber { background: #fef3c7; color: #78350f; }
+.ot-chip-red { background: #fee2e2; color: #7f1d1d; }
+
+/* ── Tank Specs ── */
+.ot-farm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  border-bottom: 1px solid #e5e7eb;
+}
+.ot-farm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px 22px;
+  border-right: 1px solid #e5e7eb;
+  min-width: 0;
+}
+.ot-farm-col:last-child { border-right: 0; }
+.ot-col-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ot-col-head .ot-chip { margin-left: auto; }
+.ot-tank-name { font: 600 17px/1.2 var(--app-font); color: #1a2332; white-space: nowrap; }
+.ot-drawing { height: 300px; display: flex; align-items: flex-end; justify-content: center; }
+.ot-drawing svg { max-width: 100%; height: auto; }
+.ot-volume { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ot-volume-big {
+  font: 600 24px/1 var(--app-font);
+  font-variant-numeric: tabular-nums;
+  color: #1a2332;
+}
+
+.ot-table-wrap { padding: 8px; overflow-x: auto; }
+.ot-specs {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font: 12px/1.4 var(--ui-font);
+  color: #1a2332;
+  border: 1px solid #bcc6d3;
+}
+.ot-specs th {
+  background: #e8edf4;
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 10px;
+  border: 1px solid #d3dae4;
+}
+.ot-specs td {
+  padding: 6px 10px;
+  border: 1px solid #d3dae4;
+  font-variant-numeric: tabular-nums;
+}
+.ot-specs tbody tr:nth-child(even) td { background: #f8fafc; }
+.ot-specs td.ot-spec-label { color: #475569; width: 200px; }
+.ot-specs tr.ot-strong td:not(.ot-spec-label) { font-weight: 700; }
+
+.ot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 10px 2px 2px;
+  font: 11.5px var(--ui-font);
+  color: #475569;
+}
+.ot-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.ot-dash { display: inline-block; width: 16px; border-top: 2px dashed; }
+.ot-dash-amber { border-color: #b45309; }
+.ot-dash-red { border-color: #b91c1c; }
+.ot-sensor { display: inline-block; width: 12px; height: 9px; border-radius: 2px; background: #16a34a; }
+
+/* ── Spotlight ── */
+.ot-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.ot-pick {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 8px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1a2332;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--ui-font);
+}
+.ot-pick:hover { border-color: #cbd5e1; }
+.ot-pick-on,
+.ot-pick-on:hover { border-color: #1a2332; background: #f1f5f9; }
+.ot-pick-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ot-pick-name { font: 600 14px/1.3 var(--app-font); }
+.ot-pick-pct { font: 700 18px var(--app-font); font-variant-numeric: tabular-nums; }
+.ot-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+.ot-scroll > .ot-spot { flex: 1 0 auto; }
+.ot-spot { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 28px; padding: 22px 26px 26px; }
+.ot-spot-tank {
+  flex: none;
+  width: 400px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ot-spot-tank svg { max-width: 100%; height: auto; }
+.ot-spot-name { font: 600 21px/1.2 var(--app-font); color: #1a2332; }
+.ot-spot-main { flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+.ot-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.ot-stat {
+  background: #ffffff;
+  border: 1px solid #d3dae4;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.ot-stat-label { font: 400 11px var(--ui-font); color: #64748b; }
+.ot-stat-value {
+  font: 600 21px/1.3 var(--app-font);
+  font-variant-numeric: tabular-nums;
+  color: #1a2332;
+  margin-top: 2px;
+}
+
+.ot-trend { background: #ffffff; border: 1px solid #d3dae4; border-radius: 8px; padding: 12px 16px 10px; }
+.ot-trend-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.ot-trend-title { font: 600 14px var(--app-font); color: #1a2332; }
+.ot-chart { display: flex; gap: 8px; }
+/* Each label centred on its gridline: 100% at the top of the plot, 0% at the bottom. */
+.ot-chart-y {
+  position: relative;
+  flex: none;
+  height: 220px;
+  width: 34px;
+  font: 11px/1 var(--ui-font);
+  color: #64748b;
+}
+.ot-chart-y span { position: absolute; right: 0; transform: translateY(-50%); }
+.ot-chart-y span:nth-child(1) { top: 0; }
+.ot-chart-y span:nth-child(2) { top: 50%; }
+.ot-chart-y span:nth-child(3) { top: 100%; }
+.ot-chart-plot { flex: 1; min-width: 0; }
+.ot-chart-plot svg { display: block; width: 100%; height: 220px; }
+.ot-chart-empty {
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 12px var(--ui-font);
+  color: #64748b;
+}
+.ot-chart-x {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font: 11px var(--ui-font);
+  color: #64748b;
+}
+
+.ot-foot { display: flex; flex-wrap: wrap; gap: 22px; font: 12.5px var(--ui-font); color: #334155; }

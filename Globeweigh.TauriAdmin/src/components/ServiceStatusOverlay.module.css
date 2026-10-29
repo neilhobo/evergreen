@@ -1,0 +1,132 @@
+/* Full-screen "the API is down" cover. Sidebar navy + the app green. Sits above
+   everything, dialogs and fly-ins included. Selectors are doubled-up (.card .title etc.)
+   because App.css is bundled after every module and would win an equal-specificity fight. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(9, 14, 24, 0.72);
+  backdrop-filter: blur(3px);
+  animation: fade 0.18s ease-out;
+  font-family: var(--ui-font);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay .card {
+  width: 420px;
+  max-width: 100%;
+  padding: 26px 26px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--sidebar-bg);
+  border-radius: 6px;
+  box-shadow: 0 24px 70px -12px rgba(0, 0, 0, 0.6);
+}
+
+.card .logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  margin-bottom: 18px;
+}
+
+.card .spinner {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+/* Recovered: stop spinning, go solid green rather than swapping in an icon. */
+.card .spinnerDone {
+  border-color: var(--primary);
+  animation: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.card .title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.card .body {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.card .note {
+  margin: 12px 0 0;
+  max-width: 36ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #f0b429;
+}
+
+.card .footer {
+  width: 100%;
+  margin-top: 20px;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.card .status {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.card .retry {
+  height: 28px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.card .retry:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.3);
+}
+
+.card .retry:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay { animation: none; }
+  .card .spinner { animation-duration: 2.4s; }
+}

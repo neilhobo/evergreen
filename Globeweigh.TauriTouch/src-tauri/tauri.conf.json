@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Globeweigh Touch",
+  "version": "0.1.12",
+  "identifier": "com.globeweigh.evergreen.touch",
+  "build": {
+    "beforeDevCommand": "npm run dev:vite",
+    "devUrl": "http://localhost:1430",
+    "beforeBuildCommand": "",
+    "frontendDist": "../loader"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Globeweigh Touch",
+        "width": 1280,
+        "height": 1024,
+        "x": 0,
+        "y": 0,
+        "center": false,
+        "resizable": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "fullscreen": false,
+        "theme": "Dark",
+        "backgroundColor": "#0d1624"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDczNUYwMEJFRDA3OTU5NTIKUldSU1dYblF2Z0JmYzRtSzBEQThtUW5yODlhSFBjWE1NN2xiU2hJdmprQWowVDgxVDJoVnZJYk8K",
+      "endpoints": ["http://192.168.250.5:5099/api/touch-app/latest.json"],
+      "dangerousInsecureTransportProtocol": true,
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

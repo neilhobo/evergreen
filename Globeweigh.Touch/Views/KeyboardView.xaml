@@ -1,0 +1,63 @@
+﻿<shared:WindowBase
+    x:Class="Globeweigh.Touch.KeyboardView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns:controls1="clr-namespace:WpfKb.Controls;assembly=Globeweigh.Shared"
+    xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+    xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+    Width="{DynamicResource ClientWidth}"
+    Height="{DynamicResource ClienHeight}"
+    Margin="50"
+    d:DesignHeight="1024"
+    d:DesignWidth="1280"
+    md:DialogServiceViews.IsRegistered="True"
+    AllowsTransparency="True"
+    Background="{DynamicResource MainNavyBrush}"
+    FocusManager.FocusedElement="{Binding ElementName=textcontrol}"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <shared:WindowBase.Resources>
+        <converters:BoolToWindowStateConverter x:Key="BoolToWindowStateConverter" />
+
+    </shared:WindowBase.Resources>
+    <shared:WindowBase.WindowState>
+        <Binding Converter="{StaticResource BoolToWindowStateConverter}" Mode="OneWay" Path="IsMaximized" />
+    </shared:WindowBase.WindowState>
+    <Border Margin="10" Background="White">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="80" />
+                <RowDefinition Height="55*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Border Background="{DynamicResource TransactionHeaderFooterBorderBrush}" BorderBrush="{DynamicResource ItemBorderBrush}" BorderThickness="0,0,0,1">
+                <TextBlock Margin="20,0" VerticalAlignment="Center" FontFamily="Segoe UI Semibold" FontSize="30" Foreground="{DynamicResource MainNavyBrush}" Text="{Binding HeaderText, FallbackValue=Enter Data}" />
+            </Border>
+            <Grid Grid.Row="1" Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="160" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBox x:Name="textcontrol" Height="100" Margin="10" VerticalContentAlignment="Center" CaretIndex="{x:Static System:Int32.MaxValue}" CharacterCasing="Upper" FontSize="50" Foreground="Black" Text="{Binding KeyboardValue}" TextAlignment="Center" />
+                <Border Grid.Row="1" Margin="5,5,5,0" Padding="0" Background="White" BorderThickness="1">
+                    <controls1:OnScreenWebKeyboard Height="Auto" Margin="0,10,0,50" Background="#FF666666" CapsOn="{Binding CapsOn}" />
+                </Border>
+            </Grid>
+            <Grid Grid.Row="2">
+                <Border Height="160" Style="{DynamicResource TransactionBorderFooterStyle}">
+                    <StackPanel Height="100" Margin="0,0,30,0" HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+                        <Button Width="250" Height="100" Margin="0,0,40,0" HorizontalAlignment="Left" Command="{Binding OkCommand}" Content="Ok" FontSize="50" Style="{DynamicResource PrimaryButtonStyleAction}" />
+                        <Button Width="250" Height="100" HorizontalAlignment="Right" Command="{Binding CancelCommand}" Content="Cancel" FontSize="50" Style="{DynamicResource PrimaryButtonStyleCancel}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</shared:WindowBase>

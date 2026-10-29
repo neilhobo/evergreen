@@ -1,0 +1,77 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+           xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+         xmlns:helpers1="clr-namespace:Globeweigh.Shared.Helpers;assembly=Globeweigh.Shared"
+          xmlns:model="clr-namespace:Globeweigh.Model;assembly=Globeweigh.Model"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.ProductConditionTypeView"
+             mc:Ignorable="d"  dx:ThemeManager.ThemeName="MetropolisLight"
+             d:DesignHeight="500" d:DesignWidth="1200"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding ProductConditionTypeView, Source={StaticResource Locator}}" Background="{DynamicResource LightGreyBrush}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Globeweigh.Shared;component/ResourceDictionaries/SharedElementStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Margin="0,0,10,10">
+        <Grid Grid.Row="1" >
+            <Grid Margin="0" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="453*"/>
+                </Grid.RowDefinitions>
+                <Border Background="{DynamicResource LightGreyBrush}" BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" HorizontalAlignment="Right" Grid.Column="1" >
+                            <controls:ImageButton Content="Add" ImageSource="/Images\Add-Square-32.png" Command="{Binding AddNewCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                            <controls:ImageButton Content="Delete" ImageSource="/Images\Delete-32.png" Command="{Binding DeleteCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdRefData}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                            <controls:ImageButton Content="Edit" ImageSource="/Images\Edit-32.png" Command="{Binding EditCommand}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdRefData}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                            <!--<controls:ImageButton Content="Compare with Opera" ImageSource="/Images\Compare-32.png" Command="{Binding CompareWithOperaCommand}" IsEnabled="{Binding ElementName=chkGroupCodes, Path=IsChecked, Converter={StaticResource TrueToFalseConverter}}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>-->
+                            <controls:ImageButton Content="Print / Export" Margin="2,0,0,0" ImageSource="/Images\Print-32.png" Command="{Binding GlobalPrintExportCommand}" CommandParameter="{Binding ElementName=tvGrid}" IsEnabled="{Binding VisibleRowCount, ElementName=grdPallets}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border BorderThickness="1" Grid.Row="1">
+                    <Grid x:Name="RefDataParentGrid">
+                        <dxg:GridControl x:Name="grdRefData" ItemsSource="{Binding GenericRefDataList}"  SelectedItem="{Binding SelectedRefData}" FontSize="12" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="0,10,0,0">
+                            <dxg:GridControl.View>
+                                <dxg:TableView x:Name="tvGrid">
+                                    <dxmvvm:Interaction.Behaviors>
+                                        <dxmvvm:EventToCommand PassEventArgsToCommand="False" Command="{Binding EditCommand}" EventName="RowDoubleClick"/>
+                                    </dxmvvm:Interaction.Behaviors>
+                                </dxg:TableView>
+                                
+                            </dxg:GridControl.View>
+                            <dxg:GridColumn FieldName="DisplayName" Header="Product" FixedWidth="True" Width="300"/>
+                            <dxg:GridColumn  FieldName="IntData" Header="Condition Type" FixedWidth="True" Width="150">
+                                <dxg:GridColumn.EditSettings>
+                                    <dxe:ComboBoxEditSettings AutoComplete="True" ItemsSource="{Binding Source={model:Enum {x:Type model:ePalletDeliveryCondition}}}" DisplayMember="Description" ValueMember="Value" />
+                                </dxg:GridColumn.EditSettings>
+                            </dxg:GridColumn>
+                            <dxg:GridColumn Header=" "/>
+                        </dxg:GridControl>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

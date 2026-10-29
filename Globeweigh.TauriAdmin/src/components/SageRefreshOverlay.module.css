@@ -1,0 +1,20 @@
+/* Additions to the ServiceStatusOverlay card for the Sage refresh cover. Doubled-up
+   selectors for the same reason as there: App.css is bundled after every module. */
+
+p.hint.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* A way out, not the thing to press: outlined rather than the solid green. */
+button.cancel.cancel {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+button.cancel.cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}

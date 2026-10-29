@@ -1,0 +1,28 @@
+{
+  "name": "globeweigh-picking-dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dev orchestration for Globeweigh.Picking: `npm run dev:full` runs the Flutter app on the ET40 (hot reload) and the local Globeweigh.Api (dotnet watch, auto-restart) together.",
+  "scripts": {
+    "dev": "cross-env EMULATOR=1 GW_TARGET=prod node scripts/dev-device.mjs",
+    "dev:app": "node scripts/dev-device.mjs",
+    "dev:emu": "cross-env EMULATOR=1 node scripts/dev-device.mjs",
+    "dev:api": "cross-env ASPNETCORE_ENVIRONMENT=Development dotnet watch --project ../Globeweigh.Api run --urls http://0.0.0.0:5099",
+    "dev:full": "concurrently -k -n app,api -c green,blue \"npm:dev:emu\" \"npm:dev:api\"",
+    "dev:full:emu": "concurrently -k -n app,api -c green,blue \"npm:dev:emu\" \"npm:dev:api\"",
+    "dev:full:et40": "concurrently -k -n app,api -c green,blue \"npm:dev:app\" \"npm:dev:api\"",
+    "avd:create": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-et401-avd.ps1",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1",
+    "patch": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/patch.ps1",
+    "deploy:touch": "npm --prefix .. run deploy:touch",
+    "deploy:admin": "npm --prefix .. run deploy:admin",
+    "deploy:api": "npm --prefix .. run deploy:api",
+    "deploy:api:only": "npm --prefix .. run deploy:api:only",
+    "migrate:local": "npm --prefix .. run migrate:local",
+    "migrate:prod": "npm --prefix .. run migrate:prod"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3"
+  }
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-probe-relay-ports"
+description = "Enables the probe_relay_ports command without any pre-configured scope."
+commands.allow = ["probe_relay_ports"]
+
+[[permission]]
+identifier = "deny-probe-relay-ports"
+description = "Denies the probe_relay_ports command without any pre-configured scope."
+commands.deny = ["probe_relay_ports"]

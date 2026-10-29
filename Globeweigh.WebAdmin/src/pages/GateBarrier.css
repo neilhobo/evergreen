@@ -1,0 +1,189 @@
+/* Gate / Barrier page — uses the shared design tokens from App.css (:root vars). */
+
+.gb-page {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: var(--page-gradient);
+}
+
+.gb-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow: auto;
+}
+
+.gb-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+/* Live weight readout */
+.gb-weight {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--input-bg);
+}
+.gb-weight-value {
+  font-size: 44px;
+  font-weight: 600;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.gb-weight-unit {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+.gb-weight-stale {
+  color: var(--text-secondary);
+}
+
+/* Gate / barrier control rows */
+.gb-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gb-control-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-label);
+}
+
+.gb-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(203, 213, 225, 0.25);
+}
+.gb-dot.open {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+.gb-dot.closed {
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.gb-btn {
+  min-width: 92px;
+  height: 32px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.gb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gb-btn.open {
+  background: var(--primary);
+}
+.gb-btn.open:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.gb-btn.close {
+  background: #dc2626;
+}
+.gb-btn.close:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Camera selector */
+.gb-cameras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gb-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-label);
+  cursor: pointer;
+}
+.gb-radio .gb-ip {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Status badge */
+.gb-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  align-self: flex-start;
+}
+.gb-status.ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+.gb-status.bad {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+/* Video area */
+.gb-video {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1624;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+.gb-video-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.gb-video-cam {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+.gb-video-note {
+  font-size: 13px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+.gb-video-badge {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}

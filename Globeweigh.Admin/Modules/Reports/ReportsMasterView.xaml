@@ -1,0 +1,67 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:admin="clr-namespace:Globeweigh.Admin"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.ReportsMasterView"
+             mc:Ignorable="d"  dx:ThemeManager.ThemeName="MetropolisLight"
+             d:DesignHeight="500" d:DesignWidth="1200"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding ReportsMasterView, Source={StaticResource Locator}}" Background="White">
+    <UserControl.Resources>
+
+        <DataTemplate DataType="{x:Type admin:ReportDispatchInStockViewModel}">
+            <admin:ReportDispatchInStockView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:ReportStockSummaryViewModel}">
+            <admin:ReportStockSummaryView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:ReportDispatchRecordsViewModel}">
+            <admin:ReportDispatchRecordsView/>
+        </DataTemplate>
+        
+
+
+    </UserControl.Resources>
+    <Grid>
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border  Background="{DynamicResource LightGreyBrush}">
+                <Grid >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="451*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Report Types" Foreground="Black" VerticalAlignment="Center" Margin="14,0,0,2" FontSize="16" FontFamily="Segoe UI Semilight" FontWeight="Bold"/>
+                    </Border>
+                    <Grid Margin="14,20" Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <ListBox x:Name="lstHardCoded" SelectedItem="{Binding SelectedEntity}" Style="{DynamicResource LeftMenuListBoxStyle}" ItemContainerStyle="{DynamicResource LeftMenuItemContainerStyle}" FontFamily="Segoe UI Semibold">
+                            <ListBox.Items>
+                                <ListBoxItem x:Name="StockDispatch" Content="Stock/Dispatch Report" FontFamily="Segoe UI Semibold"/>
+                                <ListBoxItem x:Name="StockSummary" Content="Stock Summary Report" FontFamily="Segoe UI Semibold"/>
+                                <ListBoxItem x:Name="Dispatch" Content="Dispatch Report" FontFamily="Segoe UI Semibold"/>
+                            </ListBox.Items>
+                        </ListBox>
+                    </Grid>
+                </Grid>
+
+            </Border>
+            <ContentControl Content="{Binding CurrentViewModel}" Grid.Row="1" Background="{DynamicResource MainContentGrey}" Grid.Column="1"/>
+        </Grid>
+    </Grid>
+</UserControl>

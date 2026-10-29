@@ -1,0 +1,28 @@
+{
+  "name": "globeweigh-webadmin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy:touch": "npm --prefix .. run deploy:touch",
+    "deploy:admin": "npm --prefix .. run deploy:admin",
+    "deploy:api": "npm --prefix .. run deploy:api",
+    "deploy:api:only": "npm --prefix .. run deploy:api:only",
+    "migrate:local": "npm --prefix .. run migrate:local",
+    "migrate:prod": "npm --prefix .. run migrate:prod"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  }
+}

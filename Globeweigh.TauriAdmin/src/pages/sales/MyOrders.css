@@ -1,0 +1,750 @@
+/* ── My Orders (MyOrdersPage) — the Sales role's tab ──
+   Design C of the 2026-10-05 mock-ups: the orders down the left with filter chips, the picked
+   one on the right as a tracker. Statuses wear the DetailPanel statusTag family's colours.
+   The column classes from ContentCard.module.css are outranked with an element in the
+   selector (div.mo-*), since the module's rules may land after this file. */
+
+div.mo-list {
+  flex-basis: 400px;
+}
+
+.mo-list-tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.mo-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.mo-new {
+  flex: none;
+  white-space: nowrap;
+}
+
+.mo-chips {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mo-chip {
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid #dbe2ea;
+  background: #ffffff;
+  font: 500 10.5px var(--ui-font);
+  color: #475569;
+  cursor: pointer;
+}
+
+.mo-chip:hover {
+  border-color: #b9c3cf;
+}
+
+.mo-chip.on {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #ffffff;
+}
+
+.mo-chip b {
+  margin-left: 5px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.mo-items {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* One order: customer and status on the first line, refs/pallets/value and delivery below. */
+.mo-li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 1px solid #eef2f7;
+  background: #ffffff;
+  text-align: left;
+  font: 400 12px var(--ui-font);
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.mo-li:hover {
+  background: #f8fafc;
+}
+
+/* The picked order: the grid's selected-row amber, with a rule down its edge. */
+.mo-li.on {
+  background: #fff3e0;
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.mo-li-cust {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mo-li-meta {
+  font-size: 11px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.mo-li-meta b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.mo-li-date {
+  text-align: right;
+}
+
+.mo-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.mo-empty-big {
+  margin: auto;
+}
+
+/* Status pills (DetailPanel statusTag sizes and colours). */
+.mo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  font: 600 10px/1 var(--ui-font);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mo-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mo-st-draft { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
+.mo-st-returned,
+.mo-st-cancelled { color: #b42318; background: #fdeceb; border-color: #f0c2bd; }
+.mo-st-pending { color: #8a5a00; background: #fff4dc; border-color: #f2d391; }
+.mo-st-approved { color: #0a5aa8; background: #e8f2fc; border-color: #bcd6f2; }
+.mo-st-planned { color: #5b3fb0; background: #f1ecfd; border-color: #d4c7f5; }
+.mo-st-dispatched { color: #1f7a3d; background: #e4f4e9; border-color: #bfe3cb; }
+
+/* ── The picked order ── */
+div.mo-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The order's header and tracker: fixed above the split. */
+.mo-top {
+  flex: none;
+}
+
+.mo-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 14px;
+}
+
+.mo-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 14px 18px 10px;
+}
+
+.mo-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mo-head h3 {
+  margin: 0 0 3px;
+  font: 600 15px var(--app-font);
+  color: #0f172a;
+}
+
+.mo-head-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.mo-head-sub b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* A POS board rides the order: lavender, as on the order dialog's Add POS. */
+.mo-pos {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1ecfd;
+  color: #5b3fb0;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* The order's numbers above the customer: Order No (once approved) and Ref, on the left
+   where they are read first. */
+.mo-head-ref {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.mo-head-ref b {
+  font: 600 13px var(--app-font);
+  color: #0f172a;
+}
+
+/* The tracker: five steps on one rail, each with the date or load under it. */
+.mo-stepper {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 4px 18px 16px;
+}
+
+.mo-step {
+  position: relative;
+  padding-top: 22px;
+  padding-right: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.mo-step::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #e2e8f0;
+}
+
+.mo-step:first-child::before {
+  left: 8px;
+}
+
+.mo-step.done::before {
+  background: #16a34a;
+}
+
+.mo-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  box-sizing: border-box;
+}
+
+.mo-step.done .mo-dot {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.mo-step.cur .mo-dot {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.16);
+}
+
+.mo-step.wait .mo-dot {
+  border-color: #e0a526;
+  background: #fff4dc;
+  box-shadow: 0 0 0 4px rgba(224, 165, 38, 0.2);
+}
+
+.mo-step.bad .mo-dot {
+  border-color: #dc2626;
+  background: #dc2626;
+}
+
+.mo-step.done,
+.mo-step.cur,
+.mo-step.wait,
+.mo-step.bad {
+  color: #0f172a;
+}
+
+.mo-step-name {
+  display: block;
+  font-weight: 600;
+}
+
+.mo-step-note {
+  display: block;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.mo-sec {
+  padding: 0 18px 14px;
+}
+
+.mo-sec-title {
+  margin: 0 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #eef2f7;
+  font: 600 10.5px var(--ui-font);
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mo-note {
+  border-left: 3px solid #dc2626;
+  background: #fdeceb;
+  color: #7a1d14;
+  padding: 7px 10px;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+}
+
+.mo-note b {
+  color: #b42318;
+}
+
+.mo-comments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 24px;
+}
+
+.mo-comments p {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.mo-hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11.5px;
+}
+
+.mo-hist > li {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+}
+
+.mo-hist-t {
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under the tracker: the detail on the left, which scrolls, and a fixed-width panel of
+   actions on the right, which stays put. The app always runs wide, so the lines keep to a
+   readable width and the buttons sit beside them instead of at the foot of a tall window. */
+.mo-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  border-top: 1px solid #eef2f7;
+}
+
+.mo-side {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-left: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+/* The order in two figures. */
+.mo-figs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mo-figs > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.mo-figs span {
+  font: 600 10px var(--ui-font);
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mo-figs b {
+  font: 600 16px var(--app-font);
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.mo-side-note {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+/* The buttons, full width, the main one first. */
+.mo-side-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mo-side-btns button {
+  width: 100%;
+  height: 30px;
+}
+
+/* Deleting a draft cannot be undone: it reads red, like the Returned tag. */
+.toolbar-btn.mo-danger {
+  color: #b42318;
+}
+
+.toolbar-btn.mo-danger:hover:enabled {
+  border-color: #f0c2bd;
+  background: #fdeceb;
+}
+
+/* Send to office: the step only the salesperson can take, in the awaiting-approval amber. */
+.mo-send {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 5px;
+  border: 1px solid #e0a526;
+  background: #fff4dc;
+  font: 600 11.5px var(--ui-font);
+  color: #8a5a00;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mo-send:hover:enabled {
+  background: #ffe9b8;
+}
+
+.mo-send:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ── Board view (MyOrdersBoard) — design B: a column per stage, cards moving left to right ── */
+.mob-wrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mob-tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mob-tools .mo-search {
+  flex: none;
+  width: 280px;
+}
+
+.mob-tools-sp {
+  flex: 1;
+}
+
+.mob-board {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background: #f6f8fb;
+}
+
+.mob-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #eef2f7;
+  border-radius: 6px;
+}
+
+/* The column's head: its stage in the stage's colour, the count, and what is in it. */
+.mob-colh {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 2px 7px;
+  padding: 8px 10px;
+  border-bottom: 2px solid;
+}
+
+.mob-sw {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.mob-colt {
+  font: 600 11px var(--ui-font);
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mob-ct {
+  font: 600 11px var(--ui-font);
+  color: #64748b;
+}
+
+.mob-colv {
+  grid-column: 2 / -1;
+  font-size: 10.5px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.mob-cards {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mob-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 10px;
+  background: #ffffff;
+  border: 1px solid #dfe5ed;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+}
+
+.mob-card:hover {
+  border-color: #b9c3cf;
+}
+
+.mob-card:focus-visible {
+  outline: 2px solid #087eef;
+  outline-offset: 1px;
+}
+
+/* Returned by the office: a red edge, and the office's note on the card. */
+.mob-card.ret {
+  border-color: #f0c2bd;
+  box-shadow: inset 3px 0 0 #dc2626;
+}
+
+.mob-card.can {
+  opacity: 0.75;
+}
+
+.mob-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.mob-top b {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.mob-cust {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.mob-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
+
+.mob-note {
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: #fdeceb;
+  color: #7a1d14;
+  font-size: 11px;
+}
+
+.mob-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed #e5e7eb;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+.mob-foot-txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Send on a draft's card: the awaiting-approval amber of the List view's Send. */
+.mob-send {
+  flex: none;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 4px;
+  border: 1px solid #e0a526;
+  background: #fff4dc;
+  font: 600 10.5px var(--ui-font);
+  color: #8a5a00;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mob-send:hover:enabled {
+  background: #ffe9b8;
+}
+
+.mob-send:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.mob-empty {
+  padding: 18px 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* History: an edit's line is a link that folds out the list of what it changed. */
+.mo-hist-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: #0a5aa8;
+  cursor: pointer;
+}
+
+.mo-hist-link:hover {
+  text-decoration: underline;
+}
+
+.mo-hist-link:focus-visible {
+  outline: 2px solid #087eef;
+  outline-offset: 1px;
+}
+
+.mo-hist-count {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e8f2fc;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0a5aa8;
+}
+
+.mo-hist-caret {
+  display: inline-block;
+  font-size: 9px;
+  color: #64748b;
+  transition: transform 0.15s;
+}
+
+.mo-hist-caret.open {
+  transform: rotate(90deg);
+}
+
+.mo-hist-changes {
+  list-style: disc;
+  margin: 4px 0 2px;
+  padding: 6px 10px 6px 22px;
+  border-left: 2px solid #bcd6f2;
+  background: #f8fafc;
+  border-radius: 0 4px 4px 0;
+  font-size: 11.5px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo-hist-caret {
+    transition: none;
+  }
+}

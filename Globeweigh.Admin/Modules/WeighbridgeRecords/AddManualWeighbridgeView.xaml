@@ -1,0 +1,166 @@
+<admin:MetroWindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:admin="clr-namespace:Globeweigh.Admin"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.AddManualWeighbridgeView" Title="{Binding HeaderText, FallbackValue=Add Manual Record}"
+        mc:Ignorable="d" ResizeMode="NoResize" WindowStyle="SingleBorderWindow" WindowTitleBrush="#FF3F3F46"
+        Height="720" Width="540" WindowStartupLocation="CenterScreen" WindowState="Normal"
+        md:DialogServiceViews.IsRegistered="True" Background="White">
+
+    <admin:MetroWindowBase.Resources>
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <system:Boolean x:Key="True">True</system:Boolean>
+        <system:Boolean x:Key="False">False</system:Boolean>
+    </admin:MetroWindowBase.Resources>
+
+    <Grid Margin="0" Background="{DynamicResource MainContentGrey}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+        <Border Margin="4,4,4,0" BorderThickness="3" BorderBrush="White">
+            <Grid Margin="10">
+
+                <!-- ================= Step 1: Choose record type ================= -->
+                <Grid Visibility="{Binding IsChooseTypeStep, Converter={StaticResource TrueToVisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Select record type" Style="{DynamicResource DefaultTextBlockContentStyle}" FontFamily="Segoe UI Semibold" Margin="0,0,0,20"/>
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Button Content="Delivery" Command="{Binding SelectDeliveryCommand}" Style="{DynamicResource TransactionButtonStyleAction}" Width="260" Height="80" FontSize="26"/>
+                        <Button Content="Collection" Command="{Binding SelectCollectionCommand}" Style="{DynamicResource TransactionButtonStyleAction}" Width="260" Height="80" FontSize="26" Margin="0,20,0,0"/>
+                        <TextBlock Text="Collection coming soon" Foreground="Gray" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ================= Step 2: Details + manual weights ================= -->
+                <Grid Visibility="{Binding IsDetailsStep, Converter={StaticResource TrueToVisibilityConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Delivery details" Style="{DynamicResource DefaultTextBlockContentStyle}" FontFamily="Segoe UI Semibold" Margin="0,0,0,10"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="14"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Haulier:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="0"/>
+                        <dxe:ComboBoxEdit Grid.Row="0" Grid.Column="1" ItemsSource="{Binding HaulierList}" Background="White"
+                                          EditValue="{Binding CurrentWeighbridgeRecord.HaulierId, UpdateSourceTrigger=PropertyChanged}"
+                                          Style="{DynamicResource DefaultComboBoxEditStyle}" ShowError="False" AutoComplete="True"
+                                          SelectedItem="{Binding SelectedHaulier}" DisplayMember="Name" ValueMember="id"
+                                          Foreground="Black" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Vehicle Reg:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="1"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBoxStyle}" Background="White"
+                                 Text="{Binding CurrentWeighbridgeRecord.VehicleReg, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Width="150" Margin="0,4"/>
+
+                        <TextBlock Text="Docket Number:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="2"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBoxStyle}" Background="White"
+                                 Text="{Binding CurrentWeighbridgeRecord.DocketNumber, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Width="150" Margin="0,4"/>
+
+                        <TextBlock Text="Product:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="3"/>
+                        <dxe:ComboBoxEdit Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ProductList}" Background="White"
+                                          Style="{DynamicResource DefaultComboBoxEditStyle}" ShowError="False" AutoComplete="True"
+                                          SelectedItem="{Binding SelectedProduct}" DisplayMember="Description" ValueMember="Description"
+                                          Foreground="Black" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Supplier:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="4"/>
+                        <dxe:ComboBoxEdit Grid.Row="4" Grid.Column="1" ItemsSource="{Binding ProductSupplierList}" Background="White"
+                                          Style="{DynamicResource DefaultComboBoxEditStyle}" ShowError="False" AutoComplete="True"
+                                          SelectedItem="{Binding SelectedProductSupplier}" DisplayMember="Name" ValueMember="Name"
+                                          Foreground="Black" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Bog:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="5"/>
+                        <dxe:ComboBoxEdit Grid.Row="5" Grid.Column="1" ItemsSource="{Binding BogList}" Background="White"
+                                          Style="{DynamicResource DefaultComboBoxEditStyle}" ShowError="False" AutoComplete="True"
+                                          SelectedItem="{Binding SelectedBog}" DisplayMember="Name" ValueMember="Name"
+                                          Foreground="Black" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <Border Grid.Row="6" Grid.ColumnSpan="2" BorderBrush="White" BorderThickness="0,0,0,2" Margin="0,4"/>
+
+                        <TextBlock Text="Weight In (Kg):" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="7"/>
+                        <dxe:TextEdit Grid.Row="7" Grid.Column="1" Background="White" Style="{DynamicResource DefaultTextEditStyle}"
+                                      MaskType="Numeric" Mask="d" MaskUseAsDisplayFormat="True"
+                                      EditValue="{Binding CurrentWeighbridgeRecord.WeightIn, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Left" Width="150" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Date Weight In:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="8"/>
+                        <dxe:TextEdit Grid.Row="8" Grid.Column="1" Background="White" Style="{DynamicResource DefaultTextEditStyle}"
+                                      MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True"
+                                      EditValue="{Binding CurrentWeighbridgeRecord.DateWeightIn, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Left" Width="150" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Weight Out (Kg):" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="9"/>
+                        <dxe:TextEdit Grid.Row="9" Grid.Column="1" Background="White" Style="{DynamicResource DefaultTextEditStyle}"
+                                      MaskType="Numeric" Mask="d" MaskUseAsDisplayFormat="True"
+                                      EditValue="{Binding CurrentWeighbridgeRecord.WeightOut, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Left" Width="150" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Date Weight Out:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="10"/>
+                        <dxe:TextEdit Grid.Row="10" Grid.Column="1" Background="White" Style="{DynamicResource DefaultTextEditStyle}"
+                                      MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" AllowNullInput="True"
+                                      EditValue="{Binding CurrentWeighbridgeRecord.DateWeightOut, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Left" Width="150" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Sample Weight:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Center" Grid.Row="11"/>
+                        <dxe:TextEdit Grid.Row="11" Grid.Column="1" Background="White" Style="{DynamicResource DefaultTextEditStyle}"
+                                      MaskType="Numeric" Mask="n2" MaskUseAsDisplayFormat="True" AllowNullInput="True"
+                                      EditValue="{Binding CurrentWeighbridgeRecord.SampleBoxWeight, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Left" Width="150" VerticalAlignment="Center" Margin="0,4"/>
+
+                        <TextBlock Text="Comments:" Style="{DynamicResource DefaultTextBlockStyle}" VerticalAlignment="Top" Grid.Row="12" Margin="0,8,0,0"/>
+                        <TextBox Grid.Row="12" Grid.Column="1" Style="{DynamicResource DefaultMultilineTextBoxStyle}" Background="White"
+                                 Text="{Binding CurrentWeighbridgeRecord.Comments, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" VerticalContentAlignment="Top"
+                                 HorizontalAlignment="Stretch" Margin="0,4,0,4"/>
+                    </Grid>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Content="Back" Width="100" Command="{Binding BackCommand}" Style="{DynamicResource TransactionButtonStyleCancel}"/>
+                        <Button Content="Save" Width="100" Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
+                <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+</admin:MetroWindowBase>

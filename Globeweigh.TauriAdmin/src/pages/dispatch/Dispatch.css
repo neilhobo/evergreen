@@ -1,0 +1,1241 @@
+/* Dispatch / Orders ("Open Orders" tab): the WPF DispatchOrderListView layout inside the
+   content card — col 1 = Open Orders, col 2 = Loads, col 3 = Pending (top) over Completed
+   Weighbridge Records (bottom) — columns parted by hairlines, each with the template's
+   column header (ContentCard .colHeader / .colTitle). */
+
+/* DEV ONLY. A section at the foot of the column it acts on — Add Order under the orders, the
+   load helpers under the loads. Ruled off with a dashed line so nobody mistakes it for part of
+   the page, and given its own padding so the buttons are not pressed against the bottom of the
+   screen. Not rendered at all in a release build; see the import.meta.env.DEV branches. */
+.dsp-dev-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 0 6px;
+  padding: 7px 2px 8px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.dsp-dev-label {
+  margin-right: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.dsp-page {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.dsp-page > * + * {
+  border-left: 1px solid #e5e7eb;
+}
+
+.dsp-page > .dsp-panel {
+  flex: 0 0 400px;
+}
+
+/* Open Orders: 70px over the base width for its Created column. */
+.dsp-page > .dsp-panel:nth-child(1) {
+  flex-basis: 470px;
+}
+
+/* Loads is wider than the base: it carries the Emailed column as well. */
+.dsp-page > .dsp-panel:nth-child(2) {
+  flex-basis: 440px;
+}
+
+/* Loads grid: a load 7+ days past its week-commencing date; Open Orders: the orders on such a
+   load. :not(.selected) keeps the orange selection visible on top, as .row-missed does.
+   .row-on-load below must stay declared after this so its blue wins on a selected load's orders. */
+.data-table tbody tr.row-overdue:not(.selected) td {
+  background: #fee2e2;
+}
+
+/* Open Orders grid: the orders on the load selected in the Loads grid — a blue tint with a
+   blue bar down the left edge, so it can't be mistaken for the orange selection (which still
+   wins on the one order that is both). */
+.data-table tbody tr.row-on-load:not(.selected) td {
+  background: #e0f2fe;
+}
+.data-table tbody tr.row-on-load td:first-child {
+  box-shadow: inset 3px 0 0 #0284c7;
+}
+
+/* A load that has been emailed to its haulier (Loads grid, Emailed column). */
+.dsp-emailed {
+  display: inline-flex;
+  color: var(--primary);
+  vertical-align: middle;
+  /* keeps the 14px icon from making the row taller than a text-only row */
+  margin: -2px 0;
+}
+
+.dsp-emailed svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* third column is itself two rows (Pending over Completed) */
+.dsp-col-split {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.dsp-col-split > .dsp-panel:first-child {
+  flex: 0 0 300px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dsp-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.dsp-grid-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid #eef2f6;
+}
+.dsp-grid-head .spacer { flex: 1; }
+
+.dsp-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* The Open Orders search sits between the header and its grid, level with the grid edge. */
+.dsp-panel > .toolbar-search {
+  flex: none;
+  width: auto;
+  margin: 6px 6px 0;
+}
+
+.dsp-panel .data-table-wrap { flex: 1; min-height: 0; }
+
+/* Create/Edit Load dialog — fill the modal body as a flex column: the load's header panel at
+   the top, the Orders grid filling the remaining height. */
+.cl-form {
+  display: flex;
+  flex-direction: column;
+  /* 6px closer to the dialog edges than the body's shared padding puts it: the form reaches
+     out by that much on every side, and grows by the same so it still fills the body. */
+  height: calc(100% + 12px);
+  min-height: 0;
+  margin: -6px;
+}
+
+/* The panel: the Order Details page's left panel turned on its side — the same white card,
+   filling the dialog, with the load's header along the top and its orders below, parted by a
+   rule. The section titles and the label/value rows are the page's own (DetailPanel.module.css,
+   via the ld-row rows); only the controls are styled here, sized to the rows they sit in. */
+.ld-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+/* The header along the top: the load down the left half; the right half is kept for what
+   comes next. Ruled off from the orders below. */
+.ld-head {
+  flex: none;
+  display: grid;
+  grid-template-columns: 378px minmax(0, 1fr);
+  gap: 0 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* A page field row holding a control rather than a value: centred on the control, a touch
+   more breathing room than the page's 1px. A tall control (Comments) takes its label at the
+   top instead, level with the first line. Scoped to the panel, not the load header, so every
+   dialog built on the panel (the order dialog too) gets the same rows. */
+.ld-panel .ld-row {
+  align-items: center;
+  padding: 2px 0;
+}
+
+.ld-panel .ld-row-top {
+  align-items: start;
+}
+
+.ld-panel .ld-row-top > :first-child {
+  padding-top: 5px;
+}
+
+/* The right half of the header: the cell is the positioned box and the section is taken out
+   of the flow inside it, so the left half alone sets the header's height and a long list
+   scrolls rather than pushing the orders down. */
+.ld-emails-cell {
+  position: relative;
+  min-height: 0;
+}
+
+.ld-emails {
+  position: absolute;
+  inset: 0;
+}
+
+/* The Emails grid (EmailsGrid.tsx), the Load and Order dialogs' both: the SpecGauge report
+   grid (Density Comparison) a size down — ruled cells, no header row, the Emails column tinted
+   blue the way its what-if columns are. A row per party, its addresses stacked in the cell.
+   Fills its section and scrolls on its own. */
+.ld-mail-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+}
+
+.ld-mail {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 11px/1.4 var(--ui-font);
+  color: #0f172a;
+}
+
+.ld-mail tbody td {
+  padding: 3px 8px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ld-mail td:last-child {
+  border-right: 0;
+}
+
+.ld-mail tbody tr:hover td {
+  box-shadow: inset 0 0 0 9999px rgba(59, 111, 229, 0.16);
+}
+
+/* The name column holds its width, so any extra goes to the addresses. */
+.ld-mail-name {
+  width: 220px;
+  max-width: 220px;
+}
+
+td.ld-mail-tint {
+  background: #f0f7ff;
+}
+
+
+.ld-mail-empty {
+  padding: 16px 8px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.ld-input {
+  height: 26px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  /* The ledger kit's field (the app default since 2026-09-24): tinted, 12px regular. */
+  background: #f8fafc;
+  font: 400 12px var(--ui-font);
+  color: #0f172a;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.ld-input:hover {
+  border-color: #b9c3cf;
+}
+
+.ld-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.15);
+}
+
+.ld-input.ld-comments-box {
+  height: 80px;
+  padding: 6px 8px;
+  font-weight: 400;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* A section that is a grid: it fills the rest of the panel (the load's orders, the order's
+   items). Whatever rides its title row — the load's note, the order's Add Item — sits where
+   the status tag rides ORDER DETAILS on the page. */
+.ld-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The grid wears the frame the page's grids wear (.content-area .data-table-wrap): the
+   same border colour and 3px corners, not the dialog default's softer 8px. */
+.ld-grid > .data-table-wrap {
+  flex: 1;
+  min-height: 0;
+  border-color: #bcc6d3;
+  border-radius: 3px;
+}
+
+/* The load's note, on the title row: it sheds the title's capitals and tracking. */
+.ld-note {
+  font: 400 10.5px/1 var(--ui-font);
+  color: #64748b;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── The rest of the panel's kit, for any dialog built on it ──
+   Each is the page's own piece worn by a control, so a dialog on this panel needs nothing the
+   page does not already have. */
+
+/* A value that is not edited here, in a row of controls: held to the control's height so the
+   rows keep one rhythm, and set in by the control's border and padding so its text starts on
+   the same line as the text in the boxes above and below it. Prose (an address) takes its
+   label at the top instead and keeps its line breaks. */
+.ld-static {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  min-width: 0;
+  padding-left: 9px;
+  color: #0f172a;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.ld-static.ld-static-prose {
+  display: block;
+  min-height: 0;
+  padding: 5px 0 5px 9px;
+  white-space: pre-line;
+  font-weight: 400;
+  font-variant-numeric: normal;
+}
+
+/* A value chosen in another dialog (the order's customer): the control's frame with the value
+   inside and the way in at its right edge, so it reads as a field that is set, not a fact. */
+.ld-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ld-picker-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ld-picker-hint {
+  flex: none;
+  font: 600 10px/1 var(--ui-font);
+  color: #0a5aa8;
+}
+
+.ld-picker:hover .ld-picker-hint {
+  text-decoration: underline;
+}
+
+/* A tick with its words, on the page's type. */
+.ld-check,
+.le-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font: 400 11.5px/1.4 var(--ui-font);
+  color: #0f172a;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.ld-check input,
+.le-check input {
+  margin: 0;
+  flex: none;
+}
+
+/* An action riding a section title (Add Item on ITEMS): the pill the page's grid heads carry
+   (DetailPanel .showAll), 4px taller than the status tag but with that 4px taken back in its
+   margins, so its margin box is the tag's 17px and the title rows across the panel stay one
+   height. It is a button, so the title's capitals and tracking are not inherited. */
+.ld-title-btn {
+  flex: none;
+  height: 21px;
+  margin: -2px 0;
+  padding: 0 9px;
+  border: 1px solid #c7d2e0;
+  border-radius: 999px;
+  background: #ffffff;
+  font: 600 10.5px/1 var(--ui-font);
+  color: #0a5aa8;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ld-title-btn:hover:enabled {
+  background: #f1f6fb;
+  border-color: #9dbbd8;
+}
+
+.ld-title-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Order dialog: Add Item and Add POS side by side in the Items title row. */
+.od-title-btns {
+  display: flex;
+  gap: 6px;
+}
+
+/* The POS board — not a product, so it reads apart from the lines: lavender, on the button
+   that adds it and on its row, which is always the grid's last. */
+.ld-title-btn.od-pos-btn {
+  border-color: #cfc3ec;
+  color: #6a4fb3;
+}
+
+.ld-title-btn.od-pos-btn:hover:enabled {
+  background: #f5f1fd;
+  border-color: #b3a2e0;
+}
+
+.data-table tbody tr.od-pos-row td {
+  background: #efe9fb;
+  color: #4b3590;
+}
+
+.od-pos-name {
+  font-weight: 600;
+}
+
+/* DEV ONLY: + Random line in the Items title — the dev controls' lavender and dotted edge
+   (App.css .btn-dev) on the title pill, so it can never pass for production UI. */
+.ld-title-btn.od-dev-btn {
+  border: 1.5px dotted #8b7cd8;
+  background: #f4f1fc;
+  color: #6b5bb8;
+}
+
+.ld-title-btn.od-dev-btn:hover:enabled {
+  background: #e9e3f9;
+  border-color: #7a69cf;
+}
+
+/* Two views of one grid, switched in its title row (View Order: the lines, or the pallets
+   picked). Each tab is set as the title is; the one in use is dark, and its underline lies on
+   the title's own rule — 3px from the 11px line to the 17px row's edge, the row's 5px of
+   padding and the 1px rule make 9. */
+.ld-tabs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 17px;
+}
+
+.ld-tab {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 11px/1 var(--ui-font);
+  color: #a3aebd;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ld-tab:hover {
+  color: #64748b;
+}
+
+.ld-tab.active {
+  color: #0f172a;
+  cursor: default;
+}
+
+.ld-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 2px;
+  background: var(--primary);
+}
+
+/* Delivery order picker sits inside an Orders grid cell — short and centred so the
+   row keeps its normal height. */
+select.cl-delivery-order {
+  width: 44px;
+  height: 20px;
+  padding: 0 0 0 2px;
+  font-size: 9px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* bold blue "ASAP" delivery marker (WPF look) */
+.dsp-asap {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* IN/OUT badge — redefined here so the Dispatch page doesn't depend on
+   Weighbridge.css being loaded. */
+.io-badge {
+  display: inline-block;
+  min-width: 34px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+.io-badge.in {
+  background: #e2f6f2;
+  color: #58ad63;
+}
+.io-badge.out {
+  background: #fadfed;
+  color: #e76884;
+}
+
+/* Per-row "⋮" menu on the Pending grid. The grid scrolls, so the menu is rendered
+   position:fixed at page level (an absolute menu inside the cell would be clipped)
+   and closed on any scroll/resize. Styled like the PageHeader profile menu. */
+/* The negative vertical margin keeps the 20px hit target without it setting the row
+   height: at 20px it made these grids' rows taller than Open Orders' text-only rows. */
+.dsp-row-menu-btn {
+  width: 22px;
+  height: 20px;
+  margin: -4px 0;
+  vertical-align: middle;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.dsp-row-menu-btn:hover,
+.dsp-row-menu-btn[aria-expanded="true"] {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+.dsp-row-menu {
+  position: fixed;
+  z-index: 1200;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.25), 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.dsp-row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 9px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #334155;
+  font: 400 12px/1.2 var(--ui-font);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.dsp-row-menu-item:hover {
+  background: #f8fafc;
+  color: var(--primary);
+}
+.dsp-row-menu-item.danger { color: #b42318; }
+.dsp-row-menu-item.danger:hover {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+/* Select Customer & Address: the highlighted address's Delivery Note Info sits under the
+   address list at a fixed height, so picking a different address never shifts the layout. */
+.dsp-note-box {
+  flex: none;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dsp-note-box .cs-note-view {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+.dsp-note-box textarea {
+  flex: 1;
+  min-height: 0;
+  line-height: 1.45;
+}
+.dsp-note-box .stock-radio {
+  flex: none;
+}
+
+/* ── Send Email dialog (SendLoadEmailModal) ──
+   Sits in the Create/Edit Load dialog's panel (.cl-form / .ld-panel): who it goes to and how
+   down the left, the message itself taking the rest. While the emails go, a sheet lies over
+   the body with a row per email. */
+.le-root {
+  position: relative;
+}
+
+.le-panel {
+  overflow: hidden;
+}
+
+.le-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 0 24px;
+}
+
+.le-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.le-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.le-note {
+  margin: 4px 0 0;
+  font: 400 11px/1.5 var(--ui-font);
+  color: #64748b;
+}
+
+.le-warn {
+  color: #b45309;
+}
+
+.le-override {
+  margin-top: 4px;
+}
+
+/* The preview: the header lines as page fields, then the message in a frame of its own. */
+.le-preview {
+  min-height: 0;
+}
+
+/* The attachments (the dispatch confirmation carries a delivery note per order): each a link
+   that puts that PDF in the frame in place of the message; the one on show is bold. */
+.le-attach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+
+.le-attach-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.le-attach-item:hover {
+  text-decoration: underline;
+}
+
+.le-attach-item.le-attach-on {
+  font-weight: 600;
+}
+
+/* A commercial invoice among the attachments: lavender, like Include Commercial Invoice. */
+.le-attach-item.le-attach-invoice {
+  color: #6d55c7;
+}
+
+.le-attach-item svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+/* Over the frame while a PDF is on show: which one, and the way back to the message. */
+.le-viewing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font: 400 11px/1.4 var(--ui-font);
+  color: #64748b;
+}
+
+.le-viewing + .le-frame {
+  margin-top: 4px;
+}
+
+/* The frame standing in for a PDF that is still rendering, or would not. */
+.le-frame-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  font: 400 12px/1.5 var(--ui-font);
+  color: #64748b;
+}
+
+.le-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #bcc6d3;
+  border-radius: 3px;
+  background: #f3f5f8;
+}
+
+/* The progress sheet. */
+.le-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(238, 240, 243, 0.92);
+  border-radius: 6px;
+}
+
+.le-sheet-card {
+  width: min(520px, 90%);
+  max-height: 90%;
+  overflow-y: auto;
+  padding: 16px 18px 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.le-sheet-title {
+  margin: 0 0 10px;
+  font: 600 13px/1.3 var(--ui-font);
+  color: #0f172a;
+}
+
+.le-jobs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.le-job {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.le-job-sent {
+  border-color: #bfe3cb;
+  background: #f4fbf6;
+}
+
+.le-job-failed {
+  border-color: #f0c2bd;
+  background: #fdf3f2;
+}
+
+.le-job-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.le-job-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.le-job-sent .le-job-icon {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.le-job-skipped .le-job-icon,
+.le-job-skipped .le-job-state {
+  color: #94a3b8;
+}
+
+.le-job-failed .le-job-icon {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.le-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.le-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: le-spin 0.8s linear infinite;
+}
+
+@keyframes le-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .le-spinner {
+    animation-duration: 2s;
+  }
+}
+
+.le-job-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.le-job-to {
+  font: 500 11.5px/1.3 var(--ui-font);
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.le-job-state {
+  font: 400 11px/1.3 var(--ui-font);
+  color: #64748b;
+}
+
+.le-job-failed .le-job-state {
+  color: #b42318;
+}
+
+/* Who each message goes to. The dispatch confirmation goes to the haulier and to each customer
+   on the load, each in a copy of their own, so every recipient group down the left, every
+   preview tab and every row of the progress sheet says which: a blue Haulier pill or an amber
+   Customer one. The group whose message is on show is tinted; clicking a group shows it. */
+.le-side > section {
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.le-side > .le-group {
+  cursor: pointer;
+}
+
+.le-side > .le-group-on {
+  border-color: #cfe0f5;
+  background: #f5f9fe;
+}
+
+.le-who {
+  display: inline-flex;
+  align-items: center;
+  height: 17px;
+  padding: 0 7px;
+  border-radius: 3px;
+  font: 700 10px/1 var(--ui-font);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex: none;
+}
+
+.le-who-haulier {
+  background: #e0ecfb;
+  color: #0a5aa8;
+}
+
+.le-who-customer {
+  background: #fdf0d8;
+  color: #92560a;
+}
+
+/* A customer's group is faintly amber, like its pill, so it reads apart from the haulier's. */
+.le-side > .le-group-customer {
+  border-color: #f6e6c6;
+  background: #fffbf3;
+}
+
+.le-side > .le-group-customer.le-group-on {
+  border-color: #ecd09a;
+  background: #fdf4e3;
+}
+
+/* Include Commercial Invoice, in the haulier's group: a lavender strip of its own, so it reads
+   as an option on the email rather than one more address. */
+.le-check.le-include-invoices {
+  display: flex;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border: 1px solid #e0d8f7;
+  border-radius: 4px;
+  background: #f5f2fd;
+  color: #4c3799;
+  font-weight: 600;
+}
+
+.le-include-invoices input[type="checkbox"] {
+  accent-color: #6d55c7;
+}
+
+/* Send to a test address: its own section at the foot of the list, folded until opened. */
+.le-side > .le-test {
+  margin-top: auto;
+}
+
+.le-test-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.le-test-toggle:disabled {
+  cursor: default;
+}
+
+.le-test-toggle svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s;
+}
+
+.le-test-open .le-test-toggle svg {
+  transform: rotate(90deg);
+}
+
+.le-side .le-group-name {
+  display: block;
+  min-width: 0;
+  max-width: 180px;
+  line-height: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* A customer's name can be long: the tab keeps to a width and ends in an ellipsis (on an
+   inner span, so the underline under the tab is not clipped with it). */
+.le-tab-text {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 13px;
+}
+
+.le-muted {
+  color: #94a3b8;
+}
+
+.le-job-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11.5px/1.3 var(--ui-font);
+  color: #0f172a;
+}
+
+
+/* ── Add/Edit Order dialog (DispatchOrderEditModal) ──
+   The Order Details page in the Create/Edit Load dialog's panel (.cl-form / .ld-panel): the
+   order down the left, as the page has it, and its lines filling the right. The left column is
+   the load header's, so the two dialogs' labels and controls fall on the same lines. */
+.od-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 378px minmax(0, 1fr);
+  gap: 0 24px;
+}
+
+.od-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The comments take whatever the details leave, the two boxes sharing it equally. Each row is
+   a page field row (a grid), whose one track stretches to the row's height, and the box fills
+   the track — so the boxes are as tall as the dialog allows and no taller. */
+.od-comments {
+  flex: 1;
+  min-height: 0;
+}
+
+.od-comment {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.od-comment .ld-comments-box {
+  align-self: stretch;
+  height: auto;
+  min-height: 48px;
+  resize: none;
+}
+
+/* The order number is eight digits at most, so its box is sized to that rather than the row. */
+.od-orderno {
+  width: 140px;
+}
+
+/* A validation note under its control, in the row's value column. */
+.od-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.od-hint {
+  font: 400 10.5px/1.3 var(--ui-font);
+}
+
+/* ASAP, and the date when it is not. The tick keeps its width; the date takes the rest. */
+.od-delivery {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.od-delivery .ld-input {
+  flex: 1;
+  width: auto;
+}
+
+/* The order's labels are short (the longest is Delivery Note), so its controls sit closer to
+   them than the page's 104px label column would put them. */
+.od-side .ld-row {
+  grid-template-columns: 84px minmax(0, 1fr);
+}
+
+/* ── Add/Edit Product dialog (ProductEditModal) ──
+   The Add/Edit Order dialog's panel, content-sized rather than filling a fixed-height dialog:
+   the product's details on the left, its Pallet / Bag Setup on the right (finished products
+   only — the other types are the left column alone). */
+.pe-form {
+  margin: -6px;
+}
+
+.pe-body {
+  display: grid;
+  /* The details keep the width they had at 900px; the setup column takes the rest. */
+  grid-template-columns: 410px minmax(0, 1fr);
+  gap: 0 28px;
+}
+
+.pe-body-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* The longest labels (Commodity Code, Pallet Weight (kg)) set the label column. */
+.pe-body .ld-row {
+  grid-template-columns: 124px minmax(0, 1fr);
+}
+
+/* ── Add/Edit User dialog (StaffEditModal) ──
+   The Add/Edit Product dialog's panel and label column: who the user is on the left, the role
+   and the access ticks on the right. */
+.us-body {
+  grid-template-columns: 380px minmax(0, 1fr);
+}
+
+/* User Type: the three choices along the row. */
+.us-choices {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 26px;
+}
+
+/* The roles, one under another; the first sits level with its label. */
+.us-roles {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2px;
+}
+
+/* Four digits at most, so the box is sized to that rather than the row. */
+.us-passcode {
+  width: 110px;
+}
+
+/* An empty stand-in for the status tag on a title that has none: 17px, the tag's height, so
+   the title rows across the panel stay one height and their rules line up. */
+.us-title-strut {
+  height: 17px;
+}
+
+/* Role is the access column's only label, and short, so the choices sit close to it rather
+   than out on the details column's 124px. */
+.us-body .us-access .ld-row {
+  grid-template-columns: 44px minmax(0, 1fr);
+}
+
+/* ── Orders (from sales) (SalesOrdersSection) — the foot of the Open Orders column: the reps'
+   orders sent from My Orders and waiting for approval. A fixed share of the column under a
+   rule, so Open Orders keeps the rest; the title bar is Open Orders' own. ── */
+.dsp-sales-sec {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dsp-sales-sec .data-table-wrap {
+  flex: 1;
+  min-height: 0;
+  margin: 6px 6px 6px;
+}
+
+/* How many are waiting: the awaiting-approval amber of My Orders. */
+.dsp-sales-count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid #f2d391;
+  background: #fff4dc;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8a5a00;
+  white-space: nowrap;
+}
+
+.dsp-sales-pos {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f1ecfd;
+  color: #5b3fb0;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+/* The Return dialog (SalesOrdersSection): who and when, then the note the rep will read. */
+.dsp-sales-return {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+}
+
+.dsp-sales-return p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.dsp-sales-return label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+}
+
+/* .form-input is a one-line 26px box with no top padding; the note wants room for a few
+   lines and the text inset from the top edge as well as the sides. */
+.dsp-sales-return textarea {
+  height: 100px;
+  padding: 7px 8px;
+  line-height: 1.4;
+  resize: vertical;
+  font-weight: 400;
+}

@@ -1,0 +1,196 @@
+
+/* Incoming-call card: a dark "phone call" card with round Dismiss / Answer buttons. */
+.ic-call {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+  width: 300px;
+  background: #111a27;
+  color: #f1f5f9;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  animation: ic-call-in 0.22s ease-out;
+}
+@keyframes ic-call-in {
+  from { transform: translateY(-10px); opacity: 0; }
+}
+.ic-call-img {
+  position: relative;
+  height: 150px;
+  background: #1f2937;
+}
+.ic-call-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* The picture fades into the card so the name can sit over its lower edge. */
+.ic-call-img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 45%, #111a27);
+}
+.ic-call-body {
+  position: relative;
+  margin-top: -24px;
+  padding: 0 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.ic-call-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+.ic-call-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+.ic-call-actions {
+  display: flex;
+  gap: 48px;
+  margin-top: 16px;
+}
+.ic-call-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.ic-call-btn {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.ic-call-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: #fff;
+}
+.ic-call-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.ic-call-btn:focus-visible { outline: 2px solid #f1f5f9; outline-offset: 3px; }
+.ic-call-btn:disabled { cursor: default; opacity: 0.7; }
+.ic-call-dismiss { background: #ef4444; }
+.ic-call-answer {
+  background: #22c55e;
+  animation: ic-call-breathe 1.2s ease-in-out infinite;
+}
+.ic-call-answer:disabled { animation: none; }
+@keyframes ic-call-breathe {
+  50% { transform: scale(1.07); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.22); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ic-call, .ic-call-answer { animation: none; }
+}
+
+/* ---- Call dialog ---- */
+.icd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  background: rgba(3, 7, 18, 0.85);
+}
+.icd {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 24px;
+  background: #0b1220;
+  border-radius: 12px;
+  overflow: hidden;
+  color: #e5e7eb;
+}
+.icd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #1f2937;
+}
+.icd-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.icd-sub {
+  font-size: 13px;
+  color: #9ca3af;
+}
+.icd-warn {
+  font-size: 13px;
+  color: #fbbf24;
+}
+.icd-video {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #000;
+}
+.icd-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.icd-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+.icd-btn {
+  min-width: 160px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.icd-btn:disabled { opacity: 0.5; cursor: default; }
+.icd-btn-mute { background: #374151; color: #f9fafb; }
+.icd-btn-mute:hover:not(:disabled) { background: #4b5563; }
+.icd-btn-hangup { background: #dc2626; color: #fff; }
+.icd-btn-hangup:hover { background: #b91c1c; }
+
+/* Microphone picker + live level, so it's obvious which mic is in use and that it hears you. */
+.icd-mic {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.icd-mic select {
+  max-width: 320px;
+  padding: 5px 8px;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.icd-meter {
+  width: 220px;
+  height: 6px;
+  background: #1f2937;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.icd-meter-fill {
+  height: 100%;
+  background: #22c55e;
+  transition: width 0.1s linear;
+}

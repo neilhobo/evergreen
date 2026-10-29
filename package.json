@@ -1,0 +1,15 @@
+{
+  "name": "globeweigh-evergreen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repo-root helper scripts for deploying Globeweigh to the evergreen server.",
+  "scripts": {
+    "migrate:local": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.Api/deploy/migrate-db.ps1 -Target local",
+    "migrate:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.Api/deploy/migrate-db.ps1 -Target prod",
+    "deploy:api": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.Api/deploy/deploy-to-evergreen.ps1",
+    "deploy:api:only": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.Api/deploy/deploy-to-evergreen.ps1 -SkipUi",
+    "deploy:touch": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriTouch/deploy-touch-ui.ps1",
+    "deploy:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriAdmin/deploy-admin-ui.ps1",
+    "dist:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriAdmin/dist-tauriadmin.ps1"
+  }
+}

@@ -1,0 +1,218 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+
+        xmlns:controls1="clr-namespace:Globeweigh.Admin.Controls"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.MyAccountView"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="None"
+        Height="500" Width="600" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White"
+        >
+
+    <Window.Resources>
+
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <Style x:Key="VerticalTabStyle" TargetType="{x:Type controls1:ImageTabItem}" >
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3">
+                            <Grid Width="110">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="26"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding ImageSource, RelativeSource={RelativeSource TemplatedParent}}"  VerticalAlignment="Center" Margin="4" />
+                                <!--<Image Source="/Globeweigh.Admin;component/Images/privacy-32.png"  VerticalAlignment="Center" Margin="4" />-->
+                                <Border Name="Border" Background="Transparent" BorderBrush="Transparent"  Height="30"  Grid.ColumnSpan="1" Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0">
+                                    <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center"  HorizontalAlignment="Left" TextElement.FontSize="12"
+                              ContentSource="Header" TextElement.Foreground="{DynamicResource DarkGreyBrush}"
+                              RecognizesAccessKey="True" Margin="0,0,2,0">
+                                    </ContentPresenter>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{StaticResource LightGreyBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+    </Window.Resources>
+
+    <Border Margin="0" CornerRadius="3" Background="White">
+        <Grid>
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource MainBorderBrush}" >
+                <Grid Margin="10,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Globeweigh Management System" Style="{DynamicResource TransactionHeaderTextBlockStyle}" Margin="0" FontSize="14"/>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="316*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse Height="60" Width="60" Fill="{DynamicResource GlobeweighBlueBrush}"/>
+                        <TextBlock Text="{Binding CurrentGlobeweighUser.Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="24" FontFamily="Segoe UI Semibold" Margin="0,0,0,1"/>
+                        <Grid Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock  Text="{Binding CurrentGlobeweighUser.FullName,FallbackValue=Neil Hobson}" FontSize="14" FontFamily="Segoe UI Semibold" Foreground="{DynamicResource DarkGreyBrush}" Margin="0,0,0,1"/>
+                            <TextBlock  Text="{Binding CurrentGlobeweighUser.RolesDisplay,FallbackValue=Admin}" Grid.Row="1" Foreground="{DynamicResource DarkGreyBrush}" Margin="0,2,0,0"/>
+                        </Grid>
+                    </Grid>
+
+                </Grid>
+            </Border>
+            <Border Grid.Row="1">
+
+
+                <Grid>
+                    <TabControl Margin="10" TabStripPlacement="Left">
+                        <controls1:ImageTabItem Header="Security" IsSelected="True" Style="{DynamicResource VerticalTabStyle}" ImageSource="/Globeweigh.Admin;component/Images/privacy-32.png">
+                            <Grid Margin="30,0,10,10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="151*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Security Settings" VerticalAlignment="Center" FontWeight="Bold" />
+                                <Grid Grid.Row="1" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Label Content="Email (Login)" Style="{DynamicResource DefaultLabelStyle}" Grid.ColumnSpan="2" Margin="0,5"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CurrentGlobeweighUser.Username}" Style="{DynamicResource DefaultTextBlockContentStyle}" Padding="0"/>
+                                    <Label Content="New Password" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1" Margin="0,5"/>
+                                    <dxe:PasswordBoxEdit EditValue="{Binding NewPassword, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultPasswordBoxEditStyle}"  Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Width="150"/>
+                                    <Label Content="Old Password (Confirm)" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="2" Margin="0,5"/>
+                                    <dxe:PasswordBoxEdit  EditValue="{Binding OldPassword, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultPasswordBoxEditStyle}"  Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Width="150"/>
+
+
+                                    <Label Content="Passcode (Touch)" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="6" Margin="0,5"/>
+                                    <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="6">
+                                        <!--<TextBox Text="{Binding CurrentGlobeweighUser.Passcode, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}"  InputScope="Number" Grid.Row="6" Margin="0"  TabIndex="2" Grid.Column="1" HorizontalAlignment="Left" Width="150"/>-->
+                                        <dxe:TextEdit Text="{Binding CurrentGlobeweighUser.Passcode, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextEditStyle}" InputScope="Digits" MaxLength="4" Margin="0"  TabIndex="2" Grid.Column="1" HorizontalAlignment="Left" Width="150"/>
+                                        <Label Content="(4 digits)" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="6" Margin="10,5,0,5"/>
+                                    </StackPanel>
+
+                                    <Button Content="Save Changes"  Width="110" Command="{Binding SavePasswordCommand}" Style="{DynamicResource ToolbarButtonStyleAction}" Grid.Row="7" HorizontalAlignment="Left" Margin="0,20,0,0" />
+                                </Grid>
+                            </Grid>
+                        </controls1:ImageTabItem>
+                        <!--<controls1:ImageTabItem Header="Signature" IsSelected="True" Style="{DynamicResource VerticalTabStyle}" ImageSource="/Globeweigh.Admin;component/Images/autograph-32.png">
+                            <Grid Margin="30,0,10,10">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="120"/>
+                                    <RowDefinition Height="60"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Digital Signature" VerticalAlignment="Center" FontWeight="Bold" />
+                                <Grid Grid.Row="1" >
+                                    <Grid Margin="0,10,10,10" Background="{DynamicResource LightGreyBrush}" HorizontalAlignment="Left">
+                                        <Border Margin="20"  BorderThickness="1">
+                                            <Border.BorderBrush>
+                                                <DrawingBrush Viewport="0,0,8,8" ViewportUnits="Absolute" TileMode="Tile">
+                                                    <DrawingBrush.Drawing>
+                                                        <DrawingGroup>
+                                                            <GeometryDrawing Brush="{DynamicResource GlobeweighLightBlueBrush}">
+                                                                <GeometryDrawing.Geometry>
+                                                                    <GeometryGroup>
+                                                                        <RectangleGeometry Rect="0,0,50,50" />
+                                                                        <RectangleGeometry Rect="50,50,50,50" />
+                                                                    </GeometryGroup>
+                                                                </GeometryDrawing.Geometry>
+                                                            </GeometryDrawing>
+                                                        </DrawingGroup>
+                                                    </DrawingBrush.Drawing>
+                                                </DrawingBrush>
+                                            </Border.BorderBrush>
+                                            --><!-- <InkCanvas Strokes="{Binding CurrentStrokesCollection}" MinHeight="60" MinWidth="250"/> --><!--
+                                                <InkCanvas x:Name="inkCanvas" MinHeight="60" MinWidth="250"  Strokes="{Binding CurrentStrokesCollection}" />
+
+                                            </Border>
+                                        --><!--<Border x:Name="ImageBorder" Margin="0" Padding="10" Visibility="{Binding CurrentPhotoImageSource, Converter={StaticResource NullToCollapsedConverter}}">
+                        <Grid>
+                            <Image VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Source="{Binding CurrentPhotoImageSource}"/>
+
+                        </Grid>
+                    </Border>--><!--
+                                    </Grid>
+                                </Grid>
+                                <Grid Grid.Row="2" HorizontalAlignment="Left" Width="292">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                        <Button Content="Save Signature"  Width="120" Command="{Binding SaveSignatureCommand}" CommandParameter="{Binding ElementName=inkCanvas}" Style="{DynamicResource ToolbarButtonStyleAction}" Margin="0" Grid.Column="1" />
+                                    <Button Content="Clear" Width="120" Command="{Binding ClearCommand}" Style="{DynamicResource ToolbarButtonStyleBase}" Margin="0"/>
+                                </Grid>
+
+
+                            </Grid>
+                        </controls1:ImageTabItem>-->
+                    </TabControl>
+
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        
+                        <Button Content="Close" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+            <Grid  Background="White" Visibility="{Binding Saved, Converter={StaticResource TrueToVisibilityConverter}}" d:IsHidden="True">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Saved Successfully" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe UI Semibold" FontSize="24" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                    <Button Content="Close" Command="{Binding CancelCommand}" Margin="0,50,0,0" Style="{DynamicResource TransactionButtonStyleCancel}"></Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+    </Border>
+</shared:WindowBase>

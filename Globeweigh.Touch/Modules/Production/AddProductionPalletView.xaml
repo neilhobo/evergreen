@@ -1,0 +1,145 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+         xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+  xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        x:Class="Globeweigh.Touch.AddProductionPalletView" WindowStyle="None" Margin="50"
+        AllowsTransparency="True" mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="1024" ResizeMode="NoResize"  
+        md:DialogServiceViews.IsRegistered ="True" Background="{DynamicResource MainNavyBrush}" IsOwnerSize="True">
+
+    <shared:WindowBase.Resources>
+
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:EnumBooleanPalletDeliveryConverter x:Key="EnumBooleanPalletDeliveryConverter"/>
+        <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter"/>
+        <converters:ZeroToVisibleConverter x:Key="ZeroToVisibleConverter"/>
+        <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsedConverter"/>
+
+        <system:Boolean x:Key="True">True</system:Boolean>
+        <system:Boolean x:Key="False">False</system:Boolean>
+
+
+    </shared:WindowBase.Resources>
+    <Border  >
+        <Border Background="{DynamicResource LightGreyBrush}" Margin="10"  >
+            <Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Style="{DynamicResource TransactionBorderHeaderStyle}" Height="80">
+                        <TextBlock Text="{Binding HeaderText, FallbackValue=Add Pallet}" VerticalAlignment="Center" FontSize="34" Margin="20,0" Foreground="{DynamicResource MainNavyBrush}"/>
+                    </Border>
+                    <Grid VerticalAlignment="Top" Margin="20,20,20,0" Grid.Row="1" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="250"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+
+                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Next Pallet No:" VerticalAlignment="Center" FontSize="30" />
+                        <TextBlock Text="{Binding CurrentPallet.PalletNo}" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBlockContentStyle}" Grid.Column="1" FontSize="30" />
+                        <TextBlock Text="Production Date:" VerticalAlignment="Center" FontSize="30" Grid.Row="2"/>
+                        <controls:TransactionContentControl x:Name="DateOfProduction"  Text="{Binding CurrentPallet.DateOfProduction, StringFormat=dd/MM/yyyy}" FontSize="30" Style="{DynamicResource TextBlockPopupContentStyle}" Grid.Column="1" Grid.Row="2" Margin="0" Height="80" HorizontalAlignment="Left" Width="300"/>
+                        <TextBlock Text="Location:" VerticalAlignment="Center" FontSize="30" Margin="0" Grid.Row="5"/>
+                        <controls:TransactionContentControl x:Name="Location" ItemsSource="{Binding LocationList}" EditValue="{Binding CurrentPallet.LocationId, UpdateSourceTrigger=PropertyChanged}"  DisplayMember="LocationName" ValueMember="id" FontSize="30" Style="{DynamicResource TransactionComboBoxContentPopupStyleNew}" Grid.Column="1" Margin="0" Height="80" Grid.Row="5" HorizontalAlignment="Left" Width="500"/>
+
+                        <TextBlock Text="Product:" VerticalAlignment="Center" FontSize="30" Grid.Row="4"/>
+                        <controls:TransactionContentControl x:Name="Product" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"  EditValue="{Binding CurrentPallet.ProductId, UpdateSourceTrigger=PropertyChanged}" DisplayMember="ProductName" ValueMember="ProductId" FontSize="30" Style="{DynamicResource TransactionComboBoxContentPopupStyleNew}" Grid.Column="1" Grid.Row="4" Margin="0" Height="80"/>
+
+                    </Grid>
+                    <Grid VerticalAlignment="Top" Margin="20" Grid.Row="2" Visibility="{Binding SelectedProduct, Converter={StaticResource NullToCollapsedConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="250"/>
+
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+
+                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="80"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Size:" VerticalAlignment="Center" FontSize="30" />
+                        <TextBlock Text="{Binding SelectedProduct.Size}" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBlockContentStyle}" Grid.Column="1" FontSize="30" />
+                        <TextBlock Text="UPP:" VerticalAlignment="Center" FontSize="30" Grid.Row="1" />
+                        <TextBlock Text="{Binding SelectedProduct.Upp}" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBlockContentStyle}" Grid.Column="1" FontSize="30" Grid.Row="1" />
+
+
+                        <TextBlock Text="No. of Units:" VerticalAlignment="Center" FontSize="30" Grid.Row="2" />
+                        <controls:TransactionContentControl x:Name="NoOfUnits" Text="{Binding CurrentPallet.NoOfUnits}" FontSize="30" Style="{DynamicResource TextBlockPopupContentStyle}" Width="220" HorizontalAlignment="Left" Margin="0" Height="80" Grid.Column="1" Grid.Row="2"/>
+                        <TextBlock Text="No. of Pallets:" VerticalAlignment="Center" FontSize="30" Grid.Row="3" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToVisibleConverter}}"/>
+                        <Grid Grid.Column="1" Margin="0" Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <controls:TransactionContentControl x:Name="NoOfPallets" Text="{Binding NoOfPallets}" FontSize="30" Style="{DynamicResource TextBlockPopupContentStyle}" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToVisibleConverter}}" Width="220" HorizontalAlignment="Left" Margin="0" Height="80"/>
+                            <!--<TextBlock Text="No Labels Required" VerticalAlignment="Center" FontSize="30" Grid.Row="3" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToVisibleConverter}}" Grid.Column="1" Margin="20,0,0,0"/>
+                            <CheckBox IsChecked="{Binding SelectedLocation.NoLabelsRequired}" IsEnabled="False"  Grid.Column="2" HorizontalAlignment="Left" Margin="20,0,0,0"/>-->
+                        </Grid>
+                    </Grid>
+
+
+                    <Grid Grid.Row="4">
+                        <Border Style="{DynamicResource TransactionBorderFooterStyle}" Height="90">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,30,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button Command="{Binding SaveCommand}" Width="200" Content="Save" HorizontalAlignment="Left" Margin="0,0,40,0" Style="{DynamicResource PrimaryButtonStyleAction}" Height="60" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToCollapsedConverter}}"/>
+                                <Button Command="{Binding SaveCommand}" Width="200" Content="Save" HorizontalAlignment="Left" Margin="0,0,40,0" Style="{DynamicResource PrimaryButtonStyleAction}" Height="60" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToVisibleConverter}}"/>
+                                <!--<Button Command="{Binding SaveCommand}" Width="200" Content="Save &amp; Print" HorizontalAlignment="Left" Margin="0,0,40,0" Style="{DynamicResource PrimaryButtonStyleAction}" Height="60" Visibility="{Binding CurrentPallet.id, Converter={StaticResource ZeroToVisibleConverter}}"/>-->
+
+                                <Button Command="{Binding CancelCommand}" Width="160" Content="Cancel" HorizontalAlignment="Right" Style="{DynamicResource PrimaryButtonStyleBase}" Height="60"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+                <!--<Grid Background="White" Visibility="{Binding IsPrinting, Converter={StaticResource TrueToVisibilityConverter}}" d:IsHidden="True">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="691*"/>
+                        <RowDefinition Height="100"/>
+                    </Grid.RowDefinitions>
+                    <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Fill" Width="400" Height="200" Margin="0">
+                        <dx:WaitIndicator DeferedVisibility="{Binding IsPrinting}" dx:ThemeManager.ThemeName="Office2013">
+                            <dx:WaitIndicator.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="Printing....." FontSize="20"/>
+                                        -->
+                <!--<TextBlock Text="{Binding}"/>-->
+                <!--
+                                    </StackPanel>
+                                </DataTemplate>
+                            </dx:WaitIndicator.ContentTemplate>
+                        </dx:WaitIndicator>
+                    </Viewbox>
+                    <Border Style="{DynamicResource TransactionBorderFooterStyle}" Grid.Row="1">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,20,0" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Command="{Binding CancelAllPrintJobsCommand}" IsEnabled="{Binding CancelButtonEnabled}" Width="240" Content="Cancel Printing" HorizontalAlignment="Right" Style="{DynamicResource PrimaryButtonStyleAction}" FontWeight="Bold" Height="60"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>-->
+            </Grid>
+        </Border>
+    </Border>
+
+</shared:WindowBase>

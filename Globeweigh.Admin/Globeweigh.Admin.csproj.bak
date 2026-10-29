@@ -1,0 +1,1086 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{44C2A6EE-B226-48F7-AA1D-8ED017E2E3C0}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Globeweigh.Admin</RootNamespace>
+    <AssemblyName>Globeweigh.Admin</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <PublishUrl>C:\Globeweigh\ClickOnce\Clonakilty\Admin\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>true</UpdateRequired>
+    <MapFileExtensions>false</MapFileExtensions>
+    <InstallUrl>https://globeweigh.blob.core.windows.net/clonakilty-deploy/</InstallUrl>
+    <TargetCulture>en-GB</TargetCulture>
+    <MinimumRequiredVersion>1.0.0.28</MinimumRequiredVersion>
+    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
+    <WebPage>publish.htm</WebPage>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
+    <ApplicationRevision>55</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>19CF3907119B69FD1A2BF57CAD4BF90AEFDEC826</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Globe-96.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonServiceLocator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommonServiceLocator.2.0.3\lib\net45\CommonServiceLocator.dll</HintPath>
+    </Reference>
+    <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Drawing.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Mvvm.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Office.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v23.1.Export, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Printing.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.CodeView.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.Desktop.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Core.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Docking.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.DocumentViewer.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Gauges.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Grid.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Grid.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.LayoutControl.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Printing.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.ReportDesigner.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Themes.HybridApp.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Themes.MetropolisDark.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Themes.MetropolisLight.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Themes.Office2007Black.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Themes.VS2017Light.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraPrinting.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Charts.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraCharts.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.PivotGrid.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Sparkline.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.CodeParser.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraReports.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraReports.v23.1.Extensions, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="FileHelpers, Version=3.4.2.0, Culture=neutral, PublicKeyToken=3e0c08d59cc3d657, processorArchitecture=MSIL">
+      <HintPath>..\packages\FileHelpers.3.4.2\lib\net45\FileHelpers.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight, Version=5.4.1.0, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Extras, Version=5.4.1.0, Culture=neutral, PublicKeyToken=669f0b5e8f868abf, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Platform, Version=5.4.1.0, Culture=neutral, PublicKeyToken=5f873c45e98af8a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=1.6.1.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
+    </Reference>
+    <Reference Include="MvvmDialogs">
+      <HintPath>..\packages\MvvmDialogs.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.5.3\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="BaseClasses\DialogViewModelBase.cs" />
+    <Compile Include="BaseClasses\AdminViewModelBase.cs" />
+    <Compile Include="BaseClasses\MetroWindowBase.cs" />
+    <Compile Include="Controls\ImageTabItem.cs" />
+    <Compile Include="Controls\MenuListBoxItem.cs" />
+    <Compile Include="Helpers\CHCNetSDK.cs" />
+    <Compile Include="Helpers\ExcelHelper.cs" />
+    <Compile Include="Helpers\ExcelProductImporter.cs" />
+    <Compile Include="Helpers\Utilities.cs" />
+    <Compile Include="Installer1.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Installer1.Designer.cs">
+      <DependentUpon>Installer1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainWindowViewModel.cs" />
+    <Compile Include="Modules\CompletedOrders\CompletedOrderListView.xaml.cs">
+      <DependentUpon>CompletedOrderListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\CompletedOrders\CompletedOrderListViewModel.cs" />
+    <Compile Include="Modules\Costing\EditZonePriceView.xaml.cs">
+      <DependentUpon>EditZonePriceView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Costing\EditZonePriceViewModel.cs" />
+    <Compile Include="Modules\Costing\CostingMasterView.xaml.cs">
+      <DependentUpon>CostingMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Costing\CostingMasterViewModel.cs" />
+    <Compile Include="Modules\Costing\CostingPriceListView.xaml.cs">
+      <DependentUpon>CostingPriceListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Costing\CostingPriceListViewModel.cs" />
+    <Compile Include="Modules\CustomerSupplier\AddEditAddressView.xaml.cs">
+      <DependentUpon>AddEditAddressView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\CustomerSupplier\AddEditAddressViewModel.cs" />
+    <Compile Include="Modules\CustomerSupplier\AddEditCustomerSupplierView.xaml.cs">
+      <DependentUpon>AddEditCustomerSupplierView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\CustomerSupplier\AddEditCustomerSupplierViewModel.cs" />
+    <Compile Include="Modules\CustomerSupplier\CustomerSupplierListView.xaml.cs">
+      <DependentUpon>CustomerSupplierListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\CustomerSupplier\CustomerSupplierListViewModel.cs" />
+    <Compile Include="Modules\CustomerSupplier\SelectAddressView.xaml.cs">
+      <DependentUpon>SelectAddressView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\CustomerSupplier\SelectAddressViewModel.cs" />
+    <Compile Include="Modules\Dispatch\AddEditDispatchOrderItemView.xaml.cs">
+      <DependentUpon>AddEditDispatchOrderItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\AddEditDispatchOrderItemViewModel.cs" />
+    <Compile Include="Modules\Dispatch\ViewLoadDetailsView.xaml.cs">
+      <DependentUpon>ViewLoadDetailsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\CreateLoadView.xaml.cs">
+      <DependentUpon>CreateLoadView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\ViewLoadDetailsViewModel.cs" />
+    <Compile Include="Modules\Dispatch\CreateLoadViewModel.cs" />
+    <Compile Include="Modules\Dispatch\AutoPickView.xaml.cs">
+      <DependentUpon>AutoPickView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\AutoPickViewModel.cs" />
+    <Compile Include="Modules\Dispatch\DispatchOrderListViewOld.xaml.cs">
+      <DependentUpon>DispatchOrderListViewOld.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\FullDispatchOrderViewModel.cs" />
+    <Compile Include="Modules\Dispatch\EditCompletedDispatchView.xaml.cs">
+      <DependentUpon>EditCompletedDispatchView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\EditCompletedDispatchViewModel.cs" />
+    <Compile Include="Modules\Dispatch\FullDispatchOrderView.xaml.cs">
+      <DependentUpon>FullDispatchOrderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\SelectBulkPalletView.xaml.cs">
+      <DependentUpon>SelectBulkPalletView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\SelectBulkPalletViewModel.cs" />
+    <Compile Include="Modules\Login\AboutView.xaml.cs">
+      <DependentUpon>AboutView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Login\AboutViewModel.cs" />
+    <Compile Include="Modules\Production\AddProductionPalletsView.xaml.cs">
+      <DependentUpon>AddProductionPalletsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\AddProductionPalletsViewModel.cs" />
+    <Compile Include="Modules\Login\MyAccountView.xaml.cs">
+      <DependentUpon>MyAccountView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Login\MyAccountViewModel.cs" />
+    <Compile Include="Modules\Production\ProductionMasterView.xaml.cs">
+      <DependentUpon>ProductionMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\ProductionMasterViewModel.cs" />
+    <Compile Include="Modules\Production\ProductionSummaryView.xaml.cs">
+      <DependentUpon>ProductionSummaryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\ProductionSummaryViewModel.cs" />
+    <Compile Include="Modules\Product\AddEditProductView.xaml.cs">
+      <DependentUpon>AddEditProductView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Product\AddEditProductViewModel.cs" />
+    <Compile Include="Modules\Product\ProductListView.xaml.cs">
+      <DependentUpon>ProductListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Product\ProductListViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\AddEditRefDataView.xaml.cs">
+      <DependentUpon>AddEditRefDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\AddEditRefDataViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\Costing\CostingZoneListView.xaml.cs">
+      <DependentUpon>CostingZoneListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\Costing\CostingZoneListViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\Costing\AddEditCostingZoneView.xaml.cs">
+      <DependentUpon>AddEditCostingZoneView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\Costing\AddEditCostingZoneViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserView.xaml.cs">
+      <DependentUpon>AddEditGlobeweighUserView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserViewOld.xaml.cs">
+      <DependentUpon>AddEditGlobeweighUserViewOld.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserViewModelOld.cs" />
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\GlobeweighUserListView.xaml.cs">
+      <DependentUpon>GlobeweighUserListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\GlobeweighUserListViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\SelectRolesView.xaml.cs">
+      <DependentUpon>SelectRolesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\GlobeweighUser\SelectRolesViewModel.cs" />
+    <Compile Include="Modules\Haulier\AddEditHaulierView.xaml.cs">
+      <DependentUpon>AddEditHaulierView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Haulier\AddEditHaulierViewModel.cs" />
+    <Compile Include="Modules\Haulier\HaulierListView.xaml.cs">
+      <DependentUpon>HaulierListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Haulier\HaulierListViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\ReferenceDataMasterView.xaml.cs">
+      <DependentUpon>ReferenceDataMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\ReferenceDataMasterViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\ReferenceDataView.xaml.cs">
+      <DependentUpon>ReferenceDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\ReferenceDataViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\StockLocation\AddEditLocationView.xaml.cs">
+      <DependentUpon>AddEditLocationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\StockLocation\AddEditLocationViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\StockLocation\StockLocationListView.xaml.cs">
+      <DependentUpon>StockLocationListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\StockLocation\StockLocationListViewModel.cs" />
+    <Compile Include="Modules\Stock\CurrentStockSummaryView.xaml.cs">
+      <DependentUpon>CurrentStockSummaryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\CurrentStockLocationView.xaml.cs">
+      <DependentUpon>CurrentStockLocationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\CurrentStockSummaryViewModel.cs" />
+    <Compile Include="Modules\Stock\CurrentStockLocationViewModel.cs" />
+    <Compile Include="Modules\Stock\PalletHistoryView.xaml.cs">
+      <DependentUpon>PalletHistoryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\SelectPalletView.xaml.cs">
+      <DependentUpon>SelectPalletView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\CreateDispatchOrderView.xaml.cs">
+      <DependentUpon>CreateDispatchOrderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\PalletHistoryViewModel.cs" />
+    <Compile Include="Modules\Dispatch\SelectPalletViewModel.cs" />
+    <Compile Include="Modules\Dispatch\CreateDispatchOrderViewModel.cs" />
+    <Compile Include="Modules\Dispatch\DispatchOrderListView.xaml.cs">
+      <DependentUpon>DispatchOrderListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Dispatch\DispatchOrderListViewModel.cs" />
+    <Compile Include="Modules\Production\EditMultipleProductionPalletsView.xaml.cs">
+      <DependentUpon>EditMultipleProductionPalletsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\EditProductionPalletView.xaml.cs">
+      <DependentUpon>EditProductionPalletView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\EditMultipleProductionPalletsViewModel.cs" />
+    <Compile Include="Modules\Production\EditProductionPalletViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\Address\AddressListView.xaml.cs">
+      <DependentUpon>AddressListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\Address\AddressListViewModel.cs" />
+    <Compile Include="Modules\Production\ProductionPalletListView.xaml.cs">
+      <DependentUpon>ProductionPalletListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Production\ProductionPalletListViewModel.cs" />
+    <Compile Include="Modules\Login\LoginViewModel.cs" />
+    <Compile Include="Modules\Login\LoginView.xaml.cs">
+      <DependentUpon>LoginView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\RefDataBespoke\AddEditProductContitionTypeView.xaml.cs">
+      <DependentUpon>AddEditProductContitionTypeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\RefDataBespoke\AddEditProductContitionTypeViewModel.cs" />
+    <Compile Include="Modules\ReferenceData\RefDataBespoke\ProductConditionTypeView.xaml.cs">
+      <DependentUpon>ProductConditionTypeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ReferenceData\RefDataBespoke\ProductConditionTypeViewModel.cs" />
+    <Compile Include="Modules\Reports\ReportDispatchRecordsView.xaml.cs">
+      <DependentUpon>ReportDispatchRecordsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Reports\ReportDispatchRecordsViewModel.cs" />
+    <Compile Include="Modules\Reports\ReportStockSummaryView.xaml.cs">
+      <DependentUpon>ReportStockSummaryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Reports\ReportDispatchInStockView.xaml.cs">
+      <DependentUpon>ReportDispatchInStockView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Reports\ReportStockSummaryViewModel.cs" />
+    <Compile Include="Modules\Reports\ReportDispatchInStockViewModel.cs" />
+    <Compile Include="Modules\Reports\ReportsMasterView.xaml.cs">
+      <DependentUpon>ReportsMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Reports\ReportsMasterViewModel.cs" />
+    <Compile Include="Modules\Stock\CurrentStockListView.xaml.cs">
+      <DependentUpon>CurrentStockListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\CurrentStockListViewModel.cs" />
+    <Compile Include="Modules\Stock\StockHistoryView.xaml.cs">
+      <DependentUpon>StockHistoryView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\StockHistoryViewModel.cs" />
+    <Compile Include="Modules\Stock\FinishedProductStockMasterView.xaml.cs">
+      <DependentUpon>FinishedProductStockMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\StockMasterView.xaml.cs">
+      <DependentUpon>StockMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\FinishedProductStockMasterViewModel.cs" />
+    <Compile Include="Modules\Stock\StockMasterViewModel.cs" />
+    <Compile Include="Modules\Stock\StockTakeView.xaml.cs">
+      <DependentUpon>StockTakeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Stock\StockTakeViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\EditOutgoingView.xaml.cs">
+      <DependentUpon>EditOutgoingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\AddOutgoingView.xaml.cs">
+      <DependentUpon>AddOutgoingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\EditOutgoingViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\AddOutgoingViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\SelectSalesOrderView.xaml.cs">
+      <DependentUpon>SelectSalesOrderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\EditWeighbrideRecordView.xaml.cs">
+      <DependentUpon>EditWeighbrideRecordView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\AddIncomingView.xaml.cs">
+      <DependentUpon>AddIncomingView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\SelectSalesOrderViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\EditWeighbrideRecordViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\AddIncomingViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\WeighbrdgeSetupView.xaml.cs">
+      <DependentUpon>WeighbrdgeSetupView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\WeighbrdgeSetupViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\WeighbridgeMasterView.xaml.cs">
+      <DependentUpon>WeighbridgeMasterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\WeighbridgeMasterViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\WeighbridgeView.xaml.cs">
+      <DependentUpon>WeighbridgeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\WeighbridgeViewModel.cs" />
+    <Compile Include="Modules\Weighbridge\WeighOutView.xaml.cs">
+      <DependentUpon>WeighOutView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\Weighbridge\WeighOutViewModel.cs" />
+    <Compile Include="Services\SageService.cs" />
+    <Compile Include="UserControl1.xaml.cs">
+      <DependentUpon>UserControl1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModelLocator.cs" />
+    <Compile Include="ViewModels\DownloadNewUpdateViewModel.cs" />
+    <Compile Include="ViewModels\AddEditGenericDataViewModel.cs" />
+    <Compile Include="ViewModels\PrintExportOptionsViewModel.cs" />
+    <Compile Include="ViewModels\EntitiesViewModel.cs" />
+    <Compile Include="Views\DownloadNewUpdateView.xaml.cs">
+      <DependentUpon>DownloadNewUpdateView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AddEditGenericDataView.xaml.cs">
+      <DependentUpon>AddEditGenericDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PrintExportOptionsView.xaml.cs">
+      <DependentUpon>PrintExportOptionsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EntitiesView.xaml.cs">
+      <DependentUpon>EntitiesView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Modules\CompletedOrders\CompletedOrderListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Costing\EditZonePriceView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Costing\CostingMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Costing\CostingPriceListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\CustomerSupplier\AddEditAddressView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\CustomerSupplier\AddEditCustomerSupplierView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\CustomerSupplier\CustomerSupplierListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\CustomerSupplier\SelectAddressView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\AddEditDispatchOrderItemView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\ViewLoadDetailsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\CreateLoadView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\AutoPickView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\DispatchOrderListViewOld.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\EditCompletedDispatchView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\FullDispatchOrderView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\SelectBulkPalletView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Login\AboutView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\AddProductionPalletsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Login\MyAccountView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\ProductionMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\ProductionSummaryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Product\AddEditProductView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Product\ProductListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\AddEditRefDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\Costing\CostingZoneListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\Costing\AddEditCostingZoneView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\GlobeweighUser\AddEditGlobeweighUserViewOld.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\GlobeweighUser\GlobeweighUserListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\GlobeweighUser\SelectRolesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Haulier\AddEditHaulierView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Haulier\HaulierListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\ReferenceDataMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\ReferenceDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\StockLocation\AddEditLocationView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\StockLocation\StockLocationListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\CurrentStockSummaryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\CurrentStockLocationView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\PalletHistoryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\SelectPalletView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\CreateDispatchOrderView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Dispatch\DispatchOrderListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\EditMultipleProductionPalletsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\EditProductionPalletView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\Address\AddressListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Production\ProductionPalletListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Login\LoginView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\RefDataBespoke\AddEditProductContitionTypeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\ReferenceData\RefDataBespoke\ProductConditionTypeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Reports\ReportDispatchRecordsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Reports\ReportStockSummaryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Reports\ReportDispatchInStockView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Reports\ReportsMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\CurrentStockListView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\StockHistoryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\FinishedProductStockMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\StockMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Stock\StockTakeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\EditOutgoingView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\AddOutgoingView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\SelectSalesOrderView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\EditWeighbrideRecordView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\AddIncomingView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\WeighbrdgeSetupView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\WeighbridgeMasterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\WeighbridgeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modules\Weighbridge\WeighOutView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\ApplicationDefaults.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\CommonColours.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\GridControlResources.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\NewElementStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\MetroResources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControl1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DownloadNewUpdateView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\AddEditGenericDataView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\PrintExportOptionsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\EntitiesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Licenses.licx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Globeweigh.Admin_TemporaryKey.pfx" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Globe-96.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Dropbox-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Circled User Male-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Good Quality-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Globe-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Computer-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Dispatch-96.png" />
+    <Resource Include="Images\Intake-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Customers-96.png" />
+    <Resource Include="Images\Product-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Barcode-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Csv-64.png" />
+    <Resource Include="Images\Excel-64.png" />
+    <Resource Include="Images\Pdf-64.png" />
+    <Resource Include="Images\Preview-64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\GreenTick-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Redx-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\weighbridge-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Stock-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\BlueTick-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Production-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Warehouse-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Money-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Reports-96.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Globeweigh.Model\Globeweigh.Model.csproj">
+      <Project>{1307f4fb-0560-45b1-81a4-c0be9b7f8927}</Project>
+      <Name>Globeweigh.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Globeweigh.Reports\Globeweigh.Reports.csproj">
+      <Project>{757572bb-c472-4ca8-8796-cf8555d56812}</Project>
+      <Name>Globeweigh.Reports</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Globeweigh.Shared\Globeweigh.Shared.csproj">
+      <Project>{110696a8-6423-40bf-81b5-d834ec6d1f25}</Project>
+      <Name>Globeweigh.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\privacy-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\admin-96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\green-tick-square-48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="SageDataObject280">
+      <Guid>{D7F4B92E-F1B4-4996-80D1-76AC2448EDAB}</Guid>
+      <VersionMajor>28</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\CameraOff.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Dlls\AudioRender.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\D3DCompiler_43.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\D3DX9_43.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\EagleEyeRender.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\gdiplus.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCCore.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDK.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\AnalyzeData.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\AudioIntercom.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCAlarm.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCCoreDevCfg.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCDisplay.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCGeneralCfgMgr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCIndustry.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCPlayBack.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCPreview.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\HCVoiceTalk.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\libiconv2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\msvcr90.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\OpenAL32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\StreamTransClient.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HCNetSDKCom\SystemTransform.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\hlog.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HmMerge.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\hpr.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\HXVA.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\libeay32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\MP_Render.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\MP_VIE.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\NPQos.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\PlayCtrl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\ssleay32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\SuperRender.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\YUVProcess.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dlls\zlib1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="Images\task-completed-96.png" />
+    <Resource Include="Images\GlobeweighLogo.png" />
+  </ItemGroup>
+  <ItemGroup />
+</Project>

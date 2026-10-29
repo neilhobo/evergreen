@@ -1,0 +1,569 @@
+/* Gate / Barrier page inside the content card: the controls as a strip across the top, the
+   camera filling the rest below (2026-10-16 — the feed is widescreen, so a side-by-side layout
+   left black bands above and below it). Uses the shared design tokens from App.css (:root vars). */
+
+.gb-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The video fills the rest of the card, 6px in from the hairline like a grid. */
+.gb-page > .gb-video {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  margin: 6px;
+  border-radius: 3px;
+}
+
+.gb-panel {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 18px 24px;
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  /* Height of a section heading (.gb-card-title) including its 8px gap — fixed so the column
+     separators under the "Live Weight" heading can reach back up past it. */
+  --gb-title-h: 23px;
+}
+.gb-panel .gb-card-title {
+  height: 15px;
+  line-height: 15px;
+  margin: 0 0 8px;
+}
+
+/* Four columns across the strip: Bridge 1 & 2 | Gate & Barrier | TOUCH-IN/OUT | Camera list.
+   The first three come from the Live Weight section, the camera list is its own section. */
+.gb-panel-weight {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gb-panel-cameras {
+  flex: 0 0 auto;
+  padding-left: 24px;
+  border-left: 1px solid #e5e7eb;
+}
+
+/* The shared Live Weight body is a column on Deliveries/Incoming (readouts, relay, remote);
+   here the same three run across the strip in that order. */
+.gb-panel .wb-live {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px 24px;
+}
+/* A hairline between each column, running the full height of the strip: these two start up
+   level with the "Live Weight" heading, like the one beside the camera list. */
+.gb-panel .wb-live > .wb-relay,
+.gb-panel .wb-live > .wb-remote {
+  margin-top: calc(-1 * var(--gb-title-h));
+  padding-top: var(--gb-title-h);
+  padding-left: 24px;
+  border-left: 1px solid #e5e7eb;
+}
+.gb-panel--dock .wb-live > .wb-relay,
+.gb-panel--dock .wb-live > .wb-remote,
+.gb-panel--dock .gb-panel-cameras {
+  border-left-color: #2b3648;
+}
+/* The readouts: 40px narrower than they were in the old 390px column (362px inside its padding). */
+.gb-panel .wb-weights {
+  flex: 0 0 322px;
+  /* Stretched to the strip's height, less 30px at the bottom. */
+  margin-bottom: 30px;
+}
+/* Each readout fills the strip's height with the weight centred in it, rather than sitting at
+   the top over an empty band. align-content (with wrap) centres the line and keeps the digits and
+   unit on a shared baseline. */
+.gb-panel .wb-weight-block {
+  display: flex;
+  flex-direction: column;
+}
+.gb-panel .wb-weights .wb-weight {
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: center;
+}
+/* Wide enough for the IO-card fault box that covers the rows. */
+.gb-panel .wb-relay {
+  flex: 0 0 264px;
+}
+.gb-panel .wb-remote {
+  flex: 0 0 184px;
+  margin-top: 0;
+}
+/* TOUCH-IN above TOUCH-OUT. */
+.gb-panel .wb-remote-links {
+  flex-direction: column;
+  gap: 8px;
+}
+.gb-panel .wb-remote-link {
+  flex: 0 0 auto;
+}
+
+/* Gate/barrier controls wrapper — anchors the IO-card fault overlay. */
+.gb-controls {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Shaded error box over the gate/barrier controls (labels, lights and buttons)
+   when the relay IO card is not connected — same warning as Deliveries/Incoming. */
+.gb-relay-error {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  bottom: -6px;
+  left: -6px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #fff3e0;
+  border: 1px solid #f0c890;
+  border-radius: 6px;
+}
+.gb-relay-error-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: #d97706;
+}
+.gb-relay-error-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+}
+.gb-relay-error-sub {
+  font-size: 11px;
+  color: #b45309;
+  opacity: 0.85;
+  margin-top: 1px;
+}
+
+.gb-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+/* Live weight readout — dark panel with green seven-seg-ish digits (same as the
+   Deliveries/Incoming weighbridge panel). */
+.gb-weight {
+  background: #424242;
+  border-radius: 6px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.gb-weight-value {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  color: #4ade80; /* bright touch-app green, lit like a display */
+  text-shadow:
+    0 0 6px rgba(74, 222, 128, 0.65),
+    0 0 16px rgba(34, 197, 94, 0.45);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+.gb-weight-unit {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+.gb-weight-stale {
+  color: #2f7d33;
+  text-shadow: none;
+}
+
+/* Outage note under a bridge that has stopped sending — the greyed digits above it
+   are the last known figure, not a live reading. */
+.gb-weight-lost {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--error-text);
+  text-align: right;
+}
+
+/* Two bridges side by side — smaller digits so both fit in the panel. */
+.gb-weights {
+  display: flex;
+  gap: 8px;
+}
+.gb-weight-block {
+  flex: 1;
+  min-width: 0;
+}
+.gb-weight-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+.gb-weights .gb-weight {
+  padding: 10px 12px;
+  gap: 6px;
+}
+.gb-weights .gb-weight-value {
+  font-size: 26px;
+  letter-spacing: 1px;
+}
+.gb-weights .gb-weight-unit {
+  font-size: 15px;
+}
+
+/* Gate / barrier control rows */
+.gb-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gb-control-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-label);
+}
+
+.gb-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(203, 213, 225, 0.25);
+}
+.gb-dot.open {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
+.gb-dot.closed {
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.gb-btn {
+  min-width: 92px;
+  height: 32px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+.gb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gb-btn.open {
+  background: var(--primary);
+}
+.gb-btn.open:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.gb-btn.close {
+  background: #dc2626;
+}
+.gb-btn.close:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* Camera selector */
+.gb-cameras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gb-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-label);
+  cursor: pointer;
+}
+.gb-radio .gb-ip {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Status badge */
+.gb-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  align-self: flex-start;
+}
+.gb-status.ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+.gb-status.bad {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+/* Video area */
+.gb-video {
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1624;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+.gb-video-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.gb-video-cam {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+.gb-video-note {
+  font-size: 13px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+.gb-video-badge {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── "Dark dock" skin — Super Admin > Scale/Relay Styles, the same flag and look as the Live
+   Weight column on Deliveries/Incoming (Weighbridge.css .wb-live--dock). The controls column
+   becomes a navy block inset 6px like the video beside it; readouts get white digits and a live
+   lamp, gate/barrier rows a state chip beside a plain button. Scoped under .gb-panel--dock so
+   the current look is untouched. ── */
+.gb-panel--dock {
+  margin: 6px;
+  border-bottom: 0;
+  border-radius: 3px;
+  background: var(--sidebar-bg);
+  color: #e2e8f0;
+  gap: 14px 28px;
+}
+/* One 6px gap between the navy strip and the video, not two margins stacked. */
+.gb-panel--dock + .gb-video {
+  margin-top: 0;
+}
+.gb-panel--dock .gb-card-title {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #8b9bb4;
+}
+.gb-panel--dock .gb-status.ok {
+  padding: 0;
+  background: transparent;
+  color: #4ade80;
+  font-size: 11px;
+}
+.gb-panel--dock .gb-status .gb-dot {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  box-shadow: none;
+}
+
+/* Readouts */
+.gb-panel--dock .gb-weight-block {
+  background: #141c29;
+  border: 1px solid #2b3648;
+  border-radius: 8px;
+  padding: 8px 10px 10px;
+}
+.gb-panel--dock .gb-weight-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b9bb4;
+}
+.gb-weight-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3b4759;
+}
+.gb-weight-led.on {
+  background: #22c55e;
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.22),
+    0 0 8px rgba(34, 197, 94, 0.6);
+}
+.gb-panel--dock .gb-weights .gb-weight {
+  background: transparent;
+  padding: 0;
+  gap: 5px;
+  align-items: baseline;
+}
+.gb-panel--dock .gb-weights .gb-weight-value {
+  font: 600 30px/1 var(--app-font);
+  color: #4ade80; /* bright touch-app green, lit like a display */
+  text-shadow:
+    0 0 6px rgba(74, 222, 128, 0.65),
+    0 0 16px rgba(34, 197, 94, 0.45);
+  letter-spacing: 0;
+}
+.gb-panel--dock .gb-weights .gb-weight-value.gb-weight-stale {
+  color: #5b6b85;
+  text-shadow: none;
+}
+.gb-panel--dock .gb-weights .gb-weight-unit {
+  font: 500 12px var(--app-font);
+  color: #8b9bb4;
+}
+.gb-panel--dock .gb-weight-lost {
+  margin-top: 4px;
+  color: #f87171;
+}
+
+/* Gate / barrier rows */
+.gb-panel--dock .gb-controls {
+  gap: 6px;
+}
+.gb-panel--dock .gb-control {
+  height: 36px;
+  padding: 0 10px;
+  gap: 10px;
+  background: #141c29;
+  border: 1px solid #2b3648;
+  border-radius: 8px;
+}
+.gb-panel--dock .gb-control-label {
+  flex: 1;
+  font-size: 12.5px;
+  color: #e2e8f0;
+}
+.gb-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.gb-chip.on {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ade80;
+}
+.gb-panel--dock .gb-btn,
+.gb-panel--dock .gb-btn.open,
+.gb-panel--dock .gb-btn.close {
+  min-width: 0;
+  height: 26px;
+  padding: 0 14px;
+  border: 1px solid #3b4759;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  font: 600 11px var(--ui-font);
+  color: #fff;
+}
+.gb-panel--dock .gb-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Camera list */
+.gb-panel--dock .gb-radio {
+  color: #e2e8f0;
+  font-size: 12.5px;
+}
+.gb-panel--dock .gb-radio .gb-ip {
+  color: #8b9bb4;
+}
+.gb-panel--dock .gb-radio input {
+  accent-color: #22c55e;
+}
+
+/* "Connecting to relay…" — shown over the gate/barrier rows until the first relay poll answers,
+   in place of the IO-card fault box, which is kept for a poll that has actually said "not
+   connected". Same footprint as the fault box, but in the column's own colour so it blends in. */
+.gb-relay-checking {
+  position: absolute;
+  inset: -6px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  font: 500 12px var(--ui-font);
+  color: #64748b;
+}
+.gb-relay-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  border-top-color: #64748b;
+  animation: gb-relay-spin 0.8s linear infinite;
+}
+@keyframes gb-relay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gb-relay-spinner {
+    animation-duration: 2.4s;
+  }
+}
+.gb-panel--dock .gb-relay-checking {
+  background: rgba(26, 35, 50, 0.92);
+  color: #8b9bb4;
+}
+.gb-panel--dock .gb-relay-spinner {
+  border-color: #3b4759;
+  border-top-color: #8b9bb4;
+}
+
+/* ── The shared Live Weight body (pages/weighbridge/LiveWeightPanel), since 2026-09-25. The
+   panel supplies the padding and, in Dark dock, the navy — so the body adds neither: no second
+   inset navy block inside the navy column. ── */
+.gb-panel .wb-live {
+  padding: 0;
+}
+.gb-panel--dock .wb-live--dock {
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+}

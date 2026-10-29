@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Sunlight theme for the outdoor weighbridge screens.
+         NOT merged statically anywhere: ThemeManager adds this dictionary to (or removes
+         it from) Application.Current.Resources.MergedDictionaries when the "Sunlight"
+         toggle on the weighbridge screens changes, so it shadows the same-named keys in
+         CommonColours.xaml only while the mode is on. Toggled off, the app renders
+         exactly as it did before this theme existed.
+         Rules for direct-sun readability: maximum luminance (white surfaces),
+         near-black text, darker blue so white button text keeps its contrast,
+         and strong dark borders instead of subtle grey dividers. -->
+
+    <SolidColorBrush x:Key="GlobeweighBlueBrush" Color="#FF004A85"/>
+    <Color x:Key="GlobeweighBlueColor">#FF004A85</Color>
+
+    <SolidColorBrush x:Key="DarkGreyBrush" Color="#FF111111"/>
+    <SolidColorBrush x:Key="LightGreyBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="MainContentGrey" Color="#FFFFFFFF"/>
+    <Color x:Key="MainContentGreyColor">#FFFFFFFF</Color>
+    <Color x:Key="LightGreyColor">#FFFFFFFF</Color>
+
+    <!-- Field borders (TransactionContentControl etc.) go black instead of pale grey -->
+    <SolidColorBrush x:Key="ItemBorderBrush" Color="#FF000000"/>
+    <SolidColorBrush x:Key="DividerLineGrayBrush" Color="#FF444444"/>
+
+    <!-- ==== Weighbridge theme hooks (defaults live in CommonColours.xaml) ==== -->
+
+    <!-- Structural panel frames: white frames vanish on white, so go dark -->
+    <SolidColorBrush x:Key="WbPanelBorderBrush" Color="#FF444444"/>
+
+    <!-- Group/column headers: darker blue for contrast on white -->
+    <SolidColorBrush x:Key="WbGroupHeaderTextBrush" Color="#FF004A85"/>
+
+    <!-- Hero block goes full white for maximum luminance -->
+    <SolidColorBrush x:Key="WbHeroPanelBrush" Color="White"/>
+
+    <!-- Live-weight gauge: black digits on white — a dark glossy panel mirrors outdoors -->
+    <SolidColorBrush x:Key="WbGaugePanelBrush" Color="White"/>
+    <SolidColorBrush x:Key="WbGaugePanelBorderBrush" Color="#FF111111"/>
+    <SolidColorBrush x:Key="WbGaugeTextBrush" Color="#FF111111"/>
+
+    <!-- Barrier indicator: deeper green/red with dark outlines (white outlines vanish) -->
+    <SolidColorBrush x:Key="WbBarrierOpenBrush" Color="#FF008A00"/>
+    <SolidColorBrush x:Key="WbBarrierClosedBrush" Color="#FFC00000"/>
+    <SolidColorBrush x:Key="WbBarrierStrokeBrush" Color="#FF111111"/>
+
+    <!-- Docket YES/NO buttons -->
+    <SolidColorBrush x:Key="WbYesNoCheckedBrush" Color="#FF004A85"/>
+    <SolidColorBrush x:Key="WbYesNoCheckedBorderBrush" Color="Black"/>
+
+    <!-- Pending list: darker and a touch larger; header band keeps a visible grey -->
+    <SolidColorBrush x:Key="WbGridTextBrush" Color="#FF111111"/>
+    <sys:Double x:Key="WbGridFontSize">20</sys:Double>
+    <SolidColorBrush x:Key="WbGridHeaderBrush" Color="#FFE2E8F0"/>
+
+    <!-- Delivery list rows get dark outlines (white-on-white otherwise) -->
+    <Thickness x:Key="WbListItemBorderThickness">2</Thickness>
+
+    <!-- Keypad: light keys with black text — dark glossy keys wash out in sun -->
+    <SolidColorBrush x:Key="WbKeyBrush" Color="White"/>
+    <SolidColorBrush x:Key="WbKeyTextBrush" Color="Black"/>
+    <SolidColorBrush x:Key="WbKeyPressedBrush" Color="#FF333333"/>
+    <SolidColorBrush x:Key="WbKeyBorderBrush" Color="#FF333333"/>
+    <Thickness x:Key="WbKeyBorderThickness">2</Thickness>
+    <Thickness x:Key="WbKeyMargin">2</Thickness>
+
+</ResourceDictionary>

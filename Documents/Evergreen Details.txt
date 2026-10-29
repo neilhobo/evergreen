@@ -1,0 +1,32 @@
+Domain User: evergreen\acw 
+Pass: Static123
+
+SQL: EVERGREEN-SQL01\NTPRO
+user: globeweigh
+
+Sage Login:
+user: globeweigh
+pass: globeweigh
+
+Sage account No: 59454900
+Recovery code:PBD133EWE97EYTBZ7UHJ25WF
+SAGE SDK:
+neilhobson@globeweigh.com
+USUAL
+Serial: C470692
+Activation Key:ZYBHVLL
+
+Sage Passphrase: 10aFerryroad10aFerryroad
+
+Camera - 192.168.250.176
+admin
+mac111111
+
+ButternutSquash09
+
+9662682802
+Fish423!4231
+
+tailscale up --advertise-routes=192.168.250.0/24
+
+http://evergreen:8765

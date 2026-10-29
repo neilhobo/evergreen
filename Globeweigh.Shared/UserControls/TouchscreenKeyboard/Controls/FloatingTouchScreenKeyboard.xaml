@@ -1,0 +1,88 @@
+﻿<Popup
+    x:Class="WpfKb.Controls.FloatingTouchScreenKeyboard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:WpfKb="clr-namespace:WpfKb"
+    xmlns:Controls="clr-namespace:WpfKb.Controls"
+    xmlns:behaviors="clr-namespace:WpfKb.Behaviors"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    x:Name="keyboard"
+    DataContext="{Binding ElementName=keyboard}"
+    Placement="Center"
+    AllowsTransparency="True"
+    HorizontalOffset="0"
+    VerticalOffset="0"
+    >
+    <Grid x:Name="LayoutGrid">
+         <!-- <i:Interaction.Behaviors>  -->
+         <!--     <behaviors:AutoHideBehavior  -->
+         <!--         AreAnimationsEnabled="{Binding AreAnimationsEnabled}"  -->
+         <!--         IsShown="{Binding IsKeyboardShown, Mode=TwoWay}"  -->
+         <!--         IsAllowedToHide="{Binding IsAllowedToFade}"  -->
+         <!--         MinOpacity="{Binding MinimumKeyboardOpacity}"  -->
+         <!--         MaxOpacity="{Binding MaximumKeyboardOpacity}"  -->
+         <!--         HideDelay="{Binding KeyboardHideDelay}"  -->
+         <!--         HideDuration="{Binding KeyboardHideAnimationDuration}"  -->
+         <!--         ShowDuration="{Binding KeyboardShowAnimationDuration}"  -->
+         <!--         />  -->
+         <!-- </i:Interaction.Behaviors>  -->
+
+        <Grid.RowDefinitions>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="80"/>
+            <ColumnDefinition />
+            <ColumnDefinition Width="80"/>
+        </Grid.ColumnDefinitions>
+        <Border
+            x:Name="DragHandle"
+            Grid.Column="0"
+            BorderBrush="LightGray"
+            BorderThickness="10 10 10 5"
+            Background="DarkGray"
+            CornerRadius="10, 0, 0, 10"
+            PreviewMouseDown="DragHandle_PreviewMouseDown"
+            PreviewMouseMove="DragHandle_PreviewMouseMove"
+            PreviewMouseUp="DragHandle_PreviewMouseUp"
+            >
+            <Viewbox>
+                <TextBlock Text="Drag to move" Style="{DynamicResource Text.Detail}">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90"/>
+                    </TextBlock.LayoutTransform>
+                    <b:Interaction.Behaviors>
+                        <!-- <behaviors:AutoHideBehavior -->
+                        <!--     ActionWhenClicked="Show" -->
+                        <!--     IsAllowedToHide="{Binding IsDragHelperAllowedToHide}" -->
+                        <!--     /> -->
+                    </b:Interaction.Behaviors>
+                </TextBlock>
+            </Viewbox>
+        </Border>
+        <Border
+            Grid.Column="1"
+            Background="LightGray"
+            Padding="10"
+            CornerRadius="0, 0, 0, 0"
+            >
+            <Controls:OnScreenWebKeyboard
+                AreAnimationsEnabled="{Binding AreAnimationsEnabled}"
+                />
+        </Border>
+        <Border
+            Grid.Column="2"
+            BorderBrush="LightGray"
+            BorderThickness="10 10 10 5"
+            Background="DarkGray"
+            CornerRadius="0, 10, 10, 0" MouseUp="Border_MouseUp">
+            <Viewbox>
+                <TextBlock Text="Close" Style="{DynamicResource Text.Detail}">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90"/>
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+            </Viewbox>
+        </Border>
+    </Grid>
+</Popup>

@@ -1,0 +1,106 @@
+﻿<controls:MetroWindow
+    x:Class="Globeweigh.Touch.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+    xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+    xmlns:touch="clr-namespace:Globeweigh.Touch"
+    Title="Touch"
+    Width="1280"
+    Height="1024"
+    md:DialogServiceViews.IsRegistered="True"
+    shared:ViewModelBehavior.LoadUnload="True"
+    Background="{DynamicResource MainNavyBrush}"
+    DataContext="{Binding MainWindow, Source={StaticResource Locator}}"
+    Icon="Globe-96.ico"
+    IgnoreTaskbarOnMaximize="True"
+    IsWindowDraggable="False"
+    Left="0"
+    Loaded="MainWindow_OnLoaded"
+    LocationChanged="MainWindow_OnLocationOrSizeChanged"
+    ResizeMode="NoResize"
+    ShowCloseButton="False"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    SizeChanged="MainWindow_OnLocationOrSizeChanged"
+    SourceInitialized="MainWindow_OnSourceInitialized"
+    StateChanged="MainWindow_OnStateChanged"
+    Top="0"
+    Topmost="True"
+    UseNoneWindowStyle="True"
+    WindowStartupLocation="Manual"
+    WindowStyle="None">
+
+    <controls:MetroWindow.Resources>
+
+        <DataTemplate DataType="{x:Type touch:ProductionSummaryViewModel}">
+            <touch:ProductionSummaryView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:ProductionPalletListViewModel}">
+            <touch:ProductionPalletListView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:WeighbridgeInViewModel}">
+            <touch:WeighbridgeInView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:LoginViewModel}">
+            <touch:LoginView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:HomeViewModel}">
+            <touch:HomeView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:DeliveryInViewModel}">
+            <touch:DeliveryInView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:WeighbridgeWeighViewModel}">
+            <touch:WeighbridgeWeighView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:DispatchOrderListViewModel}">
+            <touch:DispatchOrderListView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:DispatchOrderDetailViewModel}">
+            <touch:DispatchOrderDetailView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:CollectionInViewModel}">
+            <touch:CollectionInView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:CollectionWeighViewModel}">
+            <touch:CollectionWeighView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:WeighbridgeListViewModel}">
+            <touch:WeighbridgeListView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:WeighbridgeOutViewModel}">
+            <touch:WeighbridgeOutView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type touch:SampleWeightViewModel}">
+            <touch:SampleWeightView />
+        </DataTemplate>
+
+    </controls:MetroWindow.Resources>
+    <Border Margin="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="0" />
+            </Grid.RowDefinitions>
+            <ContentControl Content="{Binding CurrentViewModel}" />
+            <!--<dxg:GridControl Grid.Row="1"  Visibility="Visible"/>
+            <dxp:DocumentPreviewControl x:Name="DocumentPreviewControl" Grid.Row="1"/>-->
+        </Grid>
+    </Border>
+</controls:MetroWindow>
+

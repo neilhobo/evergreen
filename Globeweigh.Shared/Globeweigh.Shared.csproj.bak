@@ -1,0 +1,287 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{110696A8-6423-40BF-81B5-D834EC6D1F25}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Globeweigh.Shared</RootNamespace>
+    <AssemblyName>Globeweigh.Shared</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CommonServiceLocator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommonServiceLocator.2.0.3\lib\net45\CommonServiceLocator.dll</HintPath>
+    </Reference>
+    <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Drawing.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Mvvm.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Pdf.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v23.1.Export, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Office.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Printing.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Utils.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Controls.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.CodeView.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.Desktop.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Core.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Printing.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Grid.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Grid.v23.1.Core, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v23.1, Version=23.1.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight, Version=5.4.1.0, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Extras, Version=5.4.1.0, Culture=neutral, PublicKeyToken=669f0b5e8f868abf, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Platform, Version=5.4.1.0, Culture=neutral, PublicKeyToken=5f873c45e98af8a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="InputSimulator">
+      <HintPath>..\packages\InputSimulator.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.SageDataObject280">
+      <HintPath>..\Globeweigh.Admin\obj\Debug\Interop.SageDataObject280.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="MahApps.Metro, Version=1.6.1.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Expression.Blend.Sdk.WPF.1.0.1\lib\net45\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll</HintPath>
+    </Reference>
+    <Reference Include="MvvmDialogs">
+      <HintPath>..\packages\MvvmDialogs.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.5.3\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseClasses\DialogViewModelBase.cs" />
+    <Compile Include="BaseClasses\ViewModelBase.cs" />
+    <Compile Include="BaseClasses\WindowBase.cs" />
+    <Compile Include="Behaviours\ElementBehaviours.cs" />
+    <Compile Include="Behaviours\IViewModel.cs" />
+    <Compile Include="Behaviours\ViewModelBehavior.cs" />
+    <Compile Include="Controls\RadialGuage.cs" />
+    <Compile Include="Controls\TextBlockContentControl.cs" />
+    <Compile Include="Controls\ImageButtonWithText.cs" />
+    <Compile Include="Controls\NavigationButton.cs" />
+    <Compile Include="Controls\ImageButton.cs" />
+    <Compile Include="Controls\TouchButton.cs" />
+    <Compile Include="Controls\TransactionContentControl.cs" />
+    <Compile Include="Controls\UniformGridWithOrientation.cs" />
+    <Compile Include="Converters\CustomConverters.cs" />
+    <Compile Include="Converters\MultiValueConverters.cs" />
+    <Compile Include="DXSplashScreen\SplashView.xaml.cs">
+      <DependentUpon>SplashView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorHandling\DbErrorWindow.xaml.cs">
+      <DependentUpon>DbErrorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorHandling\ErrorLogging.cs" />
+    <Compile Include="ErrorHandling\ExceptionHelper.cs" />
+    <Compile Include="ErrorHandling\frmError.xaml.cs">
+      <DependentUpon>frmError.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\AuthorisationHelper.cs" />
+    <Compile Include="Helpers\ColumnBindingHelper.cs" />
+    <Compile Include="Helpers\DeviceDetector.cs" />
+    <Compile Include="Converters\ImageConverter.cs" />
+    <Compile Include="Converters\ValueConverters.cs" />
+    <Compile Include="Helpers\BarcodeHelper.cs" />
+    <Compile Include="Helpers\EnumHelper.cs" />
+    <Compile Include="Helpers\NetworkConnection.cs" />
+    <Compile Include="Helpers\UtilitiesShared.cs" />
+    <Compile Include="Helpers\IconHelper.cs" />
+    <Compile Include="Network\NetConnection.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerConfig\ISageRepository.cs" />
+    <Compile Include="ServerConfig\ServerConfigView.xaml.cs">
+      <DependentUpon>ServerConfigView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ServerConfig\ServerConfigViewModel.cs" />
+    <Compile Include="Services\ICostingRepository.cs" />
+    <Compile Include="Services\IHaulierRepository.cs" />
+    <Compile Include="Services\IProductRepository.cs" />
+    <Compile Include="Services\IDispatchOrderRepository.cs" />
+    <Compile Include="Services\IReportRepository.cs" />
+    <Compile Include="Services\ISettingsRepository.cs" />
+    <Compile Include="Services\IStockLocationRepository.cs" />
+    <Compile Include="Services\ICustomerSupplierRepository.cs" />
+    <Compile Include="Services\IDeviceRepository.cs" />
+    <Compile Include="Services\IGlobeweighUserRepository.cs" />
+    <Compile Include="Services\IReferenceDataRepository.cs" />
+    <Compile Include="Services\IPalletRepository.cs" />
+    <Compile Include="Services\IStockRepository.cs" />
+    <Compile Include="Services\IWeighbridgeRepository.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Behaviours\AutoHideBehavior.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\FloatingTouchScreenKeyboard.xaml.cs">
+      <DependentUpon>FloatingTouchScreenKeyboard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeyboardSection.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeypad.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenWebKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\UniformOnScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\IInputSimulator.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\InputSimulatorScope.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\InputSimulatorWrapper.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\ITouchScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Keyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\CaseSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ChordKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ILogicalKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\InstantaneousModifierKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\LogicalKeyBase.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ModifierKeyBase.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\MultiCharacterKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\NumLockSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ShiftSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\StringKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\TogglingModifierKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\VirtualKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\GwAlphaNumericKeyboard.xaml.cs">
+      <DependentUpon>GwAlphaNumericKeyboard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\ucBatchClosed.xaml.cs">
+      <DependentUpon>ucBatchClosed.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Licenses.licx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="DXSplashScreen\SplashView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ErrorHandling\DbErrorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ErrorHandling\frmError.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ServerConfig\ServerConfigView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\TouchscreenKeyboard\Controls\FloatingTouchScreenKeyboard.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\TouchscreenKeyboard\GwAlphaNumericKeyboard.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\ucBatchClosed.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Resource Include="ResourceDictionaries\SharedApplicationDefaults.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="ResourceDictionaries\SharedElementStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="DXSplashScreen\Splash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Globe-Download.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\GreenTick-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Redx-32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Globeweigh.Model\Globeweigh.Model.csproj">
+      <Project>{1307f4fb-0560-45b1-81a4-c0be9b7f8927}</Project>
+      <Name>Globeweigh.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

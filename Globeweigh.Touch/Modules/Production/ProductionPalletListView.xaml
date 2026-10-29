@@ -1,0 +1,146 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+	         xmlns:internal="http://schemas.devexpress.com/winfx/2008/xaml/windowsui/internal"
+	         xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             md:DialogServiceViews.IsRegistered="True" 
+	         x:Class="Globeweigh.Touch.ProductionPalletListView"
+             mc:Ignorable="d"
+             d:DesignHeight="1024" d:DesignWidth="1280"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding ProductionPalletListView, Source={StaticResource Locator}}" Background="{DynamicResource MainContentGrey}"
+             >
+    <UserControl.Resources>
+
+            <!--<converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>-->
+
+        <Style  TargetType="{x:Type dxg:RowControl}" >
+            <Setter Property="Height" Value="40"></Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Row.IsDuplicate}" Value="True" >
+                    <Setter Property="Background" Value="#FFFFDF68"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+    </UserControl.Resources>
+    <Border  Margin="15" >
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Border Background="{DynamicResource GlobeweighBlueBrush}">
+                <Grid   Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
+                        <!-- <Button Width="60" Height="60" Style="{DynamicResource BackButtonStyle}" Margin="6,0,0,0" Command="{Binding HomeCommand}"/> -->
+                        <internal:BackButton Margin="2,2,10,2" VerticalAlignment="Center" Command="{Binding HomeCommand}" StrokeThickness="4" Width="66" Height="66"  />
+                        <TextBlock Text="Production Pallets" Margin="10,0,0,0" Style="{DynamicResource HeaderTextBlockStyle}" Foreground="White"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding LastRefreshText}" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="White" FontSize="25" Margin="0,0,10,0" />
+                    <!--<userControls:DateFilter Grid.Column="1" FilterDate="{Binding FilterDate}" FilterDateBackCommand="{Binding FilterDateBackCommand}" FilterDateForwardCommand="{Binding FilterDateForwardCommand}"  HorizontalAlignment="Right" FontSize="30" Width="400" Foreground="White" />-->
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="0,6,0,0" >
+                <!--<Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="350"/>
+                </Grid.ColumnDefinitions>-->
+                <Border BorderBrush="White" BorderThickness="0" Margin="0,0,0,4"  >
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid >
+
+                            <dxg:GridControl x:Name="grdPallets" ItemsSource="{Binding PalletList}" ShowLoadingPanel="{Binding IsBusy}" SelectedItems="{Binding SelectedPallets}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto" SelectedItem="{Binding SelectedPallet}" Margin="0,10,0,0" Grid.Row="1" Loaded="GrdPallets_OnLoaded">
+                                <dxg:GridControl.View>
+                                    <dxg:TableView x:Name="tvItems" >
+                                    </dxg:TableView>
+                                </dxg:GridControl.View>
+                                <dxg:GridControl.Columns>
+                                    <dxg:GridColumn FieldName="UniqueCode" Width="110" FixedWidth="True">
+                                        <dxg:GridColumn.EditSettings>
+                                            <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                        </dxg:GridColumn.EditSettings>
+                                    </dxg:GridColumn>
+                                    <dxg:GridColumn FieldName="CodicoCode" Width="130" FixedWidth="True" Header="Codico Code" />
+                                    <dxg:GridColumn FieldName="Gtin" Width="120" FixedWidth="True" Header="Evergreen Code" />
+                                    <dxg:GridColumn FieldName="Description"  Header="Product" />
+                                    <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True" />
+                                    <dxg:GridColumn FieldName="Upp" Width="60" FixedWidth="True" Header="UPP" />
+                                    <dxg:GridColumn FieldName="Weight" Width="80" FixedWidth="True">
+                                        <dxg:GridColumn.EditSettings>
+                                            <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                        </dxg:GridColumn.EditSettings>
+                                    </dxg:GridColumn>
+                                    <dxg:GridColumn FieldName="DateCreated" Header="Production Date" Width="140" FixedWidth="True">
+                                        <dxg:GridColumn.EditSettings>
+                                            <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                                        </dxg:GridColumn.EditSettings>
+                                    </dxg:GridColumn>
+                                    <dxg:GridColumn FieldName="IsScanned" Width="70" FixedWidth="True" Header="Scanned" />
+                                    <dxg:GridColumn FieldName="DateScanned" Header="Date Scanned" Width="140" FixedWidth="True">
+                                        <dxg:GridColumn.EditSettings>
+                                            <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                                        </dxg:GridColumn.EditSettings>
+                                    </dxg:GridColumn>
+                                </dxg:GridControl.Columns>
+                                <dxg:GridControl.TotalSummary>
+                                    <dxg:GridSummaryItem SummaryType="Count" Alignment="Right" />
+                                </dxg:GridControl.TotalSummary>
+
+                            </dxg:GridControl>
+
+
+                        </Grid>
+                        <Border BorderThickness="0" Grid.Row="2" Margin="0" Height="40">
+                            <Grid Margin="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <!--<Border Width="16" Height="16" Background="Green" VerticalAlignment="Center" CornerRadius="5" Margin="0,0,10,0">
+                                </Border>
+                                <TextBlock Text="Dispatched"  VerticalAlignment="Center" Margin="0" Foreground="{DynamicResource IsSelectedGreyBrush}"/>-->
+                                    <Border Width="20" Height="20" Background="#FFFFDF68" VerticalAlignment="Center" CornerRadius="5" Margin="10,0">
+                                    </Border>
+                                    <TextBlock Text="Duplicate"  VerticalAlignment="Center" Margin="0" Foreground="{DynamicResource IsSelectedGreyBrush}" FontSize="18"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,20,0">
+                                    <TextBlock Text="Count="  VerticalAlignment="Center" Margin="0" Foreground="{DynamicResource IsSelectedGreyBrush}"/>
+                                    <TextBlock Text="{Binding ElementName=grdPallets, Path=VisibleRowCount}"  VerticalAlignment="Center" Margin="0" Foreground="{DynamicResource IsSelectedGreyBrush}"/>
+                                </StackPanel>
+
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+             
+
+
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>
+

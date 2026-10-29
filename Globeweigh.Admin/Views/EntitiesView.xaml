@@ -1,0 +1,129 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
+             xmlns:Custom="http://www.galasoft.ch/mvvmlight"
+	         xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+	         xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+	         xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+	         md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.EntitiesView"
+             mc:Ignorable="d"  
+             d:DesignHeight="500" d:DesignWidth="1200"
+             shared:ViewModelBehavior.LoadUnload="True"
+             Background="White">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <UserControl.DataContext>
+        <Binding Path="EntitiesView" Source="{StaticResource Locator}"/>
+    </UserControl.DataContext>
+    <Grid>
+        <Grid Grid.Row="1" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border  Background="{DynamicResource LightGreyBrush}">
+                <Grid Margin="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="451*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Entities" Foreground="Black" VerticalAlignment="Center" Margin="14,0,0,2" FontSize="16" FontFamily="Segoe UI Semilight"/>
+                    </Border>
+                    <ListBox ItemsSource="{Binding EntityList}" SelectedItem="{Binding SelectedEntity}" Style="{DynamicResource LeftMenuListBoxStyle}" ItemContainerStyle="{DynamicResource LeftMenuItemContainerStyleBase}" Margin="0,20" Grid.Row="1" FontFamily="Segoe UI Semibold"/>
+                </Grid>
+
+            </Border>
+            <Grid Grid.Column="1" Margin="0" Visibility="{Binding SelectedEntity, Converter={StaticResource NullToCollapsedConverter}}">
+                <Border Background="White" Padding="0" BorderThickness="1">
+                    <Grid Margin="10,10,0,0">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="220"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Height="26">
+                                <TextBlock Text="Entity Properties"  Foreground="Black" VerticalAlignment="Top" Margin="0" FontSize="16" FontFamily="Segoe UI Semibold"/>
+                            </Border>
+                            <Grid Grid.Row="1" Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Entity Name:" Margin="0" FontFamily="Segoe UI" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding SelectedEntity.EntityName, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="200" Style="{DynamicResource TransactionTextBoxStyle}" Margin="0" FontSize="12" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                                <TextBlock Text="Entity Type ID:" Margin="0" Grid.Row="1" FontFamily="Segoe UI" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding SelectedEntity.EntityTypeId, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="60" Style="{DynamicResource TransactionTextBoxStyle}" Margin="0" Grid.Row="1" FontSize="12" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                                <TextBlock Text="Display Name:" Margin="0" Grid.Row="2" FontFamily="Segoe UI" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding SelectedEntity.DisplayName, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="200" Style="{DynamicResource TransactionTextBoxStyle}" Margin="0" Grid.Row="2" FontSize="12" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                                <TextBlock Text="Reference Data Type:" Margin="0" Grid.Row="3" FontFamily="Segoe UI" FontSize="12" VerticalAlignment="Center"/>
+                                <CheckBox IsChecked="{Binding SelectedEntity.IsReferenceDataType, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Margin="0" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock Text="Sort Order:" Margin="0" Grid.Row="4" FontFamily="Segoe UI" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding SelectedEntity.SortOrder, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Width="60" Style="{DynamicResource TransactionTextBoxStyle}" Margin="0,4" Grid.Row="4" FontSize="12" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Height="26">
+                                <TextBlock Text="Entity Database Field List"  Foreground="Black" VerticalAlignment="Top" FontSize="16" FontFamily="Segoe UI Semibold"/>
+                            </Border>
+                            <dxg:GridControl ItemsSource="{Binding EntityFieldList}" SelectedItem="{Binding SelectedEntityField}" AllowLiveDataShaping="True" Grid.Row="1" Margin="0,6,0,10" >
+                                <dxg:GridControl.View>
+                                    <dxg:TableView AllowPerPixelScrolling="True" ShowGroupPanel="False"  ShowIndicator="True" AutoWidth="True" AllowEditing="True" NavigationStyle="Cell" >
+                                        <b:Interaction.Triggers>
+                                            <b:EventTrigger EventName="RowUpdated">
+                                                <b:InvokeCommandAction Command="{Binding RowUpdatedCommand}" CommandParameter="{Binding SelectedEntityField}"/>
+                                            </b:EventTrigger>
+                                        </b:Interaction.Triggers>
+
+                                    </dxg:TableView>
+                                </dxg:GridControl.View>
+                                <dxg:GridColumn FieldName="EntityTypeId" Header="Entity Type ID">
+                                    <dxg:GridColumn.EditSettings>
+                                        <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                    </dxg:GridColumn.EditSettings>
+                                </dxg:GridColumn>
+                                <dxg:GridColumn FieldName="FieldName" Header="Field Name"/>
+                                <dxg:GridColumn FieldName="IsUsed" Header="Is Used" AllowEditing="True"/>
+                                <dxg:GridColumn FieldName="IsVisible" Header="Is Visible" AllowEditing="True"/>
+                                <dxg:GridColumn FieldName="IsRequired" Header="Is Required" AllowEditing="True"/>
+                                <dxg:GridColumn FieldName="DisplayName" Header="Display Name" AllowEditing="True"/>
+                                <dxg:GridColumn FieldName="IsForeignKey" AllowEditing="True"/>
+                                <dxg:GridColumn FieldName="ForeignKeyEnumName" AllowEditing="True"/>
+                            </dxg:GridControl>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,317 @@
+﻿<admin:MetroWindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       xmlns:admin="clr-namespace:Globeweigh.Admin"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:dxga="http://schemas.devexpress.com/winfx/2008/xaml/gauges"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.WeighOutView" Title="{Binding HeaderText, FallbackValue=Add/Edit Outgoing}"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="SingleBorderWindow" WindowTitleBrush="#FF3F3F46"
+        Height="640" Width="900" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White">
+
+    <admin:MetroWindowBase.Resources>
+
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsedConverter"/>
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+        <converters:TrueToFalseConverter x:Key="TrueToFalseConverter"/>
+        <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter"/>
+        <system:Boolean x:Key="True">True</system:Boolean>
+        <system:Boolean x:Key="False">False</system:Boolean>
+
+        <DataTemplate x:Key="selectCellTemplate">
+            <dxe:CheckEdit IsChecked="{Binding Path=RowData.Row.IsSelected}" IsReadOnly="{Binding Path=RowData.Row.OnHold}" HorizontalAlignment="Center"></dxe:CheckEdit>
+        </DataTemplate>
+
+        <Style TargetType="{x:Type dxg:RowControl}" >
+            <Setter Property="Height" Value="24"></Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Foreground" Value="Black" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Row.IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="Green" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+    </admin:MetroWindowBase.Resources>
+
+    <Border Background="White">
+        <Grid Margin="6" >
+            <Grid Background="{DynamicResource LightGreyBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <Border  BorderThickness="0,0,0,4" Background="{DynamicResource LightGreyBrush}">
+                    <Grid Margin="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="400"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid Margin="4,4,0,4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border BorderThickness="3" BorderBrush="White">
+                                <Grid Margin="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="34"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderBrush="White" BorderThickness="0,0,0,4">
+                                        <Grid Margin="0" VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Weigh Record" Style="{DynamicResource DefaultTextBlockContentStyle}" Foreground="{DynamicResource GlobeweighBlueBrush}" FontFamily="Segoe UI Semibold" Margin="5,0,0,0"  />
+                                        </Grid>
+                                    </Border>
+                                    <Grid Margin="10,10,10,0" Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="34"/>
+                                            <RowDefinition Height="50"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Incoming Weight Date:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  />
+                                        <TextBlock Text="{Binding CurrentWeighbridgeRecordView.PendingWeighDate, StringFormat=dd/MM/yy HH:mm}" Padding="0" Style="{DynamicResource DefaultTextBlockContentStyle}" Margin="0"  Grid.Column="1" />
+                                        <TextBlock Text="Haulier:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  Grid.Row="1" />
+                                        <TextBlock Text="{Binding CurrentWeighbridgeRecordView.HaulierName}" Padding="0" Style="{DynamicResource DefaultTextBlockContentStyle}" Margin="0"  Grid.Column="1" Grid.Row="1" />
+                                        <TextBlock Text="Vehicle Reg:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  Grid.Row="2" />
+                                        <TextBlock Text="{Binding CurrentWeighbridgeRecordView.VehicleReg}" Padding="0" Style="{DynamicResource DefaultTextBlockContentStyle}" Margin="0"  Grid.Column="1" Grid.Row="2" />
+                                        <TextBlock Text="Trailer No:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  Grid.Row="3" />
+                                        <TextBlock Text="{Binding CurrentWeighbridgeRecordView.TrailerNo}" Padding="0" Style="{DynamicResource DefaultTextBlockContentStyle}" Margin="0"  Grid.Column="1" Grid.Row="3" />
+                                        <!--<TextBlock Text="Sample Box Weight:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  Grid.Row="3" />
+                                <dxe:TextEdit EditValue="{Binding CurrentWeighbridgeRecord.SampleBoxWeight, UpdateSourceTrigger=PropertyChanged}" Background="White" Style="{DynamicResource DefaultTextEditStyle}" dxe:NumericMaskOptions.AlwaysShowDecimalSeparator="False"  EditValueType="{x:Type system:Decimal}" Mask="N2"
+                                                      MaskType="Numeric" AllowNullInput="True" Grid.Column="2" HorizontalAlignment="Left" Width="80" VerticalAlignment="Center" Margin="0" Grid.Row="3"/>-->
+
+                                        <TextBlock Text="Comments:" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0"  Grid.Row="4" />
+                                        <TextBox Margin="0,0,0,10" Text="{Binding CurrentWeighbridgeRecord.Comments}" Style="{DynamicResource DefaultMultilineTextBoxStyle}" Background="White"  AcceptsReturn="True" HorizontalAlignment="Stretch" VerticalContentAlignment="Top" VerticalAlignment="Stretch" Grid.Row="5" Grid.ColumnSpan="2" Grid.RowSpan="2"/>
+                                    </Grid>
+
+                                </Grid>
+
+                            </Border>
+                            <Border Grid.Column="1" Margin="0" BorderBrush="White" BorderThickness="3,0,3,3" Visibility="{Binding SelectedCustomer, Converter={StaticResource NullToCollapsedConverter}}" Grid.Row="1">
+                                <Grid  >
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="30"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                                        <Grid Margin="4,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Label Content="Orders On Load" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                                            <!--<Button Content="Edit PPT" Margin="4,0,0,0" Command="{Binding EditPptCommand}" Grid.Column="2"  IsEnabled="{Binding ElementName=grdProducts, Path=SelectedItems.Count}" Style="{DynamicResource ToolbarButtonStyle}"/>-->
+                                        </Grid>
+                                    </Border>
+                                    <dxg:GridControl x:Name="grdOrdersHaulierAssigned" ItemsSource="{Binding DispatchOrderList}" ShowLoadingPanel="{Binding IsBusy}" Margin="4" Grid.Row="1" >
+                                        <dxg:GridControl.View>
+                                            <dxg:TableView x:Name="tvOrders" NavigationStyle="None" ShowAutoFilterRow="False"/> 
+                                        </dxg:GridControl.View>
+                                        <dxg:GridControl.Columns>
+                                            <!--<dxg:GridColumn FieldName="IsSelected" Width="32"  Header=" " FixedWidth="True" AllowEditing="True" CellTemplate="{DynamicResource selectCellTemplate}"/>-->
+                                            <dxg:GridColumn FieldName="OrderNoDisplay" Header="Order No" FixedWidth="True"  Width="70">
+                                                <dxg:GridColumn.EditSettings>
+                                                    <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                                </dxg:GridColumn.EditSettings>
+                                            </dxg:GridColumn>
+                                            <dxg:GridColumn FieldName="CustomerName"  Header="Customer"/>
+                                        </dxg:GridControl.Columns>
+
+
+                                    </dxg:GridControl>
+
+
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <Border Grid.Column="2" BorderBrush="White" BorderThickness="3" Margin="4">
+
+                            <Grid x:Name="BoxLabelGrid">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="34"/>
+                                    <RowDefinition Height="160"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Border BorderBrush="White" BorderThickness="0,0,0,3">
+                                    <Grid Margin="0,4,0,0" VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Weight" Style="{DynamicResource DefaultTextBlockContentStyle}" Foreground="{DynamicResource GlobeweighBlueBrush}" Margin="5,0,0,0" HorizontalAlignment="Left"  />
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="1" Margin="0,0,14,0" >
+                                            <RadioButton x:Name="rdoAuto" Content="Auto" IsChecked="{Binding IsManual, ConverterParameter={StaticResource False}, Converter={StaticResource RadioButtonCheckedConverter}}" VerticalAlignment="Center" GroupName="x" Margin="0,0,10,0"/>
+                                            <RadioButton x:Name="rdoManual" Content="Manual" IsChecked="{Binding IsManual, ConverterParameter={StaticResource True}, Converter={StaticResource RadioButtonCheckedConverter}}" VerticalAlignment="Center" GroupName="x" Margin="0,0,10,0"/>
+                                        </StackPanel>
+
+
+                                    </Grid>
+
+                                </Border>
+                                <Grid Grid.Row="1" >
+                                    <Grid Background="#FF424242" Margin="20" d:IsHidden="True" Visibility="{Binding IsChecked, Converter={StaticResource TrueToVisibilityConverter}, ElementName=rdoAuto}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <dxga:DigitalGaugeControl Text="{Binding LiveWeight}" Margin="0,10" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                            <dxga:SevenSegmentsView>
+                                                <dxga:SevenSegmentsView.Presentation>
+                                                    <dxga:DefaultSevenSegmentsPresentation FillActive="#FF43E64A" FillInactive="#0F555555" />
+                                                </dxga:SevenSegmentsView.Presentation>
+                                            </dxga:SevenSegmentsView>
+                                        </dxga:DigitalGaugeControl>
+                                        <TextBlock Text="Kg" Grid.Column="1" FontSize="50" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="White" FontFamily="Segoe UI Semibold" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                    <Grid Background="#FF424242" Margin="20" Visibility="{Binding IsChecked, Converter={StaticResource TrueToVisibilityConverter}, ElementName=rdoManual}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Margin="20" Text="{Binding ManualWeight, UpdateSourceTrigger=PropertyChanged}"  VerticalContentAlignment="Center" FontSize="48" TextAlignment="Right" PreviewTextInput="NumberValidationTextBox"/>
+                                        <TextBlock Text="Kg" Grid.Column="1" FontSize="50" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="White" FontFamily="Segoe UI Semibold" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                </Grid>
+                                <Border Grid.Row="2" BorderBrush="White" BorderThickness="0,3,0,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <!--<Grid Visibility="{Binding RelayTcpConnection, Converter={StaticResource NullToCollapsedConverter}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="120"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Gate:" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBlockContentStyle}" FontSize="16" Margin="50,0,0,0"/>
+                                            <Button Grid.Column="1" Command="{Binding GateCommand}" Width="80">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource TransactionButtonStyleAction}">
+                                                        <Setter Property="Content" Value="Open"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding GateOpen}" Value="True">
+                                                                <Setter Property="Content" Value="Close"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Grid Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Fill="#FF00E000" Visibility="{Binding GateOpen, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Center" Height="30" Margin="0" VerticalAlignment="Center" Width="30" Stroke="White" StrokeThickness="3"/>
+                                                <Ellipse Fill="Red" Visibility="{Binding GateOpen, Converter={StaticResource TrueToCollapsedConverter}}" HorizontalAlignment="Center" Height="30" Margin="0" VerticalAlignment="Center" Width="30" Grid.Column="1" Stroke="White" StrokeThickness="3"/>
+                                            </Grid>
+                                        </Grid>
+                                        <Grid Grid.Row="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="120"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="Barrier:" VerticalAlignment="Center" Style="{DynamicResource DefaultTextBlockContentStyle}" FontSize="16" Margin="50,0,0,0"/>
+                                            <Button Grid.Column="1" Command="{Binding BarrierCommand}" Width="80">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource TransactionButtonStyleAction}">
+                                                        <Setter Property="Content" Value="Open"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding BarrierOpen}" Value="True">
+                                                                <Setter Property="Content" Value="Close"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Grid Grid.Column="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Fill="#FF00E000" Visibility="{Binding BarrierOpen, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Center" Height="30" Margin="0" VerticalAlignment="Center" Width="30" Stroke="White" StrokeThickness="3"/>
+                                                <Ellipse Fill="Red" Visibility="{Binding BarrierOpen, Converter={StaticResource TrueToCollapsedConverter}}" HorizontalAlignment="Center" Height="30" Margin="0" VerticalAlignment="Center" Width="30" Grid.Column="1" Stroke="White" StrokeThickness="3"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>-->
+
+                                        <Grid Grid.RowSpan="2" >
+                                            <Button Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}" Content="Weigh" FontSize="32" Height="90" Grid.Row="2" Width="300">
+                                                <!--<Button.Style>
+                                                <Style TargetType="{x:Type Button}" BasedOn="{StaticResource TransactionButtonStyleAction}">
+                                                    <Setter Property="Content" Value="Weigh Out"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsOutgoing}" Value="True">
+                                                            <Setter Property="Content" Value="Weigh In"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>-->
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+
+                                </Border>
+                            </Grid>
+
+                        </Border>
+
+                    </Grid>
+
+                </Border>
+
+                <Border Background="{DynamicResource LightGreyBrush}" Padding="0" Margin="0" Grid.Row="2" BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,1,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="3" Margin="0,3.5">
+                            <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource ToolbarButtonStyleBase}" IsCancel="True" Margin="20,0,6,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</admin:MetroWindowBase>
+
+
+

@@ -1,0 +1,121 @@
+/* Customers/Suppliers: Delivery Note Info — one reusable block of text per delivery
+   address, edited on the Edit Customer > Delivery Note Info tab and shown read-only
+   under the Addresses list on the Customers page. */
+
+/* Edit Customer tab: address list on the left, the note editor on the right. */
+.cs-note-tab {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+.cs-note-tab-list {
+  flex: 0 0 350px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cs-note-tab-list .data-table-wrap {
+  flex: 1;
+  min-height: 0;
+}
+.cs-note-tab-editor {
+  flex: 1;
+  margin-right: 50px; /* the editor fills the rest of the tab; keep it 50px short of the edge */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-note-tab-editor textarea {
+  line-height: 1.45;
+  white-space: pre;
+}
+
+/* Customers page side panel: the selected address's note, read-only. */
+.cs-note-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 14px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-heading);
+}
+.cs-note-empty {
+  font-size: 12px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+/* Edit Customer: the tab area is locked to the General tab's height (measured when the
+   dialog opens), so the dialog never changes size. The other tabs fill that height —
+   their grids and the note editor scroll inside it. */
+.cs-tab-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cs-tab-fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cs-tab-fill > .toolbar {
+  flex: none;
+}
+.cs-tab-fill > .data-table-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Edit Customer > Delivery Note Info: the editor side is two sections parted by a
+   hairline — the highlighted address, then the "Delivery note" entry. */
+.cs-note-addr {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-heading);
+  white-space: pre-line;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Customers page side panel: Addresses, Delivery Note Info and Emails stacked from the top,
+   each as tall as what it holds rather than a fixed share of the panel. A section may shrink
+   (its grid or note then scrolls) only when together they outgrow the panel. */
+.cs-side-sec {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-side-sec .cs-note-view {
+  flex: 0 1 auto;
+}
+
+/* Customers grid, Sales Rep column: a dropdown sized to sit inside a grid row, plain until
+   hovered so the column reads as text down the page. Saved as soon as a rep is picked. */
+.cs-rep-select {
+  width: 100%;
+  height: 20px;
+  margin: -2px 0;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  font: 400 12px var(--ui-font);
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.cs-rep-select:hover,
+.cs-rep-select:focus {
+  border-color: #b9c3cf;
+  background: #ffffff;
+  outline: none;
+}

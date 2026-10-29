@@ -1,0 +1,206 @@
+﻿<admin:MetroWindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        xmlns:admin="clr-namespace:Globeweigh.Admin"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.CreateDispatchOrderView" WindowTitleBrush="#FF3F3F46"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="SingleBorderWindow" Title="{Binding HeaderText, FallbackValue=Add/Edit Dispatch Order}"
+        Height="550" Width="1100" WindowStartupLocation="CenterOwner" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="{DynamicResource LightGreyBrush}">
+
+    <admin:MetroWindowBase.Resources>
+
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter"/>
+        <system:Boolean x:Key="True">True</system:Boolean>
+        <system:Boolean x:Key="False">False</system:Boolean>
+        <converters:TrueToFalseConverter x:Key="TrueToFalseConverter"/>
+        <Style x:Key="rowStyle" TargetType="{x:Type dxg:RowControl}" >
+            <Setter Property="Height" Value="24"></Setter>
+        </Style>
+
+        <Style x:Key="BoldCellStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="FocusedCellStyle" TargetType="dxg:LightweightCellEditor" BasedOn="{StaticResource {dxgt:GridRowThemeKey ResourceKey=LightweightCellStyle}}">
+            <Style.Triggers>
+                <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                    <Setter Property="Background" Value="White" />
+                    <!--<Setter Property="Foreground" Value="Black" />-->
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </admin:MetroWindowBase.Resources>
+    <Grid Margin="4" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Background="{DynamicResource MainContentGrey}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border BorderBrush="White" Margin="4" BorderThickness="3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="10,4,10,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Order No:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}"/>
+                        <Label Content="{Binding CurrentDispatchOrder.OrderNoDisplay}" Foreground="{DynamicResource MainNavyBrush}"  Grid.Column="1" VerticalAlignment="Center" Style="{DynamicResource DefaultLabelContentStyle}" Padding="0"/>
+                        <!--<Label Content="Transfer Location:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToVisibilityConverter}}" Grid.Row="1" Height="28"/>
+                        <dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding LocationList}" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToVisibilityConverter}}" Background="White" EditValue="{Binding CurrentDispatchOrder.TransferLocationId, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" IsReadOnly="{Binding ReadOnlyMode}" Foreground="Black" IsTextEditable="False" DisplayMember="LocationName" ValueMember="id" VerticalAlignment="Center" Height="Auto" />-->
+
+                        <Label Content="Customer:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="2" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" Height="28"/>
+                        <dxg:LookUpEdit x:Name="lookUpEdit1" Style="{DynamicResource DefaultLookUpEditStyle}" Background="White" SelectedItem="{Binding SelectedCustomer}" Margin="0,4" DisplayMember="Name" ValueMember="id" AutoPopulateColumns="False" AutoComplete="True" ImmediatePopup="False" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}"
+                                IsPopupAutoWidth="True" VerticalAlignment="Center" ItemsSource="{Binding CustomerList}" EditValue="{Binding CurrentDispatchOrder.CustomerId, UpdateSourceTrigger=PropertyChanged}"  PopupMinWidth="400" IsTextEditable="False" Grid.Column="1" Grid.Row="2">
+                            <dxg:LookUpEdit.PopupContentTemplate>
+                                <ControlTemplate>
+                                    <dxg:GridControl x:Name="PART_GridControl">
+                                        <dxg:GridControl.View>
+                                            <dxg:TableView AutoWidth="True"/>
+                                        </dxg:GridControl.View>
+                                        <dxg:GridColumn FieldName="Code" FixedWidth="True" Width="60"/>
+                                        <dxg:GridColumn FieldName="Name" AutoFilterCriteria="Contains"/>
+                                    </dxg:GridControl>
+                                </ControlTemplate>
+                            </dxg:LookUpEdit.PopupContentTemplate>
+                        </dxg:LookUpEdit>
+                        <!--<dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding CustomerList}" EditValue="{Binding CurrentDispatchOrder.CustomerId, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" IsReadOnly="{Binding ReadOnlyMode}" SelectedItem="{Binding SelectedCustomer}" Foreground="Black" IsTextEditable="False" DisplayMember="Name" ValueMember="id" VerticalAlignment="Center" Height="Auto" />-->
+                        <!--<Label Content="Customer Ref:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" Grid.Row="3" Height="28"/>-->
+                        <!--<Label Content="{Binding CurrentDispatchOrder.OrderDisplay}"  Foreground="{DynamicResource MainNavyBrush}" VerticalAlignment="Center" Style="{DynamicResource DefaultLabelContentStyle}" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" Margin="0,3" Grid.Column="1" Grid.Row="3" Padding="0"/>-->
+
+                        <Label Content="PO Number:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="4" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" Height="28"/>
+                        <dxe:TextEdit EditValue="{Binding CurrentDispatchOrder.PoNumber, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextEditStyleWhite}" Grid.Column="1" Grid.Row="4" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}"/>
+                        <Label Content="Haulier:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="5" Height="28"/>
+                        <dxe:ComboBoxEdit Grid.Column="1" Background="White" Grid.Row="5" ItemsSource="{Binding HaulierList}" EditValue="{Binding CurrentDispatchOrder.HaulierId, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" IsReadOnly="{Binding ReadOnlyMode}" Foreground="Black" IsTextEditable="False" DisplayMember="Name" ValueMember="id" VerticalAlignment="Center" Height="Auto" />
+                        <!--<Label Content="Vehicle Reg:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="6" Height="28"/>
+                            <dxe:TextEdit EditValue="{Binding CurrentDispatchOrder.VehicleReg, UpdateSourceTrigger=PropertyChanged}" Background="White" Style="{DynamicResource DefaultTextEditStyleWhite}" Grid.Column="1" Grid.Row="6" Height="Auto"/>
+                            <Label Content="Trailer No:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="7" Height="28"/>
+                            <dxe:TextEdit EditValue="{Binding CurrentDispatchOrder.TrailerNo, UpdateSourceTrigger=PropertyChanged}" Background="White" Style="{DynamicResource DefaultTextEditStyleWhite}" Grid.Column="1" Grid.Row="7" Height="Auto"/>-->
+
+                        <Label Content="Delivery:" Margin="0,4" VerticalAlignment="Top" Style="{DynamicResource DefaultLabelStyle}"    Grid.Row="8" Height="28"/>
+                        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="0,4">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="ASAP" GroupName="DeliveryType" VerticalAlignment="Center" Margin="0,0,12,0" IsEnabled="{Binding ReadOnlyMode, Converter={StaticResource TrueToFalseConverter}}" IsChecked="{Binding IsAsap, ConverterParameter={StaticResource True}, Converter={StaticResource RadioButtonCheckedConverter}}"/>
+                                <RadioButton Content="Week Commencing" GroupName="DeliveryType" VerticalAlignment="Center" IsEnabled="{Binding ReadOnlyMode, Converter={StaticResource TrueToFalseConverter}}" IsChecked="{Binding IsAsap, ConverterParameter={StaticResource False}, Converter={StaticResource RadioButtonCheckedConverter}}"/>
+                            </StackPanel>
+                            <dxe:DateEdit EditValue="{Binding CurrentDispatchOrder.DeliveryDate, UpdateSourceTrigger=PropertyChanged}" Background="White" Style="{DynamicResource DefaultDateEditStyle}" IsReadOnly="{Binding ReadOnlyMode}" Margin="0,4,0,0" Visibility="{Binding IsAsap, Converter={StaticResource TrueToCollapsedConverter}}"/>
+                        </StackPanel>
+                        <Label Content="Delivery Address:" Margin="0,4,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="{DynamicResource MainNavyBrush}" Grid.Row="9" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" Height="28"/>
+                        <dxe:HyperlinkEdit Text="Select Address" Command="{Binding SelectAddressCommand}" Margin="10,0,0,0" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="9" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToCollapsedConverter}}" />
+                        <TextBox Margin="0" Text="{Binding CurrentDispatchOrder.AddressFull}" Background="White" Style="{DynamicResource DefaultMultilineTextBoxStyle}" IsReadOnly="{Binding ReadOnlyMode}" Visibility="{Binding IsTransfer, Converter={StaticResource TrueToCollapsedConverter}}" AcceptsReturn="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="10" Grid.RowSpan="3" Grid.ColumnSpan="2" VerticalContentAlignment="Top" MinHeight="80"/>
+                        <Label Content="Comments:" Margin="0,4" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Grid.Row="13" Height="28"/>
+                        <TextBox Margin="0" Text="{Binding CurrentDispatchOrder.Comments, UpdateSourceTrigger=PropertyChanged}"  Style="{DynamicResource DefaultMultilineTextBoxStyle}" Background="White" IsReadOnly="{Binding ReadOnlyMode}" AcceptsReturn="True" HorizontalAlignment="Stretch" VerticalContentAlignment="Top" VerticalAlignment="Stretch" Grid.Row="14" Grid.RowSpan="2" Grid.ColumnSpan="2" MinHeight="80"/>
+
+                    </Grid>
+
+                </Grid>
+            </Border>
+            <Grid Grid.Row="1" Margin="4" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32"/>
+                        <RowDefinition Height="453*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="White" BorderThickness="3,3,3,0" >
+                        <Grid Margin="0,0,4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="43*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0" >
+                                <TextBlock Text="Order Items" Style="{DynamicResource TransactionHeaderTextBlockStyle}" FontSize="12"  Foreground="{DynamicResource GlobeweighBlueBrush}"  />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" HorizontalAlignment="Right" Grid.Column="1" >
+                                <controls:ImageButton Content="Add"  Command="{Binding AddCommand}" Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToCollapsedConverter}}"/>
+                                <controls:ImageButton Content="Delete"  Command="{Binding DeleteCommand}"  Style="{DynamicResource ToolbarButtonStyle}" VerticalAlignment="Center" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToCollapsedConverter}}"/>
+
+                            </StackPanel>
+                        </Grid>
+
+                    </Border>
+                    <Border BorderBrush="White" BorderThickness="3" Grid.Row="1">
+                        <dxg:GridControl ItemsSource="{Binding CurrentDispatchOrder.DispatchOrderItems}" ShowLoadingPanel="{Binding IsBusy}"  ShowBorder="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectedItem="{Binding SelectedDispatchOrderItem}" Margin="4">
+                            <dxg:GridControl.View>
+                                <dxg:TableView x:Name="tvOrderLines" EnableImmediatePosting="True" RowStyle="{DynamicResource rowStyle}" AllowSorting="False"  NavigationStyle="Cell"/>
+                            </dxg:GridControl.View>
+                            <dxg:GridColumn FieldName="ProductNameTemp"  Header="Product" AllowEditing="False" />
+                   
+                            <dxg:GridColumn FieldName="SizeTemp" Header="Size" Width="60" FixedWidth="True" AllowEditing="False"/>
+                            <dxg:GridColumn FieldName="UppTemp"  Header="UPP" Width="60" FixedWidth="True" AllowEditing="False"/>
+                            <dxg:GridColumn FieldName="Quantity" Header="Order Quantity" Width="90" FixedWidth="True" AllowEditing="True"/>
+                            <dxg:GridColumn FieldName="Price"  Width="60" FixedWidth="True" AllowEditing="False">
+                                <dxg:GridColumn.EditSettings>
+                                    <dxe:TextEditSettings HorizontalContentAlignment="Right"/>
+                                </dxg:GridColumn.EditSettings>
+                            </dxg:GridColumn>
+                            <dxg:GridColumn FieldName="TotalPrice" Width="90" FixedWidth="True">
+                                <dxg:GridColumn.DisplayTemplate>
+                                    <ControlTemplate>
+                                        <TextBlock Margin="4,0,4,0" x:Name="PART_Editor" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
+                                    </ControlTemplate>
+                                </dxg:GridColumn.DisplayTemplate>
+                            </dxg:GridColumn>
+
+                        </dxg:GridControl>
+                    </Border>
+                </Grid>
+
+            </Grid>
+
+        </Grid>
+
+
+        <Border Grid.Row="2">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Save" Width="100" Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToCollapsedConverter}}" Margin="20,0,0,0"/>
+                    <Button Content="Close" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleBase}" Margin="20,0,0,0" IsCancel="True" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToVisibilityConverter}}"/>
+                    <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleBase}" Margin="20,0,8,0" IsCancel="True" Visibility="{Binding ReadOnlyMode, Converter={StaticResource TrueToCollapsedConverter}}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</admin:MetroWindowBase>
+

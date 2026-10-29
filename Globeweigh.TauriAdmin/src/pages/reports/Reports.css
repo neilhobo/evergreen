@@ -1,0 +1,509 @@
+/* Reports — the grids and controls are the app kit (ledger DataTable, toolbar, ContentCard
+   tabs); only the notices, the figures strip and the side panel's account cards are here. */
+
+.rp-banner {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid #d3dae4;
+  border-radius: 6px;
+  background: #f8fafc;
+  font: 400 12px var(--ui-font);
+  color: #334155;
+}
+
+.rp-banner-warn {
+  border-color: #f1d5a6;
+  background: #fff7e8;
+}
+
+.rp-banner-error {
+  margin-top: 4px;
+  color: #b45309;
+}
+
+.rp-banner ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+/* The headline figures above the grid: total turnover, counts, period. */
+.rp-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid #eef2f7;
+  margin-bottom: 8px;
+}
+
+.rp-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rp-figure-k {
+  font: 600 9.5px/1.2 var(--ui-font);
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rp-figure-v {
+  font: 600 16px/1.2 var(--content-font, var(--ui-font));
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-figure-v small {
+  font-size: 11px;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: 6px;
+}
+
+.rp-tabs {
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.rp-neg {
+  color: #b91c1c;
+}
+
+.rp-muted {
+  color: #94a3b8;
+}
+
+.rp-empty {
+  padding: 14px 8px;
+  font: 400 12px var(--ui-font);
+  color: #64748b;
+}
+
+/* Side panel: the selected member's Sage accounts. */
+.rp-acc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rp-acc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 7px 10px;
+  border: 1px solid #d3dae4;
+  border-radius: 6px;
+  background: #fff;
+  font: 400 12px var(--ui-font);
+  color: #0f172a;
+}
+
+.rp-acc-ref {
+  font-weight: 600;
+}
+
+.rp-acc-name {
+  grid-column: 1 / -1;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-acc-sum {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+.rp-acc-meta {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.rp-acc-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 4px;
+  font: 600 12px var(--ui-font);
+  color: #0f172a;
+}
+
+/* Left column: the report groups with their reports nested under them. */
+.rp-nav-group {
+  padding: 8px 10px 4px;
+  font: 600 10.5px/1.2 var(--ui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.rp-nav-child {
+  padding-left: 18px;
+}
+
+.rp-nav-note {
+  padding: 4px 10px 4px 18px;
+  font: 400 12px var(--ui-font);
+  color: #94a3b8;
+}
+
+.rp-nav-new {
+  align-self: flex-start;
+  margin: 4px 0 0 8px;
+  padding: 5px 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  background: transparent;
+  font: 500 12px var(--ui-font);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.rp-nav-new:hover:enabled {
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.06);
+}
+
+.rp-nav-new:disabled {
+  color: #94a3b8;
+  cursor: default;
+}
+
+/* No reports at all: what a report is, and the way to make one. */
+.rp-start {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  font: 400 12.5px/1.5 var(--ui-font);
+  color: #475569;
+  text-align: center;
+}
+
+.rp-start strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.rp-start button {
+  margin-top: 6px;
+}
+
+.rp-members-help {
+  margin: 0 0 8px;
+  font: 400 12px/1.45 var(--ui-font);
+  color: #475569;
+}
+
+.rp-link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: 500 12px var(--ui-font);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.rp-link-btn:disabled {
+  color: #94a3b8;
+  cursor: default;
+}
+
+/* ---- Report editor: name on top, Sage customers | members below ---- */
+.rp-ed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.rp-ed-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 12px var(--ui-font);
+  color: #334155;
+}
+
+.rp-ed-name input {
+  flex: 1;
+  max-width: 460px;
+  font-weight: 600;
+}
+
+.rp-ed-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.rp-ed-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 520px;
+  padding: 10px;
+  border: 1px solid #d3dae4;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.rp-ed-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.rp-ed-head h3 {
+  margin: 0;
+  font: 600 12.5px var(--ui-font);
+  color: #0f172a;
+}
+
+.rp-ed-head span {
+  font: 400 11px var(--ui-font);
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+input.rp-ed-search {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.rp-ed-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid #eef2f6;
+}
+
+/* One Sage customer: tick, ref, name over town, and who already has it. */
+.rp-ed-cust {
+  display: grid;
+  grid-template-columns: auto 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  font: 400 12px var(--ui-font);
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.rp-ed-cust:hover {
+  background: #f8fafc;
+}
+
+.rp-ed-cust.is-picked {
+  background: rgba(8, 126, 239, 0.08);
+}
+
+.rp-ed-cust input {
+  margin: 0;
+}
+
+.rp-ed-ref {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-ed-cname {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rp-ed-cname,
+.rp-ed-cname small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-ed-cname small {
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+.rp-ed-owner,
+.rp-ed-flag {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 7px;
+  border-radius: 9px;
+  font: 500 10.5px var(--ui-font);
+}
+
+.rp-ed-owner {
+  background: #e8f5ee;
+  color: #166534;
+}
+
+.rp-ed-flag {
+  background: #fff7e8;
+  color: #b45309;
+}
+
+.rp-ed-cust.is-used .rp-ed-cname {
+  color: #64748b;
+}
+
+.rp-ed-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #eef2f6;
+}
+
+.rp-ed-picked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font: 400 12px var(--ui-font);
+  color: #334155;
+}
+
+.rp-ed-moving {
+  color: #b45309;
+}
+
+.rp-ed-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rp-ed-buttons .btn-primary {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Members: one card each, accounts as chips. The selected card is where "Add to" goes. */
+.rp-ed-members {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.rp-ed-member {
+  padding: 7px 8px;
+  border: 1px solid #d3dae4;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.rp-ed-member:hover {
+  border-color: #b6c2d1;
+}
+
+.rp-ed-member.is-target {
+  border-color: var(--accent-blue, #087eef);
+  box-shadow: 0 0 0 2px rgba(8, 126, 239, 0.15);
+}
+
+.rp-ed-member-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rp-ed-member-head input {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.rp-ed-member-tools {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rp-ed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.rp-ed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid #d3dae4;
+  border-radius: 11px;
+  background: #f8fafc;
+  font: 400 11px var(--ui-font);
+  color: #334155;
+}
+
+.rp-ed-chip b {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.rp-ed-chip-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rp-ed-chip button {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font: 600 12px/16px var(--ui-font);
+  color: #64748b;
+  cursor: pointer;
+}
+
+.rp-ed-chip button:hover {
+  background: #e2e8f0;
+  color: #b91c1c;
+}
+
+.rp-ed-chip.is-unknown {
+  border-color: #f1d5a6;
+  background: #fff7e8;
+  color: #b45309;
+}
+
+.rp-ed-noacc {
+  font: 400 11px var(--ui-font);
+  color: #b45309;
+}
+
+/* Delete sits apart from Cancel / Save, on the left of the footer. */
+.modal-footer .rp-ed-delete {
+  margin-right: auto;
+  color: #b91c1c;
+}

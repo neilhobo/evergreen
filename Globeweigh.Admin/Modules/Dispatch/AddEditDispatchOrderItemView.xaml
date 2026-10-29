@@ -1,0 +1,204 @@
+﻿<admin:MetroWindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:admin="clr-namespace:Globeweigh.Admin"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.AddEditDispatchOrderItemView" WindowTitleBrush="#FF3F3F46"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="SingleBorderWindow" Title="Add Dispatch Order Item"
+        Height="650" Width="1100" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="{DynamicResource LightGreyBrush}">
+    <admin:MetroWindowBase.Resources>
+        <ResourceDictionary>
+
+            <converters:NullToVisibleConverter x:Key="NullToVisibleConverter"/>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+            <converters:ZeroToCollapsedConverter x:Key="ZeroToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+
+
+            <Style x:Key="RefDataEntityItemContainerStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource LeftMenuItemContainerStyleBase}">
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <Grid Background="{TemplateBinding Background}"  Height="22">
+                                <TextBlock Text="{Binding TypeDescription}" TextWrapping="Wrap" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FFE4E4E4"/>
+                                </Trigger>
+                                <Trigger Property="Selector.IsSelected" Value="True">
+                                    <!--<Setter Property="Foreground" Value="#FF0063B1"/>-->
+                                    <Setter Property="Background" Value="{DynamicResource GreyBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style  TargetType="{x:Type dxg:RowControl}" >
+                <Setter Property="Height" Value="24"></Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Row.AlreadySelected}" Value="True">
+                        <Setter Property="Foreground" Value="Green" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+
+
+
+            <Style x:Key="rowStyle" TargetType="{x:Type dxg:RowControl}">
+                <Setter Property="Height" Value="30"></Setter>
+            </Style>
+        </ResourceDictionary>
+
+    </admin:MetroWindowBase.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid  Background="{DynamicResource MainContentGrey}" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+            <Border BorderThickness="3,3,0,3" BorderBrush="White">
+                <Grid  >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="White" BorderThickness="0,0,0,3">
+                        <TextBlock Text="Product Type" Style="{DynamicResource TransactionHeaderTextBlockStyle}" FontSize="12"  Foreground="{DynamicResource GlobeweighBlueBrush}" Margin="6,0,0,0"  />
+                    </Border>
+                    <ListBox x:Name="lstRefData" ItemsSource="{Binding ProductTypeList}" SelectedItem="{Binding SelectedProductType}" Style="{DynamicResource LeftMenuListBoxStyle}" ItemContainerStyle="{DynamicResource RefDataEntityItemContainerStyle}" Grid.RowSpan="2" Grid.Row="1" Margin="0,8,0,0"/>
+                </Grid>
+            </Border>
+
+
+            <Border Margin="0" Grid.Row="1" Grid.Column="1" BorderBrush="White" BorderThickness="3" >
+                <dxg:GridControl x:Name="grdProducts" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="12" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="4" >
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvProducts"  ShowSearchPanelMode="Never"  ShowGroupPanel="False" 
+                                ShowAutoFilterRow="True" NavigationStyle="Row" ShowFixedTotalSummary="False" BestFitMode="Smart" AutoWidth="True" AllowBestFit="True"/>
+                    </dxg:GridControl.View>
+                    <!--<dxg:GridColumn FieldName="Code" Width="100" FixedWidth="True"/>-->
+                    <dxg:GridColumn FieldName="ProductName"  Header="Product" AutoFilterCriteria="Contains" />
+                    <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True"/>
+                    <dxg:GridColumn FieldName="Upp"  Header="UPP" Width="60" FixedWidth="True"/>
+                    <!--<dxg:GridColumn FieldName="PalletCount" Width="90" FixedWidth="True">
+                            <dxg:GridColumn.DisplayTemplate>
+                                <ControlTemplate>
+                                    <TextBlock Margin="4,0,4,0" x:Name="PART_Editor" FontWeight="Bold" TextAlignment="Right"/>
+                                </ControlTemplate>
+                            </dxg:GridColumn.DisplayTemplate>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="TotalUnits" Width="90" FixedWidth="True"/>-->
+                    <dxg:GridColumn FieldName="HasPos" Header="POS" Width="70" FixedWidth="True"/>
+                    <dxg:GridColumn FieldName="Price" Width="90" FixedWidth="True">
+                        <dxg:GridColumn.DisplayTemplate>
+                            <ControlTemplate>
+                                <TextBlock Margin="4,0,4,0" x:Name="PART_Editor" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Right"/>
+                            </ControlTemplate>
+                        </dxg:GridColumn.DisplayTemplate>
+                    </dxg:GridColumn>
+
+                </dxg:GridControl>
+
+            </Border>
+
+            <Border BorderThickness="0,3,3,3" Background="{DynamicResource LightGreyBrush}" BorderBrush="White"  Margin="0" Grid.Column="2" Visibility="{Binding SelectedProduct, Converter={StaticResource NullToCollapsedConverter}}">
+                <Grid Margin="10" Visibility="{Binding SelectedProduct.AlreadySelected, Converter={StaticResource TrueToCollapsedConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Column="1" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Quantity (pallets):" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4"/>
+                        <TextBox Text="{Binding CurrentDispatchOrderItem.Quantity, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Background="White" HorizontalAlignment="Left" Width="80" Margin="0,4" Grid.Column="1" />
+                        <Label Content="Costing Zone:" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4" Grid.Row="1"/>
+                        <Label Content="{Binding CostingZone}" Style="{DynamicResource DefaultLabelContentStyle}" Margin="0,4" Grid.Row="1" Grid.Column="1" Padding="0"/>
+
+                        <Label Content="Price:" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4" Grid.Row="2"/>
+                        <dxe:TextEdit EditValue="{Binding CurrentDispatchOrderItem.Price, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:F2}}" Style="{DynamicResource DefaultTextEditStyleWhite}" Background="White" HorizontalAlignment="Left" Width="80" Margin="0,4" Grid.Column="1" Grid.Row="2" />
+                        <Label Content="Total Price:" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4" Grid.Row="3"/>
+                        <Label Content="{Binding CurrentDispatchOrderItem.TotalPrice}" Style="{DynamicResource DefaultLabelContentStyle}" Margin="0,4" Grid.Row="3" Grid.Column="1" Padding="0"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Visibility="{Binding SelectedProduct.PosId, Converter={StaticResource ZeroToCollapsedConverter}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="1" Visibility="{Binding InEditMode, Converter={StaticResource TrueToCollapsedConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Label Content="Include POS:" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4" Visibility="{Binding InEditMode, Converter={StaticResource TrueToCollapsedConverter}}"/>
+                            <CheckBox x:Name="chkPos" IsChecked="{Binding PosChecked, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Visibility="{Binding InEditMode, Converter={StaticResource TrueToCollapsedConverter}}" Grid.Column="1"/>
+
+                        </Grid>
+                        <Grid Grid.Row="2" Visibility="{Binding InEditMode, Converter={StaticResource TrueToCollapsedConverter}}">
+                            <Grid Visibility="{Binding IsChecked, Converter={StaticResource TrueToVisibilityConverter}, ElementName=chkPos}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="36"/>
+                                    <RowDefinition Height="36"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="{Binding SelectedProduct.PosDescription}" Padding="0" Style="{DynamicResource DefaultTextBlockContentStyle}" TextTrimming="CharacterEllipsis" Margin="0,4" Grid.ColumnSpan="2" />
+                                <Label Content="Quantity:" Style="{DynamicResource DefaultLabelStyle}" Margin="0,4" Grid.Row="1" />
+                                <TextBox Grid.Row="1" Text="{Binding CurrentDispatchOrderItem.PosQuantity, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}"  Background="White" HorizontalAlignment="Left" Width="80" Margin="0,4" Grid.Column="1" />
+
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                </Grid>
+            </Border>
+
+
+        </Grid>
+        <Border Grid.Row="1">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Save"  Width="100" Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}"/>
+                    <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</admin:MetroWindowBase>

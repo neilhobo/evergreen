@@ -1,0 +1,651 @@
+/* The newer delivery-note templates (DeliveryNoteTemplateSheet): "Ledger" (.dnt-ledger) and
+   "Green Band" (.dnt-greenband), chosen on Admin > Delivery Note.
+
+   Everything here styles what sits INSIDE the page. The page box itself — .dn-page's
+   190 x 276mm, no padding, and the 10mm @page margin — is DeliveryNote.css's and is shared
+   with the original note untouched (it prints right; see the notes there). So nothing in
+   this file may give .dn-page padding, a width or a height.
+
+   The sizes were taken from the A4 mock-ups the client chose from, where the whole 210mm
+   sheet was drawn; the @page margin now supplies the white edge the mock-ups drew as page
+   padding, so the blocks run to the edge of the printable box. */
+
+/* ── Vendored web fonts for Ledger ─────────────────────────────────────────────────────
+   Same reason Poppins is vendored (src/fonts.css): pagination is measured from real text,
+   and the server that auto-prints has no internet and none of these faces installed.
+   Public Sans is a variable font (one file serves every weight); latin + latin-ext only. */
+@font-face {
+  font-family: "Public Sans";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../../assets/fonts/public-sans-var-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Public Sans";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../../assets/fonts/public-sans-var-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../assets/fonts/ibm-plex-mono-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../assets/fonts/ibm-plex-mono-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../../assets/fonts/ibm-plex-mono-500-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../../assets/fonts/ibm-plex-mono-500-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ── Shared ──────────────────────────────────────────────────────────────────────────── */
+.dnt-page {
+  gap: 6mm;
+  line-height: 1.4;
+}
+
+.dnt-page img {
+  display: block;
+  object-fit: contain;
+}
+
+.dnt-pre {
+  white-space: pre-line;
+}
+
+.dnt-cust {
+  display: block;
+}
+
+.dnt-tel {
+  margin-top: 2mm;
+}
+
+.dnt-items {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.dnt-items .dnt-c-pal {
+  width: 20mm;
+}
+.dnt-items .dnt-c-bpp {
+  width: 26mm;
+}
+.dnt-items .dnt-c-bags {
+  width: 26mm;
+}
+
+.dnt-items th,
+.dnt-items td {
+  text-align: left;
+}
+
+.dnt-items .dnt-n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Signatures open the last-page footer and pin it to the bottom of the page — unless the
+   sheet is asked for Best Fit, when the footer follows the items directly. */
+.dnt-sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: auto;
+}
+
+.dnt-best-fit .dnt-sign {
+  margin-top: 0;
+}
+
+/* ── A · Ledger ──────────────────────────────────────────────────────────────────────── */
+.dnt-ledger {
+  font-family: "Public Sans", ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+  font-size: 11.5px;
+  color: #1a1a1a;
+  gap: 6.5mm;
+}
+
+.dnt-ledger .dnt-lab {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #5b6a52;
+}
+
+.dnt-ledger .dnl-mono,
+.dnt-ledger .dnt-items td.dnt-n {
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+
+.dnl-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 6mm;
+}
+
+.dnl-logo {
+  height: 25mm;
+  width: auto;
+}
+
+.dnl-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8mm;
+  text-align: right;
+}
+
+.dnl-no {
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.05;
+  color: #1c2b10;
+}
+
+.dnl-sub {
+  font-size: 10px;
+  color: #5b6a52;
+}
+
+/* The order confirmation's heading, over the head's rule: large, spaced capitals, no colour. */
+.dnl-doc-title {
+  /* No margins: the page's own gap between blocks spaces it. */
+  line-height: 1;
+  font-size: 7mm;
+  font-weight: 700;
+  letter-spacing: 1.2mm;
+  text-transform: uppercase;
+  color: #1c2b10;
+}
+
+.dnl-head {
+  border-top: 2px solid #1c2b10;
+  padding-top: 5mm;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1.05fr;
+  gap: 7mm;
+}
+
+.dnl-head .dnt-lab {
+  margin-bottom: 1.7mm;
+}
+
+.dnt-ledger .dnt-cust {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin-bottom: 0.6mm;
+}
+
+.dnl-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 4mm;
+}
+
+.dnl-kv > div {
+  padding: 1mm 0;
+  border-bottom: 1px solid #e3e7de;
+}
+
+.dnl-kv > div:nth-child(odd) {
+  color: #5b6a52;
+  font-size: 10px;
+}
+
+.dnl-kv > div:nth-child(even) {
+  text-align: right;
+  font-weight: 500;
+}
+
+.dnt-ledger .dnt-items {
+  border-collapse: collapse;
+}
+
+.dnt-ledger .dnt-items th {
+  background: #f4f5f1;
+  font-size: 8.3px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 2.1mm;
+  border-top: 2px solid #1c2b10;
+  border-bottom: 1px solid #cfd6c8;
+  color: #3c4637;
+}
+
+.dnt-ledger .dnt-items td {
+  padding: 2.2mm 2.1mm;
+  border-bottom: 1px solid #e3e7de;
+}
+
+.dnt-ledger .dnt-items td.dnt-n {
+  font-size: 11px;
+}
+
+.dnt-ledger .dnt-items tfoot td {
+  border-top: 2px solid #1c2b10;
+  border-bottom: none;
+  font-weight: 700;
+}
+
+.dnt-ledger .dnt-sign {
+  gap: 9mm;
+}
+
+.dnl-line {
+  height: 15mm;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.dnl-sign-lab {
+  padding-top: 1.5mm;
+  display: flex;
+  justify-content: space-between;
+  gap: 3mm;
+}
+
+.dnl-foot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6mm;
+  align-items: end;
+  border-top: 1px solid #d6dccf;
+  padding-top: 3.6mm;
+  font-size: 8px;
+  color: #5b6a52;
+  line-height: 1.55;
+}
+
+.dnl-gd {
+  height: 12mm;
+  width: auto;
+}
+
+.dnl-office {
+  font-size: 8.7px;
+  color: #1c2b10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8mm 4.6mm;
+  padding-top: 2mm;
+}
+
+.dnl-office i {
+  font-style: normal;
+  color: #7a8a70;
+}
+
+/* ── B · Green Band ──────────────────────────────────────────────────────────────────── */
+.dnt-greenband {
+  font-family: var(--app-font);
+  font-size: 11.3px;
+  color: #1a1a1a;
+}
+
+.dnt-greenband .dnt-lab {
+  font-size: 8px;
+  color: #2e6b1e;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.dnb-head {
+  border-radius: 2mm;
+  overflow: hidden;
+  border: 1px solid #d8e8c2;
+}
+
+.dnb-band {
+  background: #2e6b1e;
+  color: #fff;
+  padding: 6mm 7mm 5.5mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6mm;
+}
+
+.dnb-chip {
+  background: #fff;
+  border-radius: 3mm;
+  padding: 2.2mm 3.6mm;
+}
+
+.dnb-logo {
+  height: 21mm;
+  width: auto;
+}
+
+.dnb-title {
+  text-align: right;
+}
+
+.dnb-h {
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.dnb-pill {
+  display: inline-block;
+  margin-top: 2.6mm;
+  background: #8dc63f;
+  color: #1c2b10;
+  font-weight: 600;
+  border-radius: 99px;
+  padding: 0.8mm 4.2mm;
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dnb-tag {
+  font-size: 9px;
+  opacity: 0.85;
+  margin-top: 1.8mm;
+}
+
+.dnb-strip {
+  background: #f4f9ea;
+  display: grid;
+  grid-template-columns: 0.8fr 0.9fr 0.8fr 1.6fr 0.7fr;
+  padding: 3.6mm 7mm;
+  gap: 4mm;
+}
+
+.dnb-v {
+  font-weight: 600;
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+
+.dnb-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5.5mm;
+}
+
+.dnb-card {
+  border: 1px solid #cfe3b4;
+  border-radius: 3mm;
+  padding: 3.6mm 4.4mm;
+}
+
+.dnb-card .dnt-lab {
+  margin-bottom: 1.5mm;
+}
+
+.dnt-greenband .dnt-cust {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.dnt-greenband .dnt-tel {
+  font-weight: 600;
+}
+
+/* separate + no spacing, so the totals row's rounded ends paint */
+.dnt-greenband .dnt-items {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dnt-greenband .dnt-items th {
+  color: #2e6b1e;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  border-bottom: 2px solid #8dc63f;
+  padding: 2mm 2.5mm;
+}
+
+.dnt-greenband .dnt-items td {
+  padding: 2.3mm 2.5mm;
+}
+
+.dnt-greenband .dnt-items tbody tr:nth-child(even) td {
+  background: #f4f9ea;
+}
+
+.dnt-greenband .dnt-items tfoot td {
+  background: #2e6b1e;
+  color: #fff;
+  font-weight: 600;
+}
+
+.dnt-greenband .dnt-items tfoot td:first-child {
+  border-radius: 2mm 0 0 2mm;
+}
+
+.dnt-greenband .dnt-items tfoot td:last-child {
+  border-radius: 0 2mm 2mm 0;
+}
+
+.dnt-greenband .dnt-sign {
+  gap: 5.5mm;
+}
+
+.dnb-sbox {
+  border: 1px solid #b9d596;
+  border-radius: 3mm;
+  height: 22mm;
+  padding: 2.6mm 3.6mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dnb-small {
+  font-size: 8px;
+  color: #6c7a63;
+  white-space: nowrap;
+}
+
+.dnb-terms {
+  font-size: 8px;
+  color: #5d6a55;
+  line-height: 1.55;
+}
+
+.dnb-terms b {
+  color: #2e6b1e;
+  font-weight: 600;
+}
+
+.dnb-band2 {
+  background: #1c2b10;
+  color: #dbe7cf;
+  border-top: 1.2mm solid #8dc63f;
+  border-radius: 0 0 2mm 2mm;
+  padding: 3.6mm 6mm;
+  font-size: 8.7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6mm;
+  line-height: 1.6;
+}
+
+.dnb-band2 b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.dnb-gchip {
+  background: #fff;
+  border-radius: 2mm;
+  padding: 1.2mm 2mm;
+}
+
+.dnb-gd {
+  height: 10mm;
+  width: auto;
+}
+
+/* ── Commercial invoice (CommercialInvoiceTemplateSheet) ─────────────────────────────── */
+
+/* No signatures on the invoice, so its small print is what pins the footer to the foot. */
+.dnt-pin {
+  margin-top: auto;
+}
+
+.dnt-best-fit .dnt-pin {
+  margin-top: 0;
+}
+
+/* Sized to the figures (headings may take two lines), so the description stays on one line. */
+.dnt-items .dnt-c-hs {
+  width: 20mm;
+}
+.dnt-items .dnt-c-weight {
+  width: 17mm;
+}
+.dnt-items .dnt-c-unit {
+  width: 17mm;
+}
+.dnt-items .dnt-c-rate {
+  width: 12mm;
+}
+.dnt-items .dnt-c-nett {
+  width: 20mm;
+}
+
+.dnt-items .dnt-c {
+  text-align: center;
+}
+
+/* Nett / V.A.T. / Total under the lines: only the Total reads as the grand total. */
+.dnt-ledger .dnt-items tfoot tr + tr td {
+  border-top: 1px solid #e3e7de;
+  font-weight: 500;
+}
+
+.dnt-ledger .dnt-items tfoot tr.dnt-grand td {
+  border-top: 2px solid #1c2b10;
+  font-weight: 700;
+}
+
+.dnt-greenband .dnt-items tfoot tr:not(:last-child) td {
+  background: none;
+  color: inherit;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.dnt-greenband .dnt-items tfoot tr:first-child:not(:last-child) td {
+  border-top: 2px solid #8dc63f;
+}
+
+/* "Commercial Invoice" is longer than "Delivery Note"; keep it on one line in the band. */
+.dnb-h.dnb-h--long {
+  font-size: 32px;
+}
+
+/* "Pre-Commercial Invoice" (the estimate) is longer again. */
+.dnb-h.dnb-h--longer {
+  font-size: 27px;
+}
+
+/* Combined Gross / Nett Weight tables (CommercialInvoiceWeights; layout in
+   CommercialInvoice.css), in each template's dress. */
+.dnt-page .ciw {
+  margin: 3mm 0 2mm;
+}
+
+.dnt-page .ciw-table {
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.dnt-page .ciw-table th,
+.dnt-page .ciw-table td {
+  padding: 0.9mm 2.1mm;
+}
+
+.dnt-ledger .ciw-title th {
+  border-top: 2px solid #1c2b10;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #1c2b10;
+}
+
+.dnt-ledger .ciw-head th {
+  background: #f4f5f1;
+  font-size: 8.3px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid #cfd6c8;
+  color: #3c4637;
+}
+
+.dnt-ledger .ciw-table tbody td {
+  border-bottom: 1px solid #e3e7de;
+}
+
+.dnt-ledger .ciw-table .ciw-n {
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+
+.dnt-ledger .ciw-total td {
+  border-top: 2px solid #1c2b10;
+  border-bottom: none;
+}
+
+.dnt-greenband .ciw-title th {
+  background: #2e6b1e;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  border-radius: 4px 4px 0 0;
+}
+
+.dnt-greenband .ciw-head th {
+  color: #2e6b1e;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  border-bottom: 2px solid #8dc63f;
+}
+
+.dnt-greenband .ciw-table tbody tr:nth-child(even) td {
+  background: #f3f8ec;
+}
+
+.dnt-greenband .ciw-total td {
+  border-top: 2px solid #8dc63f;
+  background: none;
+}

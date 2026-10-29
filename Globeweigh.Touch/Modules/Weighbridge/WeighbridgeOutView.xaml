@@ -1,0 +1,199 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:local="clr-namespace:Globeweigh.Touch"
+ 	         xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+	         md:DialogServiceViews.IsRegistered="True"
+	         x:Class="Globeweigh.Touch.WeighbridgeOutView"
+             mc:Ignorable="d" 
+             d:DesignHeight="1024" d:DesignWidth="1280" 
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding WeighbridgeOutView, Source={StaticResource Locator}}" Background="{DynamicResource MainNavyBrush}">
+    <UserControl.Resources>
+
+        <converters:PercentageConverter x:Key="PercentageConverter"/>
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+        <converters:NullToVisibleConverter x:Key="NullToVisibilityConverter"/>
+
+        <!-- Pending list column headers — themed via the Wb* hooks so they follow
+             Normal / Sunlight / Dark. Simple template (no sort/resize chrome); the
+             padding header at the far right shares it, keeping the band continuous. -->
+        <Style x:Key="PendingHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Background" Value="{DynamicResource WbGridHeaderBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource WbGridTextBrush}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource DividerLineGrayBrush}" BorderThickness="0,0,0,2">
+                            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}" VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Pending list rows — same theming as the DeliveryInView selection lists:
+             white rows/black text normally, dark keys/white text in Dark mode. -->
+        <Style x:Key="PendingRowStyle" TargetType="{x:Type ListViewItem}">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="MinHeight" Value="60"/>
+            <Setter Property="Background" Value="{DynamicResource WbListItemBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource WbListItemTextBrush}"/>
+            <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+            <Setter Property="FontSize" Value="{DynamicResource WbGridFontSize}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="False"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource DividerLineGrayBrush}" BorderThickness="0,0,0,1">
+                            <GridViewRowPresenter Content="{TemplateBinding Content}" Columns="{TemplateBinding GridView.ColumnCollection}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource GlobeweighBlueBrush}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+    <Border  Background="{DynamicResource LightGreyBrush}" >
+        <Grid Background="{DynamicResource GlobeweighBlueBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid   Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
+                    <!-- <Button Width="60" Height="60" Style="{DynamicResource BackButtonStyle}" Margin="6,0,0,0" Command="{Binding HomeCommand}"/> -->
+                    <TextBlock Text="Weighbridge Out" Margin="10,0,0,0" Style="{DynamicResource HeaderTextBlockStyle}" Foreground="White"/>
+                </StackPanel>
+                <!-- Theme switches: Sunlight (white, black text) or Dark Mode (dark, white
+                     text). Mutually exclusive; persist per machine via ThemeManager. -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <TextBlock Text="Sunlight" Foreground="White" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <CheckBox IsChecked="{Binding IsSunlight, Source={x:Static local:ThemeManager.Instance}, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,30,0"/>
+                    <TextBlock Text="Dark Mode" Foreground="White" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <CheckBox IsChecked="{Binding IsDark, Source={x:Static local:ThemeManager.Instance}, Mode=TwoWay}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" Background="{DynamicResource MainContentGrey}">
+
+                <Border  >
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border BorderThickness="0,1" BorderBrush="{DynamicResource DividerLineGrayBrush}">
+                            <TextBlock Text="Pending (Incoming / Outgoing)" Style="{DynamicResource GroupHeaderTextBlockStyle}" Margin="10,0,0,0" />
+                        </Border>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="300"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Themed replacement for the old white DevExpress GridControl: a
+                                 ListView+GridView keeps the column headers but follows the active
+                                 theme (Normal / Sunlight / Dark) via the Wb* hooks. Named grdPending
+                                 so the Weigh Out button's SelectedItems binding still works. -->
+                            <ListView x:Name="grdPending"
+                                      ItemsSource="{Binding PendingList}"
+                                      SelectedItem="{Binding SelectedPending}"
+                                      SelectionMode="Single"
+                                      Background="{DynamicResource WbGridBodyBrush}"
+                                      BorderThickness="0"
+                                      Margin="5"
+                                      ItemContainerStyle="{StaticResource PendingRowStyle}"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="False"
+                                      ScrollViewer.PanningMode="VerticalOnly">
+                                <ListView.Resources>
+                                    <!-- Touch-width scrollbar (the old code-behind widened the DX one) -->
+                                    <Style TargetType="{x:Type ScrollBar}">
+                                        <Setter Property="Width" Value="40"/>
+                                    </Style>
+                                </ListView.Resources>
+                                <ListView.View>
+                                    <GridView AllowsColumnReorder="False" ColumnHeaderContainerStyle="{StaticResource PendingHeaderStyle}">
+                                        <GridViewColumn Header="Haulier" Width="260" DisplayMemberBinding="{Binding HaulierName}"/>
+                                        <GridViewColumn Header="Vehicle Reg" Width="130" DisplayMemberBinding="{Binding VehicleReg}"/>
+                                        <GridViewColumn Header="Product" Width="240" DisplayMemberBinding="{Binding Product}"/>
+                                        <GridViewColumn Header="Weigh Date" Width="170" DisplayMemberBinding="{Binding WeightInDate, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"/>
+                                        <GridViewColumn Header="Weight In (Kg)" Width="120" DisplayMemberBinding="{Binding WeightIn}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+
+                            <!-- Replaces the DX ShowLoadingPanel -->
+                            <TextBlock Text="Loading…" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                                       Style="{DynamicResource DefaultTextBlockStyle}"
+                                       Visibility="{Binding IsPendingBusy, Converter={StaticResource TrueToVisibilityConverter}}"/>
+                            <Border  Grid.Column="1" BorderBrush="{DynamicResource DividerLineGrayBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource MainContentGrey}">
+                                <Grid>
+                                    <Button Command="{Binding WeighOutCommand}" Style="{StaticResource PrimaryButtonStyleAction}" Content="Weigh Out" Width="250" IsEnabled="{Binding ElementName=grdPending, Path=SelectedItems.Count}" Height="120" Margin="0,50,0,0" Grid.Row="3" Visibility="{Binding SelectedPending, Converter={StaticResource NullToCollapsedConverter}}" VerticalAlignment="Top" FontSize="40">
+                                        <!--<Button.Style>
+                                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource PrimaryButtonStyleBase}">
+                                                <Setter Property="Content" Value="Weigh Out"/>
+                                                <Style.Triggers>
+
+                                                    <DataTrigger Binding="{Binding SelectedPending.IsOutgoing}" Value="True">
+                                                        <Setter Property="Content" Value="Weigh In"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>-->
+
+                                    </Button>
+                                    <!--<Button Command="{Binding ViewDetailsPendingCommand}" Style="{DynamicResource PrimaryButtonStyleBase}" Content="Detail View" Width="180" IsEnabled="{Binding ElementName=grdPending, Path=SelectedItems.Count}" Visibility="{Binding SelectedPending, Converter={StaticResource NullToCollapsedConverter}}" Height="60" Margin="0" Grid.Row="4"/>-->
+
+
+
+                                </Grid>
+
+
+                            </Border>
+
+                            <Grid Background="{DynamicResource MainContentGrey}" Visibility="{Binding PendingErrorFound, Converter={StaticResource TrueToVisibilityConverter}}" d:IsHidden="True" Grid.ColumnSpan="2">
+                                <Border Margin="200,50" BorderBrush="White" BorderThickness="4">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Error fetching results"  HorizontalAlignment="Center" FontSize="36" VerticalAlignment="Center" FontFamily="Segoe UI Semilight" Foreground="{DynamicResource DarkGreyBrush}" />
+                                        <Button Content="Retry" Command="{Binding RetryPendingRefreshCommand}" Grid.Row="1" Style="{DynamicResource PrimaryButtonStyleBase}" Width="200"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,125 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:admin="clr-namespace:Globeweigh.Admin"
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.ReferenceDataMasterView"
+             mc:Ignorable="d"  
+             d:DesignHeight="500" d:DesignWidth="1200"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding ReferenceDataMasterView, Source={StaticResource Locator}}" Background="White">
+    <UserControl.Resources>
+
+        <DataTemplate DataType="{x:Type admin:ReferenceDataViewModel}">
+            <admin:ReferenceDataView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type admin:GlobeweighUserListViewModel}">
+            <admin:GlobeweighUserListView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type admin:ProductConditionTypeViewModel}">
+            <admin:ProductConditionTypeView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:HaulierListViewModel}">
+            <admin:HaulierListView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:AddressListViewModel}">
+            <admin:AddressListView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:StockLocationListViewModel}">
+            <admin:StockLocationListView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type admin:CostingZoneListViewModel}">
+            <admin:CostingZoneListView/>
+        </DataTemplate>
+
+
+        <Style x:Key="RefDataEntityItemContainerStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource LeftMenuItemContainerStyleBase}">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Grid Background="{TemplateBinding Background}"  Height="22">
+                            <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="20,0,0,0" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FFE4E4E4"/>
+                            </Trigger>
+                            <Trigger Property="Selector.IsSelected" Value="True">
+                                <!--<Setter Property="Foreground" Value="#FF0063B1"/>-->
+                                <Setter Property="Background" Value="{DynamicResource GreyBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RefDataCustomItemContainerStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource LeftMenuItemContainerStyleBase}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Grid Background="{TemplateBinding Background}" Height="20">
+                            <TextBlock Text="{TemplateBinding Content}" TextWrapping="Wrap" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" Margin="20,0,0,0" VerticalAlignment="Center"  />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"/>
+                            <Trigger Property="Selector.IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="#FF0063B1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+
+
+    </UserControl.Resources>
+    <Grid>
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="210"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border  Background="{DynamicResource LightGreyBrush}" BorderThickness="0,0,1,0" BorderBrush="{DynamicResource MainBorderBrush}">
+                <Grid >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Data Setup" Foreground="Black" VerticalAlignment="Center" Margin="14,0,0,2" FontSize="16" FontFamily="Segoe UI Semilight"/>
+                    </Border>
+
+                    <Grid Margin="0,10" Grid.Row="1">
+                        <ListBox x:Name="lstRefData" ItemsSource="{Binding EntityList}" SelectedItem="{Binding SelectedEntity}" Style="{DynamicResource LeftMenuListBoxStyle}" ItemContainerStyle="{DynamicResource RefDataEntityItemContainerStyle}" Grid.Row="1"/> 
+                    </Grid>
+                    <!--<Border BorderBrush="{DynamicResource MainBorderBrush}" BorderThickness="0,1" Grid.Row="2">
+                        <TextBlock Text="Other" Foreground="Black" VerticalAlignment="Center" Margin="14,0,0,2" FontSize="16" FontFamily="Segoe UI Semilight"/>
+                    </Border>
+
+                    <Grid Margin="0,10" Grid.Row="3">
+                        <ListBox   SelectedItem="{Binding SelectedEntity}" Style="{DynamicResource LeftMenuListBoxStyle}" ItemContainerStyle="{DynamicResource RefDataCustomItemContainerStyle}" Grid.Row="1">
+                            <ListBoxItem Name="DeletedEntities" Content="Deleted Entities"/>
+                        </ListBox>
+                    </Grid>-->
+                </Grid>
+
+            </Border>
+
+            <ContentControl Content="{Binding CurrentViewModel}" Background="{DynamicResource MainContentGrey}" Grid.Column="1"/>
+        </Grid>
+    </Grid>
+</UserControl>

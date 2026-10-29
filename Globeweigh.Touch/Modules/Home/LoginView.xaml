@@ -1,0 +1,201 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+           xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+           xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+    xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+    xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+    md:DialogServiceViews.IsRegistered="True" 
+	         x:Class="Globeweigh.Touch.LoginView"
+             mc:Ignorable="d" 
+             d:DesignHeight="1080" d:DesignWidth="1280" 
+             shared:ViewModelBehavior.LoadUnload="True" 
+             DataContext="{Binding LoginView, Source={StaticResource Locator}}" Background="#FFEBEBED"
+    
+             >
+    <UserControl.Resources>
+
+
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+
+        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyleBase}">
+            <Setter Property="Foreground" Value="{DynamicResource GlobeweighLightBlueBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Name="border" BorderThickness="{TemplateBinding BorderThickness}" SnapsToDevicePixels="True" UseLayoutRounding="True" CornerRadius="3" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Image  VerticalAlignment="Center" HorizontalAlignment="Center" Width="45" Height="44" Margin="0" Source="/Globeweigh.Touch;component/Images/Logout-96.png" Grid.ColumnSpan="1"/>
+                                <TextBlock Text="Exit"  Grid.Column="1" FontSize="22" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}" Margin="0,15,15,15"/>
+                            </Grid>
+
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="KeyPadButtonStyle" TargetType="Button">
+            <Setter Property="Command" Value="{Binding KeypadCommand}"/>
+            <Setter Property="CommandParameter" Value="{Binding Content, RelativeSource={RelativeSource Self}}"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="{StaticResource GlobeweighBlueBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Name="border" BorderThickness="1" CornerRadius="5" Padding="4,2" BorderBrush="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                            <Grid >
+                                <TextBlock Text="{TemplateBinding Content}" Foreground="White" FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center" Name="content"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FF898989"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="rowStyle" TargetType="{x:Type dxg:RowControl}">
+            <Setter Property="Height" Value="64"></Setter>
+
+            <Style.Triggers>
+                <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                    <Setter Property="Background" Value="#FF75C3FF" />
+                    <!--<Setter Property="Foreground" Value="White" />-->
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <DataTemplate x:Key="UserCellTemplate" >
+            <Grid d:DesignWidth="200" d:DesignHeight="64" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image x:Name="falseImage" Source="/Images/Circled User Male-32.png" Visibility="Visible" Margin="10" />
+                <Grid Grid.Column="1" Margin="10,0,0,0">
+                    <TextBlock Text="{Binding RowData.Row.FullName, FallbackValue=Neil Hobson}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="{DynamicResource GlobeweighBlueBrush}"  FontFamily="Segoe UI Semibold" FontSize="24"/>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+    </UserControl.Resources>
+    <Border  Margin="15" Background="White">
+        <!--<Border.Effect>
+            <DropShadowEffect Direction="360" ShadowDepth="0" BlurRadius="70"/>
+        </Border.Effect>-->
+        <Grid  Effect="{x:Null}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid Background="{DynamicResource GlobeweighBlueBrush}">
+                <Grid   Margin="5" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Image Source="/Images/Globe-96.png"/>
+                    <Grid Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Globeweigh Factory " Foreground="White" FontSize="20" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding CurrentVersion, FallbackValue=v1.0.0}" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" FontSize="20" />
+                        </StackPanel>
+                    </Grid>
+                    <Button Margin="0,0,20,0" Command="{Binding ExitCommand}" Foreground="White" Height="Auto" Grid.Column="3"/>
+                </Grid>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid Background="{DynamicResource MainContentGrey}"  Grid.Column="1">
+                    <Border Margin="20"  BorderBrush="White" BorderThickness="0">
+                        <Grid Margin="40">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Margin="20">
+                                <dxg:GridControl x:Name="grdDocs" dx:ThemeManager.ThemeName="VS2017Light"  ItemsSource="{Binding UserList}" SelectedItem="{Binding SelectedUser}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                                                Margin="0,2,0,0" >
+                                    <dxg:GridControl.View>
+                                        <dxg:TableView x:Name="tvDocs" RowStyle="{DynamicResource rowStyle}" ShowColumnHeaders="False"  ShowVerticalLines="False"/>
+                                    </dxg:GridControl.View>
+                                    <dxg:GridColumn FieldName="FileName" CellTemplate="{DynamicResource UserCellTemplate}" FixedWidth="True" Width="300"/>
+                                </dxg:GridControl>
+                            </Grid>
+                            <Border Margin="20" Grid.Column="1" BorderThickness="2" Visibility="{Binding SelectedUser, Converter={StaticResource NullToCollapsedConverter}}">
+                                    <Grid Margin="0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="120"/>
+                                            <RowDefinition Height="*"/>
+                                        <RowDefinition Height="50"/>
+                                        <RowDefinition Height="150"/>
+                                        </Grid.RowDefinitions>
+                                        <Border Margin="10,0,10,10" Background="White" CornerRadius="5" Width="440" BorderBrush="Black">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding KeypadDisplayValue, FallbackValue=123456, StringFormat='N'}" d:IsHidden="True"  Foreground="Black" FontSize="50" VerticalAlignment="Center" HorizontalAlignment="Center"  Margin="0"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <Grid Grid.Row="1" Margin="10" Width="440">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="1*"/>
+                                                <RowDefinition Height="1*"/>
+                                                <RowDefinition Height="1*"/>
+                                                <RowDefinition Height="1*"/>
+                                            </Grid.RowDefinitions>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="2" Grid.Column="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="3" Grid.Column="2" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="4" Grid.Row="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="5" Grid.Row="1" Grid.Column="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="6" Grid.Row="1" Grid.Column="2" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="7" Grid.Row="2" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="8" Grid.Row="2" Grid.Column="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="9" Grid.Row="2" Grid.Column="2" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="." Grid.Row="4" FontWeight="Bold"  Grid.Column="2"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="Del" Grid.Row="4" FontWeight="Bold"  Grid.Column="2"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="0" Grid.Row="4" Grid.Column="1" FontWeight="Bold"/>
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="-" Grid.Row="4" FontWeight="Bold" />
+                                            <Button Style="{DynamicResource KeyPadButtonStyle}" Content="Clear" Grid.Row="4" FontWeight="Bold" />
+
+                                        </Grid>
+                                    <TextBlock Text="{Binding ErrorText}" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="32" Foreground="Red" FontFamily="Segoe UI Semibold"/>
+                                    <Button Command="{Binding LoginCommand}" Style="{DynamicResource PrimaryButtonStyleBase}" Content="Login" Grid.Row="3" Width="440" Height="100" FontSize="50"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+        </Grid>
+    </Border>
+
+</UserControl>

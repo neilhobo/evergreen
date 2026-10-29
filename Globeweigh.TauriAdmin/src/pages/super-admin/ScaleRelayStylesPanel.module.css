@@ -1,0 +1,82 @@
+/* Super Admin > Scale/Relay Styles. Shares StagingPanel.module.css for the column, title and
+   note; this file is the option cards and the preview box around the real component. */
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    padding: 12px 14px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.optionOn {
+    border-color: rgba(var(--primary-rgb), 0.6);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.12);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.inUse {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.useBtn {
+    flex: none;
+    height: 26px;
+    padding: 0 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #fff;
+    font: 500 11px var(--ui-font);
+    color: #0f172a;
+    cursor: pointer;
+}
+
+.useBtn:hover {
+    background: #f8fafc;
+}
+
+.useBtn:disabled {
+    color: #94a3b8;
+    cursor: default;
+}
+
+/* The real component with sample values, at the column's own width (390px on the page),
+   drawn as the column is: header strip over the body. No clicks — it is a picture. */
+.preview {
+    margin-top: 10px;
+    width: 390px;
+    max-width: 100%;
+    border: 1px solid #d9dfe7;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    pointer-events: none;
+}
+
+.previewHead {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 14px;
+    border-bottom: 1px solid #eef2f6;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+}

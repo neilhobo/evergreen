@@ -1,0 +1,43 @@
+/* Base styles for the standalone delivery-note print page.
+
+   Deliberately NOT App.css. The note's own look lives entirely in DeliveryNote.css; the
+   only things it inherits from the app are box-sizing, the font, and the font faces. But
+   App.css also carries two rules that are actively wrong for this page:
+
+     @media print { #root { display: none !important } }   (line ~2755)
+         — meant to hide the app while the weighbridge docket prints from a portal outside
+           #root. This page mounts the note INSIDE #root, so pulling in App.css makes the
+           PDF come out blank. (Observed: a 896-byte empty A4.)
+
+     @page { size: A4 portrait; margin: 13mm 13mm 18mm }   (line ~2748)
+         — competes with DeliveryNote.css's @page { size: A4; margin: 0 }. @page has no
+           specificity, so the winner is decided purely by which stylesheet is bundled
+           last. If App.css won, the 210mm-wide sheet would be squeezed into 184mm and
+           scaled to fit — exactly the fat-margin output the Completed Orders print button
+           documents as the thing to avoid.
+
+   Importing a focused base instead of the whole app stylesheet keeps this page immune to
+   both, and to any future app-wide print rule that would otherwise silently change the
+   client's dockets. */
+
+@import "../fonts.css";
+
+:root {
+  /* Same stack as App.css's --app-font, so the note's metrics — and therefore its
+     measured page breaks — match the on-screen preview exactly. */
+  --app-font:
+    "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  font-family: var(--app-font);
+}

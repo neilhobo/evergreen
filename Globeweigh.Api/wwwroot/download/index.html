@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download Globeweigh WMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #16a34a;
+        --primary-hover: #128a3f;
+        --primary-rgb: 22, 163, 74;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        font-family: "Poppins", "Segoe UI", sans-serif;
+        color: #e8ecf1;
+        background: radial-gradient(ellipse at top, #152338 0%, #0d1624 55%, #070d16 100%);
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+      .glow {
+        position: fixed;
+        width: 620px; height: 620px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(var(--primary-rgb), 0.18) 0%, transparent 65%);
+        top: -260px; right: -200px;
+        pointer-events: none;
+        filter: blur(8px);
+      }
+      .card {
+        position: relative;
+        width: min(620px, 100%);
+        background: rgba(17, 26, 42, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 16px;
+        padding: 40px 40px 32px;
+        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .brand .globe {
+        font-size: 34px;
+        filter: drop-shadow(0 0 14px rgba(var(--primary-rgb), 0.6));
+      }
+      .brand .wordmark { font-size: 22px; font-weight: 700; }
+      .brand .wordmark .w { color: var(--primary); }
+      h1 { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
+      .subtitle { font-size: 14px; color: #93a0b4; line-height: 1.55; margin-bottom: 26px; }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 26px;
+      }
+      .chip {
+        font-size: 12px;
+        font-weight: 600;
+        color: #cdd6e3;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        padding: 6px 13px;
+      }
+      .chip .label { color: #7c8aa0; font-weight: 500; margin-right: 5px; }
+      .chip.version { color: #fff; background: rgba(var(--primary-rgb), 0.16); border-color: rgba(var(--primary-rgb), 0.4); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        height: 52px;
+        border: none;
+        border-radius: 10px;
+        background: var(--primary);
+        color: #fff;
+        font: 600 16px "Poppins", "Segoe UI", sans-serif;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+      }
+      .btn:hover { background: var(--primary-hover); box-shadow: 0 10px 30px -8px rgba(var(--primary-rgb), 0.6); }
+      .btn:active { transform: translateY(1px); }
+      .btn svg { width: 20px; height: 20px; }
+      .secondary {
+        display: block;
+        text-align: center;
+        margin-top: 14px;
+        font-size: 13px;
+        color: #8b98ac;
+      }
+      .secondary a { color: var(--primary); text-decoration: none; font-weight: 500; }
+      .secondary a:hover { text-decoration: underline; }
+      .steps {
+        margin-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding-top: 22px;
+      }
+      .steps h2 {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #7c8aa0;
+        margin-bottom: 14px;
+      }
+      .steps ol { list-style: none; counter-reset: s; display: flex; flex-direction: column; gap: 12px; }
+      .steps li {
+        counter-increment: s;
+        display: flex;
+        gap: 12px;
+        font-size: 13.5px;
+        color: #c4cdda;
+        line-height: 1.5;
+      }
+      .steps li::before {
+        content: counter(s);
+        flex: none;
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        background: rgba(var(--primary-rgb), 0.18);
+        color: var(--primary);
+        font-size: 12px; font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .note { font-size: 12px; color: #6b788c; margin-top: 18px; line-height: 1.5; }
+      .error {
+        background: rgba(225, 29, 72, 0.12);
+        border: 1px solid rgba(225, 29, 72, 0.35);
+        color: #fda4b4;
+        border-radius: 10px;
+        padding: 14px 16px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .spinner {
+        width: 22px; height: 22px;
+        border: 3px solid rgba(var(--primary-rgb), 0.25);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        margin: 8px auto;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="card">
+      <div class="brand">
+        <span class="globe">&#127757;</span>
+        <span class="wordmark">Globe<span class="w">weigh</span></span>
+      </div>
+      <h1>Globeweigh WMS</h1>
+      <p class="subtitle">
+        The desktop admin application for weighbridge, dispatch, costing and production.
+        Install it on any company PC — it always loads the latest screens from the server.
+      </p>
+
+      <div id="content">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="note">
+        Windows may show a “Windows protected your PC” SmartScreen prompt the first time —
+        click <strong>More info → Run anyway</strong>. Requires Windows 10/11 or Windows Server 2012+.
+      </div>
+    </div>
+
+    <script>
+      const fmtSize = (b) => {
+        if (!b && b !== 0) return "";
+        const mb = b / (1024 * 1024);
+        return mb >= 1 ? mb.toFixed(1) + " MB" : Math.round(b / 1024) + " KB";
+      };
+      const fmtDate = (iso) => {
+        try {
+          return new Date(iso).toLocaleDateString(undefined, {
+            year: "numeric", month: "short", day: "numeric",
+          });
+        } catch { return ""; }
+      };
+
+      const downloadIcon =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+        'stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
+        '<polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+      async function load() {
+        const el = document.getElementById("content");
+        try {
+          const res = await fetch("../api/admin-app/info", { cache: "no-store" });
+          if (!res.ok) throw new Error(res.status === 404 ? "no-release" : "http-" + res.status);
+          const info = await res.json();
+
+          const chips = [
+            `<span class="chip version">v${info.version}</span>`,
+            info.setupSizeBytes ? `<span class="chip"><span class="label">Size</span>${fmtSize(info.setupSizeBytes)}</span>` : "",
+            info.releasedUtc ? `<span class="chip"><span class="label">Released</span>${fmtDate(info.releasedUtc)}</span>` : "",
+          ].join("");
+
+          const msiLink = info.msiUrl
+            ? `<div class="secondary">Prefer an MSI? <a href="${info.msiUrl}">Download the .msi installer</a></div>`
+            : "";
+
+          el.innerHTML =
+            `<div class="meta">${chips}</div>` +
+            `<a class="btn" href="${info.downloadUrl || info.msiUrl}">${downloadIcon}<span>Download &amp; Install</span></a>` +
+            msiLink +
+            `<div class="steps"><h2>How to install</h2><ol>` +
+            `<li>Click <strong>Download &amp; Install</strong> above and run the downloaded file.</li>` +
+            `<li>If prompted by Windows SmartScreen, choose <strong>More info → Run anyway.</strong></li>` +
+            `<li>Follow the installer, then launch <strong>Globeweigh WMS</strong> from the Start menu.</li>` +
+            `</ol></div>`;
+        } catch (e) {
+          el.innerHTML =
+            `<div class="error">${
+              e.message === "no-release"
+                ? "No installer is currently published. Please check back shortly or contact the software team."
+                : "Couldn’t reach the release server. Please try again in a moment."
+            }</div>`;
+        }
+      }
+      load();
+    </script>
+  </body>
+</html>

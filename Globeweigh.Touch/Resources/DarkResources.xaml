@@ -1,0 +1,47 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Dark theme for the outdoor weighbridge screens: dark matte surfaces with white
+         text — the same look as the on-screen keyboard keys, which drivers reported as
+         the most readable thing on the screen. Applied/removed at runtime by
+         ThemeManager exactly like SunlightResources.xaml; keys shadow CommonColours.xaml
+         while active. Anything not overridden here (gauge = green digits on dark, keypad
+         = dark keys, DevExpress grid body) already suits a dark screen. -->
+
+    <!-- Surfaces -->
+    <SolidColorBrush x:Key="LightGreyBrush" Color="#FF161C22"/>
+    <SolidColorBrush x:Key="MainContentGrey" Color="#FF20262D"/>
+    <Color x:Key="MainContentGreyColor">#FF20262D</Color>
+    <Color x:Key="LightGreyColor">#FF161C22</Color>
+
+    <!-- Main text goes white -->
+    <SolidColorBrush x:Key="DarkGreyBrush" Color="White"/>
+
+    <!-- Borders lighten so they stay visible on dark -->
+    <SolidColorBrush x:Key="ItemBorderBrush" Color="#FF8A9099"/>
+    <SolidColorBrush x:Key="DividerLineGrayBrush" Color="#FF6A7078"/>
+
+    <!-- ==== Weighbridge theme hooks (defaults live in CommonColours.xaml) ==== -->
+
+    <!-- White structural frames pop nicely on dark — same as the original design intent -->
+    <SolidColorBrush x:Key="WbPanelBorderBrush" Color="White"/>
+
+    <!-- Column/group headers need a lighter blue to read on dark -->
+    <SolidColorBrush x:Key="WbGroupHeaderTextBrush" Color="#FF6FBAFF"/>
+
+    <!-- WeighbridgeInView hero block (company name + date/time) -->
+    <SolidColorBrush x:Key="WbHeroPanelBrush" Color="#FF20262D"/>
+    <SolidColorBrush x:Key="WbHeroTextBrush" Color="White"/>
+
+    <!-- Haulier/Product/Supplier/Bog rows: dark keys with white text, like the keyboard.
+         Thin white outline so the dark rows separate from the dark page. -->
+    <SolidColorBrush x:Key="WbListItemBrush" Color="#FF333333"/>
+    <SolidColorBrush x:Key="WbListItemTextBrush" Color="White"/>
+    <Thickness x:Key="WbListItemBorderThickness">1</Thickness>
+
+    <!-- Pending list (WeighbridgeOutView): dark header/body with white text -->
+    <SolidColorBrush x:Key="WbGridTextBrush" Color="White"/>
+    <SolidColorBrush x:Key="WbGridHeaderBrush" Color="#FF161C22"/>
+    <SolidColorBrush x:Key="WbGridBodyBrush" Color="#FF20262D"/>
+
+</ResourceDictionary>

@@ -1,0 +1,170 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+             md:DialogServiceViews.IsRegistered="True"
+             x:Class="Globeweigh.Admin.CostingPriceListView"
+             mc:Ignorable="d"  
+             d:DesignHeight="500" d:DesignWidth="1600"
+             shared:ViewModelBehavior.LoadUnload="True" Background="{DynamicResource LightGreyBrush}"
+             DataContext="{Binding CostingPriceListView, Source={StaticResource Locator}}" SnapsToDevicePixels="True">
+    <UserControl.Resources>
+            
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+            <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter"/>
+
+    </UserControl.Resources>
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="700"/>
+            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="380"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Margin="0,0,2,0" BorderBrush="White" BorderThickness="3" >
+            <Grid >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Product List" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                        <StackPanel Orientation="Horizontal"   HorizontalAlignment="Right" Grid.Column="3" >
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <dxg:GridControl x:Name="grdDispatchOrders" AutoExpandAllGroups="True" ItemsSource="{Binding ProductList}" ShowLoadingPanel="{Binding IsBusy}" SelectedItem="{Binding SelectedProduct}" Margin="4" Grid.Row="1" >
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvDispatchOrders" >
+                        </dxg:TableView>
+                    </dxg:GridControl.View>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="Description" AutoFilterCriteria="Contains" />
+                        <!--<dxg:GridColumn  FieldName="SkuCode" Header="SKU CODE"  FixedWidth="True" Width="80"/>-->
+                        <dxg:GridColumn  FieldName="Size" Header="LTRS" FixedWidth="True" Width="50" AllowEditing="True" Visible="{Binding SelectedProductType.IsFinishedProduct}">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn  FieldName="Upp"  Header="UPP"  FixedWidth="True" Width="50" Visible="{Binding SelectedProductType.IsFinishedProduct}">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn  FieldName="Gtin" Header="Barcode"  FixedWidth="True" Width="100"/>
+                        <dxg:GridColumn  FieldName="CategoryName" Header="Category" FixedWidth="True" Width="180" Visible="{Binding SelectedProductType.IsFinishedProduct}" />
+
+                    </dxg:GridControl.Columns>
+
+
+                </dxg:GridControl>
+            </Grid>
+        </Border>
+        <Border Grid.Column="1" Margin="2,0,0,0" BorderBrush="White" BorderThickness="3" Visibility="{Binding SelectedProduct, Converter={StaticResource NullToCollapsedConverter}}">
+            <Grid  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Zone Pricing" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                        <Button Content="Edit" Margin="4,0,0,0" Command="{Binding EditZonePriceCommand}" Grid.Column="2"  IsEnabled="{Binding ElementName=grdZonePrices, Path=SelectedItems.Count}" Style="{DynamicResource ToolbarButtonStyle}"/>
+                    </Grid>
+                </Border>
+                <dxg:GridControl x:Name="grdZonePrices" ItemsSource="{Binding ZonePricingList}" ShowLoadingPanel="{Binding IsBusy}" SelectedItem="{Binding SelectedZonePrice}" Margin="4" Grid.Row="1">
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvZonePrices"/>
+                    </dxg:GridControl.View>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="Description"  Header="Zone"/>
+                        <dxg:GridColumn FieldName="SecondaryDescription"  Header=" " FixedWidth="True"  Width="110"/>
+                        <dxg:GridColumn  FieldName="Price"  Header="Price"  FixedWidth="True" Width="70" >
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                
+         
+
+                    </dxg:GridControl.Columns>
+
+
+                </dxg:GridControl>
+
+
+            </Grid>
+        </Border>
+        <Border Grid.Column="2" Margin="2,0,0,0" BorderBrush="White" BorderThickness="3" Visibility="{Binding SelectedZonePrice, Converter={StaticResource NullToCollapsedConverter}}">
+            <Grid  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border BorderThickness="0,0,0,3" BorderBrush="White">
+                    <Grid Margin="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Pricing History" Style="{DynamicResource DefaultLabelStyle}" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}"/>
+                    </Grid>
+                </Border>
+                <dxg:GridControl x:Name="grdHistory" ItemsSource="{Binding HistoryList}" SelectionMode="None" Margin="4" Grid.Row="1">
+                    <dxg:GridControl.View>
+                        <dxg:TableView x:Name="tvHistory" NavigationStyle="None"/>
+                    </dxg:GridControl.View>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn  FieldName="OldPrice" FixedWidth="True" Width="70" >
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn  FieldName="NewPrice"    FixedWidth="True" Width="70" >
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="ChangedBy"/>
+                        <dxg:GridColumn FieldName="DateCreated" Width="120" Header="Date of change" FixedWidth="True">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+
+
+                    </dxg:GridControl.Columns>
+
+
+                </dxg:GridControl>
+
+
+            </Grid>
+        </Border>
+
+
+    </Grid>
+</UserControl>

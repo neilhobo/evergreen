@@ -1,0 +1,232 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+	         xmlns:internal="http://schemas.devexpress.com/winfx/2008/xaml/windowsui/internal"
+	         xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+         xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+	         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+             xmlns:userControls="clr-namespace:Globeweigh.Touch.UserControls"
+             md:DialogServiceViews.IsRegistered="True" 
+	         x:Class="Globeweigh.Touch.DispatchOrderListView"
+             mc:Ignorable="d"
+             d:DesignHeight="1024" d:DesignWidth="1280"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding DispatchOrderListView, Source={StaticResource Locator}}" Background="White"
+             >
+    <UserControl.Resources>
+        <ResourceDictionary>
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Globeweigh.Touch;component/Resources/GridControlResources.xaml"/>
+                <ResourceDictionary Source="/Globeweigh.Touch;component/Resources/NewElementStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+
+            <converters:PercentageConverter x:Key="PercentageConverter"/>
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter"/>
+            <converters:NullToVisibleConverter x:Key="NullToVisibilityConverter"/>
+
+
+            <DataTemplate x:Key="WeightTypeShortCellTemplate">
+                <Grid >
+                    <Border x:Name="bdIncoming" Background="#FFB5E8A1" Margin="2" CornerRadius="3" Grid.Column="1" >
+                        <TextBlock  Text="IN" Foreground="#FF58AD63" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+                    <Border x:Name="bd" Background="#FFFADFED" Margin="2" CornerRadius="3" Grid.Column="1" Visibility="Collapsed">
+                        <TextBlock Text="OUT" Foreground="#FFE76884" FontWeight="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0" FontFamily="Segoe UI Semibold" />
+                    </Border>
+
+                </Grid>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RowData.Row.IsOutgoing}" Value="True">
+                        <Setter TargetName="bd" Property="Visibility" Value="Visible"/>
+                        <Setter TargetName="bdIncoming" Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ProgressCellTemplate">
+                <Border Margin="8,3" VerticalAlignment="Center" Grid.Column="1" Background="#FF595F62" CornerRadius="3" Grid.Row="1">
+                    <Grid Margin="3,3,3,3" >
+                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding RowData.Row.PercentagePicked, Mode=OneWay}" Name="pbStatus" Foreground="Red" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" />
+                        <TextBlock x:Name="txt" Text="{Binding ElementName=pbStatus, Path=Value, FallbackValue=100, Converter={StaticResource PercentageConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontFamily="Segoe UI" FontWeight="Bold" Foreground="White" Margin="0,0,0,2"/>
+                    </Grid>
+                </Border >
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding RowData.Row.TargetMet}" Value="True">
+                        <Setter TargetName="pbStatus" Property="Foreground" Value="{DynamicResource GlobeweighLightBlueBrush}" />
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <Style x:Key="clearBackgroundCellStyle" TargetType="dxg:LightweightCellEditor" BasedOn="{StaticResource {dxgt:GridRowThemeKey ResourceKey=LightweightCellStyle}}">
+                <Style.Triggers>
+                    <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                        <Setter Property="Background" Value="White" />
+                        <!--<Setter Property="Foreground" Value="Black" />-->
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style TargetType="{x:Type dxg:GridColumnHeader}">
+                <Setter Property="Height" Value="40"></Setter>
+                <Setter Property="Foreground" Value="Black" />
+                <Setter Property="FontSize" Value="16" />
+            </Style>
+
+
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border  Margin="15" Background="White">
+        <Grid Background="{DynamicResource GlobeweighBlueBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid   Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
+                    <!-- <Button Width="60" Height="60" Style="{DynamicResource BackButtonStyle}" Margin="6,0,0,0" Command="{Binding HomeCommand}"/> -->
+                    <internal:BackButton Margin="2,2,10,2" VerticalAlignment="Center" Command="{Binding HomeCommand}" StrokeThickness="4" Width="66" Height="66"  />
+                    <TextBlock Text="Dispatch Orders" Margin="10,0,0,0" Style="{DynamicResource HeaderTextBlockStyle}" Foreground="White"/>
+                </StackPanel>
+                <userControls:LoggedInUserControl Grid.Column="2" HorizontalAlignment="Right"/>
+            </Grid>
+            <Grid Grid.Row="1" Background="{DynamicResource MainContentGrey}">
+                <Grid Margin="0,10,0,0" >
+
+                    <Border Grid.Row="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <!--<ColumnDefinition Width="260"/>-->
+                            </Grid.ColumnDefinitions>
+                            <Border BorderBrush="White" BorderThickness="4" Margin="4,0,4,4"  >
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="50"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderThickness="0,0,0,4" BorderBrush="White">
+                                        <TextBlock Text="Pending (Incoming / Outgoing)" Style="{DynamicResource GroupHeaderTextBlockStyle}" Margin="10,0,0,0" />
+                                    </Border>
+                                    <Grid Grid.Row="1">
+
+                                        <dxg:GridControl x:Name="grdPending"  ShowLoadingPanel="{Binding IsPendingBusy}"  ItemsSource="{Binding PendingList}" SelectedItem="{Binding SelectedPending}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="5">
+                                            <dxg:GridControl.View>
+                                                <dxg:TableView x:Name="tvPending" />
+                                            </dxg:GridControl.View>
+                                            <dxg:GridColumn FieldName="WeighType" Header=" " FixedWidth="True" Width="40" CellTemplate="{DynamicResource WeightTypeShortCellTemplate}">
+                                                <!--<dxg:GridColumn.DisplayTemplate>
+                                                    <ControlTemplate>
+                                                        <TextBlock Margin="4,0,0,0" x:Name="PART_Editor">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="{x:Type TextBlock}">
+                                                                    <Setter Property="Foreground" Value="Green"/>
+                                                                    <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding RowData.Row.IsOutgoing}" Value="True">
+                                                                            <Setter Property="Foreground" Value="Red"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </ControlTemplate>
+                                                </dxg:GridColumn.DisplayTemplate>-->
+                                            </dxg:GridColumn>
+                                            <dxg:GridColumn FieldName="HaulierName" Header="Haulier" />
+                                            <dxg:GridColumn FieldName="VehicleReg" Header="Vehicle Reg" Width="96"  FixedWidth="True"/>
+                                            <dxg:GridColumn FieldName="PendingWeighDate" Width="180" Header="Weigh Date" FixedWidth="True">
+                                                <dxg:GridColumn.EditSettings>
+                                                    <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                                                </dxg:GridColumn.EditSettings>
+                                            </dxg:GridColumn>
+                                            <dxg:GridColumn FieldName="PendingWeight" Header="Weight (Kg)" FixedWidth="True" Width="100">
+                                                <dxg:GridColumn.EditSettings>
+                                                    <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                                </dxg:GridColumn.EditSettings>
+                                            </dxg:GridColumn>
+         
+
+                                        </dxg:GridControl>
+
+                                 
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <Border BorderBrush="White" BorderThickness="4" Margin="4,0,4,4" Grid.Column="1"  >
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="50"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="80"/>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderThickness="0,0,0,4" BorderBrush="White">
+                                        <TextBlock Text="Orders" Style="{DynamicResource GroupHeaderTextBlockStyle}" Margin="10,0,0,0" />
+                                    </Border>
+                                    <Grid Grid.Row="1">
+
+                                        <dxg:GridControl x:Name="grdOrders" ItemsSource="{Binding DispatchOrderList}" SelectedItem="{Binding SelectedDispatchOrder}" ShowBorder="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                                Loaded="GrdPallets_OnLoaded" Margin="0,0,20,0" >
+                                            <dxg:GridControl.View>
+                                                <dxg:TableView AllowPerPixelScrolling="True" AllowFilterEditor="False" ShowVerticalLines="True" ShowHorizontalLines="True" ShowGroupPanel="False" Margin="4"
+                                        AllowSorting="False" ShowIndicator="False"  AutoWidth="True"  NavigationStyle="Row"  VerticalScrollbarVisibility="Auto" ShowFilterPanelMode="Never"/>
+                                            </dxg:GridControl.View>
+                                            <dxg:GridColumn FieldName="OrderNoDisplay" Header="Order No" FixedWidth="True"  Width="90">
+                                                <dxg:GridColumn.EditSettings>
+                                                    <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                                </dxg:GridColumn.EditSettings>
+                                            </dxg:GridColumn>
+                                            <dxg:GridColumn FieldName="CustomerName"  Header="Customer" />
+                                            <dxg:GridColumn FieldName="PercentagePickedDecimal" Header="Pick Progress" Width="160" FixedWidth="True" CellTemplate="{StaticResource ProgressCellTemplate}"/>
+                                        </dxg:GridControl>
+
+                                
+
+                                        <!--<Grid Background="{DynamicResource MainContentGrey}" Visibility="{Binding PendingErrorFound, Converter={StaticResource TrueToVisibilityConverter}}" d:IsHidden="True" Grid.ColumnSpan="2">
+                                            <Border Margin="200,50" BorderBrush="White" BorderThickness="4">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="*"/>
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Text="Error fetching results"  HorizontalAlignment="Center" FontSize="36" VerticalAlignment="Center" FontFamily="Segoe UI Semilight" Foreground="#FF4B4B4B" />
+                                                    <Button Content="Retry" Command="{Binding RetryPendingRefreshCommand}" Grid.Row="1" Style="{DynamicResource PrimaryButtonStyleBase}" Width="200"/>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>-->
+                                    </Grid>
+                                    <Border  Grid.Column="1" BorderBrush="White" BorderThickness="0,4,0,0" Background="{DynamicResource MainContentGrey}" Grid.Row="3">
+                                        <Grid>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <Button Command="{Binding OrderDetailsCommand}" Style="{DynamicResource PrimaryButtonStyleAction}" IsEnabled="{Binding SelectedItems.Count, ElementName=grdOrders}" Content="Order Details"  HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0,0,4,0" Height="60" Width="200"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+   
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>
+

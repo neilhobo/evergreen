@@ -1,0 +1,203 @@
+﻿<UserControl
+    x:Class="Globeweigh.Admin.GateBarrierView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+    xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:dxga="http://schemas.devexpress.com/winfx/2008/xaml/gauges"
+    xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+    xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:wpf="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+    d:DesignHeight="500"
+    d:DesignWidth="1500"
+    md:DialogServiceViews.IsRegistered="True"
+    shared:ViewModelBehavior.LoadUnload="True"
+    Background="{DynamicResource LightGreyBrush}"
+    DataContext="{Binding GateBarrierView, Source={StaticResource Locator}}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+
+            <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter" />
+            <converters:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter" />
+            <converters:TrueToCollapsedConverter x:Key="TrueToCollapsedConverter" />
+            <converters:EnumEqualsConverter x:Key="EnumEqualsConverter" />
+
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Margin="5">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Margin="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="300" />
+                <RowDefinition Height="30*" />
+            </Grid.RowDefinitions>
+
+            <Border BorderBrush="White" BorderThickness="3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="30" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Border BorderBrush="White" BorderThickness="0,0,0,3">
+                        <Grid Margin="8,0,4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Weighbridge Scale/Gate/Barrier" FontFamily="Segoe UI Semibold" FontSize="13" Foreground="{DynamicResource GlobeweighBlueBrush}" Style="{DynamicResource DefaultLabelStyle}" />
+                        </Grid>
+                    </Border>
+                    <Grid Grid.Row="1" Margin="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="150" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Border Margin="10" Background="#FF424242" CornerRadius="3">
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <dxga:DigitalGaugeControl Margin="0,10" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding LiveWeight}">
+                                    <dxga:SevenSegmentsView>
+                                        <dxga:SevenSegmentsView.Presentation>
+                                            <dxga:DefaultSevenSegmentsPresentation FillActive="#FF43E64A" FillInactive="#0F555555" />
+                                        </dxga:SevenSegmentsView.Presentation>
+                                    </dxga:SevenSegmentsView>
+                                </dxga:DigitalGaugeControl>
+                                <TextBlock Grid.Column="1" Margin="0,0,20,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Segoe UI Semibold" FontSize="50" Foreground="White" Text="Kg" />
+                            </Grid>
+
+                        </Border>
+                        <Grid Grid.Row="1" Margin="10,20" Visibility="{Binding RelayTcpConnection, Converter={StaticResource NullToCollapsedConverter}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="0" VerticalAlignment="Center" FontSize="14" Style="{DynamicResource DefaultTextBlockContentStyle}" Text="Gate:" />
+                                <Button Grid.Column="1" Width="80" Command="{Binding GateCommand}" FontSize="12">
+                                    <Button.Style>
+                                        <Style BasedOn="{StaticResource ToolbarButtonStyleAction}" TargetType="{x:Type Button}">
+                                            <Setter Property="Content" Value="Open" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GateOpen}" Value="True">
+                                                    <Setter Property="Content" Value="Close" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Grid Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="30" Height="30" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="#FF00E000" Stroke="White" StrokeThickness="3" Visibility="{Binding GateOpen, Converter={StaticResource TrueToVisibilityConverter}}" />
+                                    <Ellipse Grid.Column="1" Width="30" Height="30" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red" Stroke="White" StrokeThickness="3" Visibility="{Binding GateOpen, Converter={StaticResource TrueToCollapsedConverter}}" />
+                                </Grid>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="0" VerticalAlignment="Center" FontSize="14" Style="{DynamicResource DefaultTextBlockContentStyle}" Text="Barrier:" />
+                                <Button Grid.Column="1" Width="80" Command="{Binding BarrierCommand}" FontSize="12">
+                                    <Button.Style>
+                                        <Style BasedOn="{StaticResource ToolbarButtonStyleAction}" TargetType="{x:Type Button}">
+                                            <Setter Property="Content" Value="Open" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BarrierOpen}" Value="True">
+                                                    <Setter Property="Content" Value="Close" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Grid Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="30" Height="30" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="#FF00E000" Stroke="White" StrokeThickness="3" Visibility="{Binding BarrierOpen, Converter={StaticResource TrueToVisibilityConverter}}" />
+                                    <Ellipse Grid.Column="1" Width="30" Height="30" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Fill="Red" Stroke="White" StrokeThickness="3" Visibility="{Binding BarrierOpen, Converter={StaticResource TrueToCollapsedConverter}}" />
+                                </Grid>
+                            </Grid>
+                        </Grid>
+
+                    </Grid>
+                </Grid>
+            </Border>
+
+
+
+        </Grid>
+
+        <Border Grid.Column="1" Margin="10,0,0,0" BorderBrush="White" BorderThickness="3">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border BorderBrush="White" BorderThickness="0,0,0,3">
+                    <!-- Camera selectors -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Content="Main Camera  (192.168.250.158)"
+                     GroupName="CameraGroup"
+                     IsChecked="{Binding SelectedCamera,
+                                         Converter={StaticResource EnumEqualsConverter},
+                                         ConverterParameter=Main}"/>
+                        <RadioButton Content="Gate Camera  (192.168.250.162)"
+                     Margin="16,0,0,0"
+                     GroupName="CameraGroup"
+                     IsChecked="{Binding SelectedCamera,
+                                         Converter={StaticResource EnumEqualsConverter},
+                                         ConverterParameter=Gate}"/>
+                        <RadioButton Content="Production (192.168.250.183)"
+                     Margin="16,0,0,0"
+                     GroupName="CameraGroup"
+                     IsChecked="{Binding SelectedCamera,
+                                         Converter={StaticResource EnumEqualsConverter},
+                                         ConverterParameter=Production}"/>
+                    </StackPanel>
+
+                </Border>
+                <Grid Grid.Row="1">
+                    <wpf:VideoView   MediaPlayer="{Binding CameraPlayer}"/>
+                    <Grid Visibility="{Binding IsCameraBusy, Converter={StaticResource TrueToVisibilityConverter}}"          Background="#66000000">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" >
+                            <ProgressBar IsIndeterminate="True" Width="240" Height="12"/>
+                            <TextBlock Text="Initialising camera…" Foreground="White" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+      
+            </Grid>
+        </Border>
+
+
+
+
+    </Grid>
+</UserControl>

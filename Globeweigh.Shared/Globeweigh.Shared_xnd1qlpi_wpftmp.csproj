@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{110696A8-6423-40BF-81B5-D834EC6D1F25}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Globeweigh.Shared</RootNamespace>
+    <AssemblyName>Globeweigh.Shared</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseClasses\DialogViewModelBase.cs" />
+    <Compile Include="BaseClasses\ViewModelBase.cs" />
+    <Compile Include="BaseClasses\WindowBase.cs" />
+    <Compile Include="Behaviours\ElementBehaviours.cs" />
+    <Compile Include="Behaviours\IViewModel.cs" />
+    <Compile Include="Behaviours\ViewModelBehavior.cs" />
+    <Compile Include="Controls\RadialGuage.cs" />
+    <Compile Include="Controls\TextBlockContentControl.cs" />
+    <Compile Include="Controls\ImageButtonWithText.cs" />
+    <Compile Include="Controls\NavigationButton.cs" />
+    <Compile Include="Controls\ImageButton.cs" />
+    <Compile Include="Controls\TouchButton.cs" />
+    <Compile Include="Controls\TransactionContentControl.cs" />
+    <Compile Include="Controls\UniformGridWithOrientation.cs" />
+    <Compile Include="Converters\CustomConverters.cs" />
+    <Compile Include="Converters\MultiValueConverters.cs" />
+    <Compile Include="DXSplashScreen\SplashView.xaml.cs">
+      <DependentUpon>SplashView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorHandling\DbErrorWindow.xaml.cs">
+      <DependentUpon>DbErrorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorHandling\ErrorLogging.cs" />
+    <Compile Include="ErrorHandling\ExceptionHelper.cs" />
+    <Compile Include="ErrorHandling\frmError.xaml.cs">
+      <DependentUpon>frmError.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\AuthorisationHelper.cs" />
+    <Compile Include="Helpers\ColumnBindingHelper.cs" />
+    <Compile Include="Helpers\DeviceDetector.cs" />
+    <Compile Include="Converters\ImageConverter.cs" />
+    <Compile Include="Converters\ValueConverters.cs" />
+    <Compile Include="Helpers\BarcodeHelper.cs" />
+    <Compile Include="Helpers\EnumHelper.cs" />
+    <Compile Include="Helpers\NetworkConnection.cs" />
+    <Compile Include="Helpers\UtilitiesShared.cs" />
+    <Compile Include="Helpers\IconHelper.cs" />
+    <Compile Include="Network\NetConnection.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerConfig\ISageRepository.cs" />
+    <Compile Include="ServerConfig\ServerConfigView.xaml.cs">
+      <DependentUpon>ServerConfigView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ServerConfig\ServerConfigViewModel.cs" />
+    <Compile Include="Services\IRelayService.cs" />
+    <Compile Include="Services\IScaleService.cs" />
+    <Compile Include="Services\ICostingRepository.cs" />
+    <Compile Include="Services\IHaulierRepository.cs" />
+    <Compile Include="Services\IProductRepository.cs" />
+    <Compile Include="Services\IDispatchOrderRepository.cs" />
+    <Compile Include="Services\IReportRepository.cs" />
+    <Compile Include="Services\ISettingsRepository.cs" />
+    <Compile Include="Services\IStockLocationRepository.cs" />
+    <Compile Include="Services\ICustomerSupplierRepository.cs" />
+    <Compile Include="Services\IDeviceRepository.cs" />
+    <Compile Include="Services\IGlobeweighUserRepository.cs" />
+    <Compile Include="Services\IReferenceDataRepository.cs" />
+    <Compile Include="Services\IPalletRepository.cs" />
+    <Compile Include="Services\IStockRepository.cs" />
+    <Compile Include="Services\IWeighbridgeRepository.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Behaviours\AutoHideBehavior.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\FloatingTouchScreenKeyboard.xaml.cs">
+      <DependentUpon>FloatingTouchScreenKeyboard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeyboardSection.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenKeypad.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\OnScreenWebKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Controls\UniformOnScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\IInputSimulator.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\InputSimulatorScope.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\InputSimulatorWrapper.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\ITouchScreenKeyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\Keyboard.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\CaseSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ChordKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ILogicalKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\InstantaneousModifierKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\LogicalKeyBase.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ModifierKeyBase.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\MultiCharacterKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\NumLockSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\ShiftSensitiveKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\StringKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\TogglingModifierKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\LogicalKeys\VirtualKey.cs" />
+    <Compile Include="UserControls\TouchscreenKeyboard\GwAlphaNumericKeyboard.xaml.cs">
+      <DependentUpon>GwAlphaNumericKeyboard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\ucBatchClosed.xaml.cs">
+      <DependentUpon>ucBatchClosed.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Licenses.licx" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Globeweigh.Model\Globeweigh.Model.csproj">
+      <Project>{1307f4fb-0560-45b1-81a4-c0be9b7f8927}</Project>
+      <Name>Globeweigh.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="SageDataObject280">
+      <Guid>{D7F4B92E-F1B4-4996-80D1-76AC2448EDAB}</Guid>
+      <VersionMajor>28</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\CommonServiceLocator.2.0.3\lib\net45\CommonServiceLocator.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Data.Desktop.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Data.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Drawing.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Mvvm.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Office.v23.2.Core.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Pdf.v23.2.Core.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Printing.v23.2.Core.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.RichEdit.v23.2.Core.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.RichEdit.v23.2.Export.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Utils.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.CodeView.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.Controls.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.Core.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.Grid.v23.2.Core.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.Grid.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.Xpf.Printing.v23.2.dll" />
+    <ReferencePath Include="C:\Program Files\DevExpress 23.2\Components\Bin\Framework\DevExpress.XtraEditors.v23.2.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Extras.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\MvvmLightLibs.5.4.1\lib\net45\GalaSoft.MvvmLight.Platform.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Model\bin\Debug\Globeweigh.Model.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\InputSimulator.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\MahApps.Metro.1.6.1\lib\net45\MahApps.Metro.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Microsoft.CSharp.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\Expression.Blend.Sdk.WPF.1.0.1\lib\net45\Microsoft.Expression.Interactions.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.19\lib\net45\Microsoft.Xaml.Behaviors.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\mscorlib.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\MvvmDialogs.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\NLog.4.5.3\lib\net45\NLog.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\PresentationCore.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\PresentationFramework.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.ComponentModel.DataAnnotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Configuration.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Core.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Data.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Data.Entity.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Deployment.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Drawing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.IO.Compression.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Management.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Net.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Runtime.Serialization.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.ServiceModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Transactions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Web.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Web.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Windows.Forms.dll" />
+    <ReferencePath Include="D:\Git-Globeweigh\Evergreen\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Xaml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\System.Xml.Linq.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\UIAutomationProvider.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\UIAutomationTypes.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\WindowsBase.dll" />
+    <ReferencePath Include="obj\Debug\Interop.SageDataObject280.dll">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </ReferencePath>
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Collections.Concurrent.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Collections.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ComponentModel.Annotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ComponentModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ComponentModel.EventBasedAsync.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Diagnostics.Contracts.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Diagnostics.Debug.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Diagnostics.Tools.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Diagnostics.Tracing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Dynamic.Runtime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Globalization.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.IO.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Linq.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Linq.Expressions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Linq.Parallel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Linq.Queryable.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Net.NetworkInformation.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Net.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Net.Requests.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ObjectModel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.Emit.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.Emit.ILGeneration.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.Emit.Lightweight.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Reflection.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Resources.ResourceManager.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.InteropServices.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.InteropServices.WindowsRuntime.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.Numerics.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.Serialization.Json.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.Serialization.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.Serialization.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Security.Principal.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ServiceModel.Duplex.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ServiceModel.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ServiceModel.NetTcp.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ServiceModel.Primitives.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.ServiceModel.Security.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Text.Encoding.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Text.Encoding.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Text.RegularExpressions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Threading.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Threading.Tasks.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Threading.Tasks.Parallel.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Threading.Timer.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Xml.ReaderWriter.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Xml.XDocument.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Xml.XmlSerializer.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\DXSplashScreen\SplashView.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\ErrorHandling\DbErrorWindow.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\ErrorHandling\frmError.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\ServerConfig\ServerConfigView.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\UserControls\TouchscreenKeyboard\Controls\FloatingTouchScreenKeyboard.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\UserControls\TouchscreenKeyboard\GwAlphaNumericKeyboard.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\UserControls\ucBatchClosed.g.cs" />
+    <Compile Include="D:\Git-Globeweigh\Evergreen\Globeweigh.Shared\obj\Debug\GeneratedInternalTypeHelper.g.cs" />
+  </ItemGroup>
+</Project>

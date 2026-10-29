@@ -1,0 +1,57 @@
+/* Deliveries/Incoming layout inside the content card: the WPF WeighbridgeRecordsView
+   arrangement on the card template.
+   TOP    = live weight + gate/barrier (left) beside the pending records (right)
+   BOTTOM = the completed records with their date range
+   Card, page header, column headers and hairlines come from ContentCard.module.css. */
+
+.split {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* Fixed height: tall enough for the two read-outs, the gate/barrier rows and the remote
+   links, so the live column never scrolls; the completed records take the rest. */
+.topRow {
+    display: flex;
+    flex: 0 0 340px;
+    min-height: 0;
+    min-width: 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.bottomRow {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* Fixed width so the read-out digits never reflow as the pending grid gains columns. */
+.liveCol {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 390px;
+    min-height: 0;
+    min-width: 0;
+    border-right: 1px solid #e5e7eb;
+}
+
+.liveBody {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.pendingCol {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}

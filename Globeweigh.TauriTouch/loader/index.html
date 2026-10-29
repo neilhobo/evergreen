@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  Thin-shell loader. This tiny page is the ONLY frontend bundled into the installed
+  Globeweigh Touch exe. On launch it checks the server is reachable and then navigates
+  the webview to the server-hosted UI (deployed with deploy-touch-ui.ps1), so UI
+  releases are a file copy on the server — clients never reinstall.
+
+  The target URL can be overridden per-machine via localStorage("touchUiUrl")
+  (open devtools on this page: localStorage.setItem("touchUiUrl", "http://host:5099/touch/")).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Globeweigh Touch</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        background: linear-gradient(160deg, #0d1624 0%, #1a2332 100%);
+        color: #e8ecf1;
+        font-family: "Poppins", "Segoe UI", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .panel { text-align: center; }
+      .globe {
+        font-size: 44px;
+        line-height: 1;
+        margin-bottom: 14px;
+        filter: drop-shadow(0 0 14px rgba(22, 163, 74, 0.45));
+      }
+      .brand { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 22px; }
+      .brand .wms { color: #16a34a; }
+      .status { font-size: 13px; color: #93a0b4; min-height: 20px; }
+      .spinner {
+        width: 22px; height: 22px;
+        border: 3px solid rgba(22, 163, 74, 0.25);
+        border-top-color: #16a34a;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .retry-box { display: none; }
+      .retry-box .msg { font-size: 14px; color: #e8ecf1; margin-bottom: 6px; }
+      .retry-box .target { font-size: 11px; color: #5b6878; margin-bottom: 16px; word-break: break-all; }
+      button {
+        background: #16a34a; color: #fff; border: none; border-radius: 4px;
+        font: 600 13px "Poppins", "Segoe UI", sans-serif;
+        padding: 7px 22px; cursor: pointer;
+      }
+      button:hover { background: #15803d; }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <div class="globe">&#127757;</div>
+      <div class="brand">Globeweigh <span class="wms">Touch</span></div>
+      <div id="connecting">
+        <div class="spinner"></div>
+        <div class="status">Connecting to server&hellip;</div>
+      </div>
+      <div id="retry" class="retry-box">
+        <div class="msg">Cannot reach the server</div>
+        <div class="target" id="target-url"></div>
+        <button id="retry-btn">Retry now</button>
+        <div class="status" id="countdown" style="margin-top: 10px;"></div>
+      </div>
+    </div>
+    <script>
+      const DEFAULT_URL = "http://192.168.250.5:5099/touch/";
+      const url = localStorage.getItem("touchUiUrl") || DEFAULT_URL;
+      document.getElementById("target-url").textContent = url;
+
+      const RETRY_SECONDS = 5;
+      let countdownTimer = null;
+
+      async function tryConnect() {
+        document.getElementById("connecting").style.display = "block";
+        document.getElementById("retry").style.display = "none";
+        try {
+          // no-cors: an opaque response still proves the server answered; a network
+          // failure rejects. Avoids needing CORS headers on the API.
+          await fetch(url, { method: "GET", mode: "no-cors", cache: "no-store" });
+          window.location.replace(url);
+        } catch {
+          showRetry();
+        }
+      }
+
+      function showRetry() {
+        document.getElementById("connecting").style.display = "none";
+        document.getElementById("retry").style.display = "block";
+        let remaining = RETRY_SECONDS;
+        const cd = document.getElementById("countdown");
+        cd.textContent = "Retrying in " + remaining + "s";
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(countdownTimer);
+            tryConnect();
+          } else {
+            cd.textContent = "Retrying in " + remaining + "s";
+          }
+        }, 1000);
+      }
+
+      document.getElementById("retry-btn").addEventListener("click", () => {
+        clearInterval(countdownTimer);
+        tryConnect();
+      });
+
+      tryConnect();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+        x:Class="Globeweigh.Admin.AddProductionPalletsView"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="None"
+        Height="400" Width="700" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White">
+
+    <Window.Resources>
+
+
+        <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+        <converters:ZeroToVisibleConverter x:Key="ZeroToVisibleConverter"/>
+
+
+    </Window.Resources>
+
+    <Border Margin="0" CornerRadius="3" Background="White">
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource MainBorderBrush}" >
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Text="Add Finished Product Pallets" Style="{DynamicResource TransactionHeaderTextBlockStyle}"/>
+                </Grid>
+            </Border>
+            <Border Grid.Row="1">
+                <Grid Margin="15,10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid x:Name="ControlsGrid" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Next Pallet No" Style="{DynamicResource DefaultLabelStyle}" Margin="0,5"/>
+                        <TextBlock Text="{Binding CurrentPallet.PalletNo}" Style="{DynamicResource DefaultTextBlockContentStyle}" Margin="0,5" Grid.Column="1"/>
+                        <!--<Label Content="Customer:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1"/>
+                    <dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding CustomerList}" EditValue="{Binding CurrentPallet.CustomerId,UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}"  SelectedItem="{Binding SelectedCustomer}" Foreground="Black" IsTextEditable="False" DisplayMember="Name" ValueMember="id" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200" />-->
+
+                        <!--<Label Content="Location:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="2"/>
+                    <dxe:ComboBoxEdit Grid.Column="1" Grid.Row="2" ItemsSource="{Binding LocationList}" EditValue="{Binding CurrentPallet.LocationId,UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" SelectedItem="{Binding SelectedLocation}" Foreground="Black" IsTextEditable="False" DisplayMember="LocationLabel" ValueMember="id" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200" />-->
+
+                        <Label Content="Product:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1"/>
+                        <Grid Grid.Column="1"  Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="150"/>
+                            </Grid.ColumnDefinitions>
+                            <dxg:LookUpEdit x:Name="lookUpEdit1" Style="{DynamicResource DefaultTextEditStyle}" SelectedItem="{Binding SelectedProduct}" Margin="0,4" DisplayMember="Description" ValueMember="id" AutoPopulateColumns="False" AutoComplete="True" ImmediatePopup="False"
+                                IsPopupAutoWidth="True" VerticalAlignment="Center" ItemsSource="{Binding ProductList}" EditValue="{Binding CurrentPallet.ProductId, UpdateSourceTrigger=PropertyChanged}" IsTextEditable="False">
+                                <dxg:LookUpEdit.PopupContentTemplate>
+                                    <ControlTemplate>
+                                        <dxg:GridControl x:Name="PART_GridControl">
+                                            <dxg:GridControl.View>
+                                                <dxg:TableView AutoWidth="True"/>
+                                            </dxg:GridControl.View>
+                                            <dxg:GridColumn FieldName="Description"/>
+                                            <dxg:GridColumn FieldName="Size" FixedWidth="True" Width="60"/>
+                                            <dxg:GridColumn FieldName="Upp" Header="UPP" FixedWidth="True" Width="60"/>
+                                        </dxg:GridControl>
+                                    </ControlTemplate>
+                                </dxg:LookUpEdit.PopupContentTemplate>
+                            </dxg:LookUpEdit>
+                            <Grid Grid.Column="1" Visibility="{Binding SelectedProduct, Converter={StaticResource NullToCollapsedConverter}}" VerticalAlignment="Center" Margin="10,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="30"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Content="Size:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1"/>
+                                <Label Content="{Binding SelectedProduct.Size}" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Row="1" Grid.Column="1"/>
+                                <Label Content="UPP:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1" Grid.Column="2"/>
+                                <Label Content="{Binding SelectedProduct.Upp}" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Row="1" Grid.Column="3"/>
+
+                            </Grid>
+
+                        </Grid>
+                        <!--<dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding ProductList}" EditValue="{Binding CurrentPallet.ProductId,UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" SelectedItem="{Binding SelectedProduct}" Foreground="Black" IsTextEditable="False" DisplayMember="ProductDisplay" ValueMember="id" VerticalAlignment="Center" Margin="0,0,10,0" />-->
+                    </Grid>
+                    <Grid Grid.Row="1"  >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="36"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <!--<dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding ProductList}" EditValue="{Binding CurrentPallet.ProductId,UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" SelectedItem="{Binding SelectedProduct}" Foreground="Black" IsTextEditable="False" DisplayMember="ProductDisplay" ValueMember="id" VerticalAlignment="Center" Margin="0,0,10,0" />-->
+                        <Label Content="Production Date:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}"/>
+                        <dxe:DateEdit Grid.Column="1" EditValue="{Binding CurrentPallet.DateOfProduction, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultDateEditStyle}"  Foreground="Black" IsTextEditable="False" VerticalAlignment="Center" Margin="0,0,10,0" HorizontalAlignment="Left" Width="150" />
+                        <Label Content="Location:" Margin="0" VerticalAlignment="Center"  Foreground="{DynamicResource MainNavyBrush}" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1"/>
+                        <dxe:ComboBoxEdit Grid.Column="1" Grid.Row="1" ItemsSource="{Binding LocationList}" EditValue="{Binding CurrentPallet.LocationId, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultComboBoxEditStyle}" Foreground="Black" IsTextEditable="False" DisplayMember="LocationName" ValueMember="id" VerticalAlignment="Center" Height="Auto" HorizontalAlignment="Left" Width="150" />
+                        <Label Content="No. Of Units" Style="{DynamicResource DefaultLabelStyle}" Margin="0,5" Grid.Row="2"/>
+                        <TextBox Text="{Binding CurrentPallet.NoOfUnits, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Margin="0,5" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Width="80"/>
+                        <Label Content="No. Of Pallets" Style="{DynamicResource DefaultLabelStyle}" Margin="0,5" Grid.Row="3" Visibility="{Binding PalletId, Converter={StaticResource ZeroToVisibleConverter}}"/>
+                        <TextBox Text="{Binding NoOfPallets, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource DefaultTextBoxStyle}" Visibility="{Binding PalletId, Converter={StaticResource ZeroToVisibleConverter}}" Margin="0,5" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Width="80"/>
+                    </Grid>
+
+                </Grid>
+
+            </Border>
+
+            <Border Grid.Row="2">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Save"  Width="100" Command="{Binding SaveCommand}" Style="{DynamicResource TransactionButtonStyleAction}"/>
+                        <Button Content="Cancel" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</shared:WindowBase>

@@ -1,0 +1,6 @@
+@Globeweigh.Api_HostAddress = http://localhost:5047
+
+GET {{Globeweigh.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

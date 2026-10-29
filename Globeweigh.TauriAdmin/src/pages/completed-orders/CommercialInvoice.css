@@ -1,0 +1,140 @@
+/* Commercial invoice — the delivery note's page template (DeliveryNote.css: .dn-page,
+   header boxes, items table, head-office banner) plus what only the invoice has.
+   Nothing here touches the page box: geometry stays DeliveryNote.css's alone. */
+
+.ci-no-label {
+  font-style: italic;
+}
+
+/* Two-word labels (Payment Terms, Country of Origin) wrap inside the green cell, as on
+   the client's own invoice, instead of widening the column. Scoped to .ci-doc: this
+   stylesheet stays loaded once imported, and the delivery note must not change. */
+.ci-doc .dn-details .dn-detail-label {
+  white-space: normal;
+  line-height: 1.15;
+}
+
+/* Items columns. .dn-items is fixed-layout, so these header widths set the columns. The
+   figures' columns are sized to their figures, not their headings (which may take two lines),
+   so the product description gets the rest and stays on one line. */
+.ci-items th.ci-hs {
+  width: 72px;
+  text-align: center;
+}
+.ci-items td.ci-hs {
+  text-align: center;
+}
+.ci-items th.ci-weight {
+  width: 60px;
+}
+.ci-items th.ci-unit {
+  width: 64px;
+}
+.ci-items th.ci-rate {
+  width: 44px;
+}
+.ci-items th.ci-nett {
+  width: 72px;
+}
+
+/* Footer: small print on the left, the Nett / V.A.T. / Total box on the right. Pushed
+   to the bottom of the last page like the delivery note's signature boxes. */
+.ci-foot {
+  margin-top: auto;
+  padding-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: start;
+  border-top: 1px solid #333;
+}
+
+/* The rule sits on .ci-foot (above both columns), not on the small print. */
+.ci-footer {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ci-incoterms {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.ci-totals {
+  border-collapse: collapse;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.ci-totals td {
+  padding: 4px 6px;
+}
+
+.ci-totals .ci-total-cur {
+  padding-right: 10px;
+}
+
+.ci-totals .ci-total-val {
+  border: 1px solid #333;
+  min-width: 110px;
+  width: 110px;
+  text-align: right;
+  padding: 5px 10px;
+}
+
+.ci-totals .ci-grand {
+  font-weight: 700;
+}
+
+/* ── Combined Gross / Nett Weight by HS Tariff Code (CommercialInvoiceWeights) ──────────
+   Two tables side by side under the items. The layout is shared by every design; each
+   design dresses the tables in its own look below (classic here, the templates' in
+   DeliveryNoteTemplates.css). */
+.ciw {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10mm;
+  margin: 4mm 0 6mm;
+  break-inside: avoid;
+}
+
+.ciw-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ciw-table th,
+.ciw-table td {
+  text-align: left;
+}
+
+.ciw-table .ciw-n {
+  text-align: right;
+}
+
+.ciw-total td {
+  font-weight: 700;
+}
+
+/* Classic: the items table's green and rules. */
+.ci-doc .ciw-table {
+  font-size: 11px;
+}
+
+.ci-doc .ciw-table th,
+.ci-doc .ciw-table td {
+  border: 1px solid #333;
+  padding: 4px 8px;
+}
+
+.ci-doc .ciw-title th {
+  background: #8dc63f;
+  border-bottom: 4px solid #2e6b1e;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+
+.ci-doc .ciw-head th {
+  font-weight: 600;
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-print-note"
+description = "Enables the print_note command without any pre-configured scope."
+commands.allow = ["print_note"]
+
+[[permission]]
+identifier = "deny-print-note"
+description = "Denies the print_note command without any pre-configured scope."
+commands.deny = ["print_note"]

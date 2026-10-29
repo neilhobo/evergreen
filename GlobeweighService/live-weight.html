@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Globeweigh - Live Weight</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --fg: #f4f6fa;
+      --muted: #8a93a3;
+      --ok: #2ecc71;
+      --warn: #f1c40f;
+      --bad: #e74c3c;
+      --accent: #4ea1ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .config {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 24px;
+      width: min(100%, 720px);
+    }
+    .config label { color: var(--muted); font-size: 14px; }
+    .config input {
+      flex: 1;
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid #2a2f3a;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    }
+    .config input:focus { outline: none; border-color: var(--accent); }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 32px 48px;
+      width: min(100%, 720px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    .dot.ok   { background: var(--ok);   color: var(--ok);   animation: pulse 1.6s infinite; }
+    .dot.warn { background: var(--warn); color: var(--warn); }
+    .dot.bad  { background: var(--bad);  color: var(--bad); }
+
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0.6); }
+      70%  { box-shadow: 0 0 0 12px rgba(46, 204, 113, 0); }
+      100% { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0); }
+    }
+
+    .weight {
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: clamp(72px, 18vw, 196px);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--fg);
+      text-align: right;
+      tabular-nums: true;
+      font-variant-numeric: tabular-nums;
+      transition: color 200ms;
+    }
+    .weight.stale { color: var(--muted); }
+    .unit {
+      font-size: 0.35em;
+      color: var(--muted);
+      margin-left: 0.2em;
+      font-weight: 500;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 24px;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--muted);
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    }
+    .meta div span { color: var(--fg); }
+
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer code { color: var(--fg); }
+  </style>
+</head>
+<body>
+
+  <div class="config">
+    <label for="host">Service:</label>
+    <input id="host" type="text" placeholder="evergreen:8765" />
+  </div>
+
+  <div class="card">
+    <div class="status">
+      <span id="dot" class="dot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+
+    <div id="weight" class="weight stale">
+      ----<span class="unit">kg</span>
+    </div>
+
+    <div class="meta">
+      <div>last update: <span id="age">-</span></div>
+      <div>service: <span id="connected">-</span></div>
+      <div>endpoint: <span id="endpoint">-</span></div>
+      <div>polling: <span id="polling">250 ms</span></div>
+    </div>
+  </div>
+
+  <footer>
+    Source: <code id="urlPreview">http://evergreen:8765/weighbridge/weight</code>
+  </footer>
+
+<script>
+  const POLL_MS = 250;
+  const STALE_AFTER_MS = 5000;
+
+  const $ = id => document.getElementById(id);
+  const hostInput   = $('host');
+  const dotEl       = $('dot');
+  const statusEl    = $('statusText');
+  const weightEl    = $('weight');
+  const ageEl       = $('age');
+  const connectedEl = $('connected');
+  const endpointEl  = $('endpoint');
+  const urlPreview  = $('urlPreview');
+
+  function defaultHost() {
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      return location.hostname + ':8765';
+    }
+    return 'evergreen:8765';
+  }
+
+  function loadHost() {
+    return localStorage.getItem('gw.host') || defaultHost();
+  }
+
+  function saveHost(h) {
+    localStorage.setItem('gw.host', h);
+  }
+
+  function buildUrl(host) {
+    return `http://${host}/weighbridge/weight`;
+  }
+
+  hostInput.value = loadHost();
+  urlPreview.textContent = buildUrl(hostInput.value);
+
+  hostInput.addEventListener('change', () => {
+    const v = hostInput.value.trim();
+    if (!v) return;
+    saveHost(v);
+    urlPreview.textContent = buildUrl(v);
+  });
+
+  function setStatus(state, text) {
+    dotEl.className = 'dot ' + state;
+    statusEl.textContent = text;
+  }
+
+  function fmtAge(ms) {
+    if (ms == null || ms < 0) return '-';
+    if (ms < 1000) return ms + ' ms';
+    if (ms < 60000) return (ms / 1000).toFixed(1) + ' s';
+    return Math.round(ms / 60000) + ' min';
+  }
+
+  let consecutiveFailures = 0;
+
+  async function tick() {
+    const host = hostInput.value.trim() || defaultHost();
+    const url = buildUrl(host);
+    endpointEl.textContent = host;
+
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 1500);
+      const resp = await fetch(url, { cache: 'no-store', signal: ctl.signal });
+      clearTimeout(timer);
+
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      consecutiveFailures = 0;
+
+      const weight = (data.weight ?? '').trim();
+      const ageMs = typeof data.ageMs === 'number' ? data.ageMs : -1;
+      const isConnected = !!data.isConnected;
+      const stale = ageMs < 0 || ageMs > STALE_AFTER_MS;
+
+      weightEl.innerHTML = (weight || '----') + '<span class="unit">kg</span>';
+      weightEl.classList.toggle('stale', stale || !isConnected);
+
+      ageEl.textContent = fmtAge(ageMs);
+      connectedEl.textContent = isConnected ? 'connected' : 'disconnected';
+
+      if (!isConnected) {
+        setStatus('bad', 'Service can\'t reach the weighbridge');
+      } else if (stale) {
+        setStatus('warn', 'Weight is stale (' + fmtAge(ageMs) + ' since last frame)');
+      } else {
+        setStatus('ok', 'Live');
+      }
+    } catch (err) {
+      consecutiveFailures++;
+      weightEl.classList.add('stale');
+      ageEl.textContent = '-';
+      connectedEl.textContent = '-';
+      if (consecutiveFailures === 1) {
+        setStatus('warn', 'Reaching service...');
+      } else {
+        setStatus('bad', 'Cannot reach service at ' + host);
+      }
+    }
+  }
+
+  tick();
+  setInterval(tick, POLL_MS);
+</script>
+</body>
+</html>

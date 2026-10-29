@@ -1,0 +1,31 @@
+/* Hauliers: Edit Haulier is tabbed (General / Emails). The tab area is locked to the
+   General tab's height (measured when the form first shows), so the dialog never changes
+   size; the Emails tab fills that height and its list scrolls inside it. */
+.hl-tab-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.hl-tab-fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hl-tab-fill > .toolbar {
+  flex: none;
+}
+.hl-tab-fill > .data-table-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Hauliers page: the Emails panel beside the list, before a haulier is selected. */
+.hl-emails-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 13px;
+}

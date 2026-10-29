@@ -1,0 +1,440 @@
+/* Paper geometry — the single source of truth for the printed margin.
+   The margin itself lives in @page at the foot of this file (custom properties are
+   not reliably readable from the page context on older Chromium, so it is written
+   out there literally); --dn-page-w is what is left of A4's 210mm after it. Change
+   the two together — if the sheet ends up wider than the page box, the print engine
+   shrinks it to fit and the margin grows instead. */
+:root {
+  --dn-page-w: 190mm; /* 210mm - 2 x the 10mm @page margin at the foot of this file */
+}
+
+/* Delivery note preview — mirrors the client's printed Evergreen delivery note:
+   clover logo top-centre, note number box top-right, To / Delivery Instructions
+   boxes, green header cells, and the green-banded items table.
+   The note renders as real A4 page divs (.dn-page) — what you see is exactly what
+   prints: page 1 carries the header, item lines flow across pages, and the
+   signatures + small print sit on the last page. */
+
+.dn-doc {
+  color: #111;
+  font-size: 12px;
+  width: var(--dn-page-w);
+  margin: 0 auto;
+  /* keep the green bands on paper — the system print path defaults backgrounds off */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* One page at 100% zoom, sized to the PRINTABLE AREA rather than to the whole
+   sheet: the 10mm paper margin is expressed once, in @page, and .dn-page is the
+   190 x 277mm box that leaves. Nothing here is wider than the page box, so the
+   print engine never has to shrink-to-fit — that scaling is what produced the fat
+   borders the client kept reporting (a 210mm sheet squeezed to 87%).
+   Do not go back to a 210mm sheet with small internal padding: 4mm sides sit inside
+   most printers' unprintable edge, so the driver either clips the outer rules or
+   scales the whole page down, and the margin grows instead of shrinking.
+   Height is 276mm, 1mm short of the 277mm page box, so rounding can never spill a
+   hairline onto a second sheet. The pagination probe measures that same 276mm. */
+.dn-page {
+  position: relative;
+  background: #fff;
+  width: var(--dn-page-w);
+  height: 276mm;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0 0 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Measuring pass: natural height so the row/block heights can be read. */
+.dn-page.dn-measure {
+  height: auto;
+  overflow: visible;
+}
+
+/* PREVIEW ONLY (DeliveryNoteModal wraps the sheet in .dn-preview): draw the 10mm paper
+   margin that @page adds on paper, so on screen the sheet reads as an A4 page instead
+   of content jammed against the edge of the box. Everything here sits OUTSIDE .dn-page —
+   a spread box-shadow paints the white surround, margins make room for it — so the page
+   box itself, which is what the pagination measures and what prints, is untouched.
+   Screen media only: on paper the @page margin is the real one, and any padding here
+   would put the sheet back over the page-box width and bring the shrink-to-fit borders
+   back. */
+@media screen {
+  .dn-preview .dn-doc {
+    /* border-box: the 190mm page plus the 10mm surround each side */
+    width: calc(var(--dn-page-w) + 20mm);
+    padding: 10mm;
+  }
+  .dn-preview .dn-page {
+    /* 10mm surround of this page + 10mm of the next, then the same 14px gap as before */
+    margin: 0 0 calc(20mm + 14px);
+    box-shadow:
+      0 0 0 10mm #fff,
+      0 1px 6px 10mm rgba(0, 0, 0, 0.3);
+  }
+  .dn-preview .dn-page:last-child {
+    margin-bottom: 0;
+  }
+}
+
+
+/* Print status in the preview's footer ("2 copies sent to …"), and the Copies box in
+   the note's own print dialog (PrintNoteDialog). Screen only by nature — the modal
+   footer is hidden in print media and the dialog is closed before the shell prints. */
+.dn-print-status {
+  margin-right: auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dn-print-copies {
+  width: 90px;
+}
+
+.dn-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.dn-logo-wrap {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.dn-logo-wrap img {
+  height: 90px;
+}
+
+.dn-tagline {
+  font-style: italic;
+  font-weight: 700;
+  font-size: 15px;
+  margin: 4px 0 12px;
+  text-align: center;
+}
+
+/* Absolutely positioned on the page. The page has no padding of its own any more
+   (the paper margin is @page's job), so right: 0 is flush with everything else. */
+.dn-note-no {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #4a7d23;
+}
+
+.dn-note-no .dn-note-box {
+  border: 1px solid #333;
+  padding: 6px 14px;
+  min-width: 90px;
+  font-size: 13px;
+  color: #111;
+  font-weight: 600;
+}
+
+/* To / Delivery Instructions / green details table row */
+/* The order confirmation's banner, between the logo and the To / Instructions boxes: the
+   items table's header colours, so it reads as part of the same sheet. It spans the To and
+   Instructions columns only (.dn-head's 1fr 1fr 1.1fr, 14px gaps): the Greendays logo hangs
+   up out of the third column into this row, so it sits beside the banner, not on it. */
+.dn-doc-title {
+  margin-right: calc((100% - 28px) * 1.1 / 3.1 + 14px);
+  background: #8dc63f;
+  border: 1px solid #333;
+  border-bottom: 4px solid #2e6b1e;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.dn-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Each column is a flex stack whose box/table fills the row height, so the To and
+   Delivery Instructions boxes bottom-align with the details table on the right. */
+.dn-head > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.dn-head .dn-box {
+  flex: 1;
+}
+
+.dn-head .dn-details {
+  flex: 1;
+}
+
+.dn-box-label {
+  color: #4a7d23;
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+
+.dn-box {
+  border: 1px solid #333;
+  min-height: 110px;
+  padding: 6px 8px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+/* Greendays sister-brand logo floats above the Date/Order No table (absolute, so
+   the table's top stays flush with the To/Instructions boxes). */
+.dn-greendays {
+  position: absolute;
+  right: 0;
+  /* Bottom edge sits just above the Date/Order No table (container top is the
+     label spacer; the table starts ~20px below it). */
+  top: -38px;
+  height: 52px;
+}
+
+.dn-details {
+  border-collapse: collapse;
+  width: 100%;
+  align-self: start;
+}
+
+.dn-details td {
+  border: 1px solid #333;
+  /* five rows now (Trailer No added) — shorter cells keep the box compact */
+  padding: 2px 8px;
+}
+
+.dn-details .dn-detail-label {
+  background: #8dc63f;
+  font-style: italic;
+  font-weight: 600;
+  text-align: right;
+  width: 88px;
+  white-space: nowrap;
+}
+
+/* Items table — fixed layout so the header widths control the columns (with auto
+   layout the 90px .dn-num cells would win and the narrower pallet/bags widths
+   would never apply). */
+.dn-items {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 16px;
+  table-layout: fixed;
+}
+
+.dn-items th {
+  background: #8dc63f;
+  border: 1px solid #333;
+  border-bottom: 4px solid #2e6b1e;
+  padding: 4px 8px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.dn-items th.dn-num,
+.dn-items td.dn-num {
+  text-align: right;
+}
+
+.dn-items th.dn-num {
+  width: 90px;
+}
+
+.dn-items th.dn-pallets {
+  width: 60px;
+}
+
+.dn-items th.dn-bpp {
+  width: 80px;
+}
+
+.dn-items th.dn-bags {
+  width: 80px;
+}
+
+.dn-items td {
+  padding: 4px 8px 2px;
+}
+
+/* Signature boxes — part of the page footer: pushed to the bottom of the A4 page. */
+.dn-sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: auto 0 14px;
+  padding-top: 26px;
+}
+
+/* "Best Fit Footer": the footer blocks sit directly under the order items instead
+   of pinning to the bottom of the page. */
+.dn-page.dn-best-fit .dn-sign {
+  margin-top: 0;
+}
+
+.dn-sign-box {
+  border: 1px solid #333;
+  min-height: 80px;
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Footer small print */
+.dn-footer {
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.dn-footer .dn-vat {
+  font-size: 12px;
+}
+
+.dn-footer .dn-green {
+  color: #4a7d23;
+}
+
+.dn-footer .dn-cards {
+  font-size: 12px;
+}
+
+/* Head Office banner — thin dark-green bar over the light-green address band. */
+.dn-office {
+  margin-top: 10px;
+  border-top: 8px solid #2e6b1e;
+}
+
+.dn-office-band {
+  background: #8dc63f;
+  text-align: center;
+  font-style: italic;
+  font-size: 11px;
+  padding: 8px 10px;
+  line-height: 1.7;
+  color: #1c2b10;
+}
+
+.dn-office-band .dn-office-key {
+  color: #f4f9ea;
+  font-weight: 700;
+}
+
+/* Print: a standard Windows A4 print of the page divs — one .dn-page per sheet of
+   paper at true size, nothing else. The Modal portals to <body>, so the app (#root)
+   is hidden outright and the un-clipped pages flow naturally. */
+@media print {
+  body.dn-print-mode #root {
+    display: none !important;
+  }
+  body.dn-print-mode .modal-overlay {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+  body.dn-print-mode .modal {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+    resize: none !important;
+  }
+  body.dn-print-mode .modal-header,
+  body.dn-print-mode .modal-footer,
+  body.dn-print-mode .modal-notice {
+    display: none !important;
+  }
+  body.dn-print-mode .modal-body {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  /* Deliberately NOT scoped to body.dn-print-mode, unlike the modal-undo rules above:
+     the server renders the same sheet on a bare page with no modal at all (print.html),
+     and it needs these too. Harmless when the modal is closed — nothing else on the app
+     is a .dn-page. */
+  .dn-page {
+    margin: 0 !important;
+    box-shadow: none !important;
+    break-after: page;
+  }
+  .dn-page:last-child {
+    break-after: auto;
+  }
+  /* The real paper margin, and the only one. .dn-page is sized to what it leaves
+     (--dn-page-w x 276mm), so the sheet always fits the page box at 100% and is
+     never shrunk to fit. 10mm also clears every printer's unprintable edge, and
+     leaves room for the browser's own header/footer if a user prints with those
+     switched on — otherwise Chromium enlarges the margin itself to make room.
+     NOTE: App.css also declares an anonymous @page (13/13/18mm, for the weighbridge
+     docket). @page has no specificity, so the winner is bundle order — and App.css
+     is bundled LAST, so this rule loses inside the app. DeliveryNoteModal therefore
+     re-states it from a <style> appended to <head>, which wins by document order.
+     This copy is what the standalone server print page (print/main.tsx, which does
+     not load App.css) uses. */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}
+
+/* The invoice preview's packaging-weight warning (DeliveryNoteModal), in the dialog's notice
+   strip between the sheet and the buttons, shown only when products lack a pallet or bag
+   weight. Screen only (the strip is hidden in print above). */
+.dn-weight-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 16px;
+  border-top: 1px solid #f1d49a;
+  background: #fff7e6;
+  color: #7a4a06;
+  font: 400 12px/1.45 var(--ui-font);
+}
+
+.dn-weight-check > svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.dn-weight-check-title {
+  font-weight: 600;
+}
+
+.dn-weight-check ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  max-height: 96px;
+  overflow-y: auto;
+}
+
+.dn-weight-check b {
+  font-weight: 600;
+}

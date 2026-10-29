@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Globeweigh - Live Scanner</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --fg: #f4f6fa;
+      --muted: #8a93a3;
+      --ok: #2ecc71;
+      --warn: #f1c40f;
+      --bad: #e74c3c;
+      --info: #4ea1ff;
+      --accent: #4ea1ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .config {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 24px;
+      width: min(100%, 1080px);
+    }
+    .config label { color: var(--muted); font-size: 14px; }
+    .config input {
+      flex: 1;
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid #2a2f3a;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    }
+    .config input:focus { outline: none; border-color: var(--accent); }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px 32px;
+      width: min(100%, 1080px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      margin-bottom: 16px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    .dot.ok   { background: var(--ok);   color: var(--ok);   animation: pulse 1.6s infinite; }
+    .dot.warn { background: var(--warn); color: var(--warn); }
+    .dot.bad  { background: var(--bad);  color: var(--bad); }
+
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0.6); }
+      70%  { box-shadow: 0 0 0 12px rgba(46, 204, 113, 0); }
+      100% { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0); }
+    }
+
+    h2 { margin: 0 0 16px 0; font-size: 16px; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    .latest {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .field {
+      background: #101319;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .field .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .field .value {
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 22px;
+      color: var(--fg);
+      margin-top: 4px;
+      word-break: break-all;
+      min-height: 28px;
+    }
+    .field.unique .value { color: var(--accent); font-weight: 600; }
+
+    .raw {
+      margin-top: 16px;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      background: #0b0d11;
+      border: 1px solid #2a2f3a;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-all;
+      min-height: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid #232730;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+    td { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+    td.code { color: var(--accent); font-weight: 600; }
+    td.raw  { color: var(--muted); word-break: break-all; }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .pill.Saved          { background: rgba(46, 204, 113, 0.15); color: var(--ok); }
+    .pill.AlreadyScanned { background: rgba(241, 196, 15, 0.15); color: var(--warn); }
+    .pill.UnknownCode    { background: rgba(231, 76, 60, 0.15);  color: var(--bad); }
+    .pill.NoRead         { background: rgba(138, 147, 163, 0.15); color: var(--muted); }
+    .pill.ParseFailed    { background: rgba(231, 76, 60, 0.15);  color: var(--bad); }
+    .pill.Error          { background: rgba(231, 76, 60, 0.15);  color: var(--bad); }
+    .pill.Parsed         { background: rgba(78, 161, 255, 0.15); color: var(--info); }
+    .pill.ScannerError   { background: rgba(241, 196, 15, 0.18); color: var(--warn); margin-left: 4px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+    footer {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer code { color: var(--fg); }
+  </style>
+</head>
+<body>
+
+  <div class="config">
+    <label for="host">Service:</label>
+    <input id="host" type="text" placeholder="evergreen:8765" />
+  </div>
+
+  <div class="card">
+    <div class="status">
+      <span id="dot" class="dot"></span>
+      <span id="statusText">Connecting...</span>
+      <span style="flex:1"></span>
+      <span id="lastEvent" style="font-family: ui-monospace, monospace;">-</span>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom: 16px;">
+      <h2 style="margin:0;">Latest scan</h2>
+      <span id="latestScannerError" class="pill ScannerError" style="display:none;">Scanner Error</span>
+    </div>
+    <div class="latest">
+      <div class="field unique">
+        <div class="label">Unique Code</div>
+        <div id="latestUnique" class="value">-</div>
+      </div>
+      <div class="field">
+        <div class="label">Weight</div>
+        <div id="latestWeight" class="value">-</div>
+      </div>
+      <div class="field">
+        <div class="label">Prod / Header</div>
+        <div id="latestProd" class="value">-</div>
+      </div>
+    </div>
+    <div class="raw" id="latestRaw">-</div>
+  </div>
+
+  <div class="card">
+    <h2>Recent scans</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 90px;">Time</th>
+          <th style="width: 100px;">Result</th>
+          <th>Unique Code</th>
+          <th style="width: 110px;">Weight</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Source: <code id="urlPreview">http://evergreen:8765/scanner/recent</code>
+  </footer>
+
+<script>
+  const POLL_MS = 750;
+
+  const $ = id => document.getElementById(id);
+  const hostInput  = $('host');
+  const dotEl      = $('dot');
+  const statusEl   = $('statusText');
+  const lastEvtEl  = $('lastEvent');
+  const latestUniq = $('latestUnique');
+  const latestWt   = $('latestWeight');
+  const latestProd = $('latestProd');
+  const latestRaw  = $('latestRaw');
+  const latestErr  = $('latestScannerError');
+  const rowsEl     = $('rows');
+  const urlPreview = $('urlPreview');
+
+  function defaultHost() {
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      return location.hostname + ':8765';
+    }
+    return 'evergreen:8765';
+  }
+
+  function loadHost() { return localStorage.getItem('gw.host') || defaultHost(); }
+  function saveHost(h) { localStorage.setItem('gw.host', h); }
+  function buildUrl(host) { return `http://${host}/scanner/recent`; }
+
+  hostInput.value = loadHost();
+  urlPreview.textContent = buildUrl(hostInput.value);
+
+  hostInput.addEventListener('change', () => {
+    const v = hostInput.value.trim();
+    if (!v) return;
+    saveHost(v);
+    urlPreview.textContent = buildUrl(v);
+  });
+
+  function setStatus(state, text) {
+    dotEl.className = 'dot ' + state;
+    statusEl.textContent = text;
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (isNaN(d)) return '-';
+    return d.toLocaleTimeString([], { hour12: false });
+  }
+
+  function fmtAge(iso) {
+    if (!iso) return '-';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (isNaN(ms)) return '-';
+    if (ms < 1000) return 'just now';
+    if (ms < 60000) return Math.round(ms / 1000) + 's ago';
+    if (ms < 3600000) return Math.round(ms / 60000) + 'm ago';
+    return Math.round(ms / 3600000) + 'h ago';
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  let consecutiveFailures = 0;
+
+  async function tick() {
+    const host = hostInput.value.trim() || defaultHost();
+    const url = buildUrl(host);
+
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 2000);
+      const resp = await fetch(url, { cache: 'no-store', signal: ctl.signal });
+      clearTimeout(timer);
+
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      consecutiveFailures = 0;
+
+      const events = Array.isArray(data.events) ? data.events : [];
+      const isConnected = !!data.isConnected;
+
+      if (!isConnected) setStatus('bad', 'Service can\'t reach scanner');
+      else if (!events.length) setStatus('warn', 'Connected to scanner — no scans yet');
+      else setStatus('ok', 'Connected to scanner');
+
+      lastEvtEl.textContent = data.lastEventUtc ? 'last scan ' + fmtAge(data.lastEventUtc) : '';
+
+      if (events.length) {
+        const e = events[0];
+        latestUniq.textContent = e.uniqueCode || '-';
+        latestWt.textContent = e.weight || '-';
+        latestProd.textContent = e.prodCd || '-';
+        latestRaw.textContent = e.raw || '';
+        latestErr.style.display = e.scannerError ? 'inline-block' : 'none';
+      } else {
+        latestUniq.textContent = '-';
+        latestWt.textContent = '-';
+        latestProd.textContent = '-';
+        latestRaw.textContent = '';
+        latestErr.style.display = 'none';
+      }
+
+      rowsEl.innerHTML = events.map(e => `
+        <tr>
+          <td>${escapeHtml(fmtTime(e.timestampUtc))}</td>
+          <td>
+            <div class="pill-row">
+              <span class="pill ${escapeHtml(e.result)}">${escapeHtml(e.result)}</span>
+              ${e.scannerError ? '<span class="pill ScannerError">ERR</span>' : ''}
+            </div>
+          </td>
+          <td class="code">${escapeHtml(e.uniqueCode || '-')}</td>
+          <td>${escapeHtml(e.weight || '-')}</td>
+          <td class="raw">${escapeHtml(e.message || '')}</td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      consecutiveFailures++;
+      if (consecutiveFailures === 1) setStatus('warn', 'Reaching service...');
+      else setStatus('bad', 'Cannot reach service at ' + host);
+    }
+  }
+
+  tick();
+  setInterval(tick, POLL_MS);
+</script>
+</body>
+</html>

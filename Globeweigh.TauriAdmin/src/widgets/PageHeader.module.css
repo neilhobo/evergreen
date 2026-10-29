@@ -1,0 +1,210 @@
+/* From the source template; its --accent (brand green) is our --primary. */
+/* specgauge PageHeader.module.css — accent rail + title + meta, optional centre slot,
+   the signed-in profile chip on the right, one rule underneath. */
+.header {
+    --ph-accent: var(--primary);
+    --ph-navy: #1a2332;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: none;
+    min-width: 0;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.titleRegion {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.titleRegion::before {
+    content: "";
+    align-self: center;
+    flex: none;
+    width: 3px;
+    height: 20px;
+    border-radius: 2px;
+    background: var(--ph-accent);
+}
+
+/* Poppins for the title, as Eramol's .ph-title has it — the meta beside it stays in
+   the content font. */
+.title {
+    font: 640 16px/1.2 var(--app-font);
+    letter-spacing: -0.01em;
+    color: var(--ph-navy);
+    white-space: nowrap;
+}
+
+.meta {
+    font: 400 11.5px/1.2 var(--ui-font);
+    color: #7c8899;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    flex: none;
+    min-width: 0;
+    margin-left: auto;
+}
+
+.center + .profile { margin-left: 0; }
+.centerLeft { margin-left: 0; }
+.centerLeft + .profile { margin-left: auto; }
+
+.leftMode .titleRegion {
+    flex: none;
+    width: 250px;
+}
+
+/* --- profile --- */
+.profile {
+    position: relative;
+    flex: none;
+    margin-left: auto;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 8px 0 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.chip:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--ph-navy);
+    color: #fff;
+    font: 500 11px/1 var(--ui-font);
+    flex: none;
+}
+
+.userText {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    max-width: 190px;
+}
+
+.userName {
+    font: 500 12px/1.2 var(--ui-font);
+    color: var(--ph-navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.userSub {
+    font: 400 10px/1.2 var(--ui-font);
+    color: #7c8899;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.caret {
+    flex: none;
+    color: #94a3b8;
+}
+
+/* --- account menu --- */
+.menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1200;
+    min-width: 214px;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.25), 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.menuHead {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 9px 9px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.menuName {
+    font: 500 12px/1.2 var(--ui-font);
+    color: var(--ph-navy);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menuEmail {
+    font: 400 11px/1.2 var(--ui-font);
+    color: #7c8899;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 9px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #334155;
+    font: 400 12px/1.2 var(--ui-font);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.menuItem:hover {
+    background: #f8fafc;
+    color: var(--ph-accent);
+}
+
+.menuItemDanger { color: #b42318; }
+
+.menuItemDanger:hover {
+    background: #fef3f2;
+    color: #b42318;
+}
+
+@media (max-width: 900px) {
+    .userText, .caret, .meta { display: none; }
+    .chip { padding: 0 4px; }
+    .titleRegion, .leftMode .titleRegion { flex: 0 1 auto; width: auto; }
+}

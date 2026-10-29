@@ -1,0 +1,42 @@
+# go2rtc — RTSP → WebRTC/MSE gateway for the Gate/Barrier (Web) cameras.
+# Run this on a host that can reach the cameras (the prod box "evergreen"); clients reach
+# go2rtc over Tailscale at http://evergreen:1984. The browser <video-rtc> player connects here.
+
+api:
+  listen: ":1984"        # web UI + WebRTC/MSE signalling — this is GateBarrier:VideoBaseUrl
+  # The admin app's intercom call dialog talks to go2rtc's WebSocket from its own page, a different
+  # origin; without this go2rtc refuses it ("request origin not allowed by Upgrader.CheckOrigin").
+  origin: "*"
+
+webrtc:
+  listen: ":8555"        # WebRTC TCP candidate (helps over VPN); MSE works without it
+
+log:
+  level: info
+
+streams:
+  # Channel 1 = main stream, matching the old LibVLC view
+  # (rtsp://admin:mac111111@<ip>/Streaming/Channels/1).
+  main:
+    - rtsp://admin:mac111111@192.168.250.158:554/Streaming/Channels/1
+  gate:
+    - rtsp://admin:mac111111@192.168.250.162:554/Streaming/Channels/1
+  # Bridge 1 door intercoms (Dahua VTO), on the client LAN since 2026-10-20.
+  # Stream names = Intercom:Units[].Stream in the API's appsettings.json.
+  bridge1a:   # Bridge 1 - Weigh Out (VTO2201F-P-S2)
+    - "rtsp://admin:Gw33470!@192.168.250.181:554/cam/realmonitor?channel=1&subtype=0"
+  bridge1b:   # Bridge 1 - Weigh In (older VTO2201F-P)
+    - "rtsp://admin:Gw33470!@192.168.250.184:554/cam/realmonitor?channel=1&subtype=0"
+  production:
+    - rtsp://admin:mac111111@192.168.250.191:554/Streaming/Channels/1
+
+# --- If a camera shows no picture in the browser, it is almost certainly H.265 (HEVC),
+#     which browsers can't play via WebRTC/MSE. Two fixes (per camera, replace the line above):
+#
+#   1) Use the H.264 sub-stream (usually channel 102) — no transcoding, low CPU:
+#        gate:
+#          - rtsp://admin:mac111111@192.168.250.162:554/Streaming/Channels/102
+#
+#   2) Transcode to H.264 with ffmpeg (needs ffmpeg on PATH; higher CPU):
+#        gate:
+#          - "ffmpeg:rtsp://admin:mac111111@192.168.250.162:554/Streaming/Channels/1#video=h264#hardware"

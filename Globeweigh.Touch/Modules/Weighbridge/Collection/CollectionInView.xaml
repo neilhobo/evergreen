@@ -1,0 +1,64 @@
+<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	         xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+	         xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+	         xmlns:controls="clr-namespace:Globeweigh.Shared.Controls;assembly=Globeweigh.Shared"
+	         xmlns:converters="clr-namespace:Globeweigh.Shared.Converters;assembly=Globeweigh.Shared"
+	         xmlns:internal="http://schemas.devexpress.com/winfx/2008/xaml/windowsui/internal"
+	         md:DialogServiceViews.IsRegistered="True"
+	         x:Class="Globeweigh.Touch.CollectionInView"
+             mc:Ignorable="d"
+             d:DesignHeight="1024" d:DesignWidth="1280"
+             shared:ViewModelBehavior.LoadUnload="True"
+             DataContext="{Binding CollectionInView, Source={StaticResource Locator}}" Background="{DynamicResource MainContentGrey}">
+    <UserControl.Resources>
+        <converters:TrueToFalseConverter x:Key="TrueToFalseConverter"/>
+    </UserControl.Resources>
+    <Border Margin="15" Background="{DynamicResource LightGreyBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Background="{DynamicResource GlobeweighBlueBrush}">
+                <Grid Margin="5">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
+                        <internal:BackButton Margin="0,0,10,0" VerticalAlignment="Center" Command="{Binding BackCommand}" StrokeThickness="4" Width="66" Height="66"/>
+                        <TextBlock Text="Collection" Margin="10,0,0,0" Style="{DynamicResource HeaderTextBlockStyle}" Foreground="White"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Enter your reference number" HorizontalAlignment="Center" FontSize="46" FontWeight="Bold" Style="{DynamicResource DefaultTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="Red" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,20"/>
+
+                <controls:TransactionContentControl
+                    x:Name="RefNumber" Grid.Row="2"
+                    Width="500" Height="140" HorizontalAlignment="Center"
+                    FontSize="70" FontWeight="Bold"
+                    TextBlockHorizontalAlignment="Center"
+                    Style="{DynamicResource TextBlockPopupContentStyle}"
+                    NullText="Tap to enter"
+                    Text="{Binding RefNumber, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Button Grid.Row="3" Content="Next" Command="{Binding NextCommand}"
+                        Style="{DynamicResource PrimaryButtonStyleAction}"
+                        Width="500" Height="120" FontSize="60" Margin="0,60,0,0"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource TrueToFalseConverter}}"/>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

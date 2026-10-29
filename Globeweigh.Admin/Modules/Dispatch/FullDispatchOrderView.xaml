@@ -1,0 +1,167 @@
+﻿<shared:WindowBase
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shared="clr-namespace:Globeweigh.Shared;assembly=Globeweigh.Shared"
+        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
+        xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+        x:Class="Globeweigh.Admin.FullDispatchOrderView"
+        mc:Ignorable="d" ResizeMode="NoResize"  WindowStyle="None"
+        Height="600" Width="900" WindowStartupLocation="CenterScreen" WindowState="Normal" 
+        md:DialogServiceViews.IsRegistered="True" Background="White">
+
+
+    <shared:WindowBase.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Globeweigh.Admin;component/Resources/GridControlResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--<DataTemplate x:Key="ViewCellTemplate">
+                <TextBlock x:Name="txt" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,0,0,0" >
+                    <Hyperlink Command="{Binding Path=Column.DataContext.ViewDocumentCommand}" CommandParameter="{Binding Path=Value}" TextDecorations="{x:Null}">
+                        <TextBlock Text="View"/>
+                    </Hyperlink>
+                </TextBlock>
+            </DataTemplate>
+
+            <Style x:Key="FocusedCellStyle" TargetType="dxg:LightweightCellEditor" BasedOn="{StaticResource {dxgt:GridRowThemeKey ResourceKey=LightweightCellStyle}}">
+                <Setter Property="Background" Value="White" />
+                <Style.Triggers>
+                    <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                        <Setter Property="Background" Value="White" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>-->
+
+
+        </ResourceDictionary>
+    </shared:WindowBase.Resources>
+
+    <Border Margin="0" CornerRadius="3" Background="White">
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+            <Border BorderBrush="{DynamicResource MainBorderBrush}" >
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Text="Dispatch Order" Style="{DynamicResource TransactionHeaderTextBlockStyle}"/>
+                </Grid>
+            </Border>
+            <Border Grid.Row="1">
+                <Grid Margin="10,10,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid>
+                        <Grid Margin="0" Background="{DynamicResource LightGreyBrush}">
+                            <Grid Margin="10">
+                                <Grid Margin="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="3*"/>
+
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Label Content="Order No:" Style="{DynamicResource DefaultLabelStyle}"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.OrderNo}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" />
+                                    <Label Content="Customer:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="1" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.CustomerName}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="1" />
+                                    <Label Content="Customer Ref:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="2" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.CustomerRef}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="2" />
+                                    <Label Content="PO Number:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="3" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.PoNumber}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="3" />
+                                    <Label Content="Haulier:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="4" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.HaulierName}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="4" />
+                                    <Label Content="Vehicle Reg:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="5" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.VehicleReg}" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="5" />
+                                    <Label Content="DeliveryDate:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="6" Margin="0"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.DeliveryDate}" ContentStringFormat="dd/MM/yyyy" Style="{DynamicResource DefaultLabelContentStyle}" Grid.Column="1" Grid.Row="6" />
+                                    <Label Content="Delivery Address:" Style="{DynamicResource DefaultLabelStyle}" Grid.Row="7"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.AddressFull}" VerticalContentAlignment="Top" Style="{DynamicResource DefaultLabelContentStyle}" VerticalAlignment="Stretch"  Margin="0,5,0,6" Grid.Row="8" Height="Auto" Grid.ColumnSpan="2" Grid.RowSpan="5" Padding="0"/>
+                                    <Label Content="Comments:" Style="{DynamicResource DefaultLabelStyle}" Margin="0" Grid.Row="13"/>
+                                    <Label Content="{Binding CurrentDispatchOrder.Comments}" VerticalContentAlignment="Top" Style="{DynamicResource DefaultLabelContentStyle}" VerticalAlignment="Stretch"  Margin="0,5,0,6" Grid.Row="14" Height="Auto" Grid.ColumnSpan="2" Grid.RowSpan="2" Padding="0"/>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+
+
+
+                    </Grid>
+                    <TabControl Margin="20,0,0,0" BorderThickness="0" Background="Transparent" Grid.Row="1" Padding="0" Grid.Column="1" >
+                        <TabItem Header="Order Items"  TextElement.FontSize="12">
+                            <dxg:GridControl x:Name="grd1" ItemsSource="{Binding CurrentDispatchOrder.DispatchOrderItems}" FontSize="12" 
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="0,10,0,0">
+                                <dxg:GridControl.View>
+                                    <dxg:TableView x:Name="tvGrid1" ShowAutoFilterRow="False" NavigationStyle="None" />
+                                </dxg:GridControl.View>
+                                <dxg:GridColumn FieldName="ProductDescription" Header="Product"  Width="120"  AllowEditing="False">
+                                    <dxg:GridColumn.EditSettings>
+                                        <dxe:TextEditSettings  HorizontalContentAlignment="Left" />
+                                    </dxg:GridColumn.EditSettings>
+                                </dxg:GridColumn>
+                                <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True"/>
+                                <dxg:GridColumn FieldName="Upp"  Header="UPP" Width="60" FixedWidth="True"/>
+                                <dxg:GridColumn FieldName="Quantity"  Header="Order Quantity" Width="120" FixedWidth="True"/>
+                            </dxg:GridControl>
+                        </TabItem>
+                        <TabItem Header="Picked Items"  TextElement.FontSize="12">
+                            <dxg:GridControl x:Name="grd2" ItemsSource="{Binding CurrentDispatchOrder.PickedItems}" FontSize="12" 
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" Margin="0,10,0,0">
+                                <dxg:GridControl.View>
+                                    <dxg:TableView x:Name="tvGrid2" ShowAutoFilterRow="False" NavigationStyle="None" />
+                                </dxg:GridControl.View>
+                                <dxg:GridColumn  FieldName="PalletId" FixedWidth="True" Width="90">
+                                    <dxg:GridColumn.EditSettings>
+                                        <dxe:TextEditSettings HorizontalContentAlignment="Left"/>
+                                    </dxg:GridColumn.EditSettings>
+                                </dxg:GridColumn>
+                                <dxg:GridColumn FieldName="ProductName" />
+                                <dxg:GridColumn FieldName="Size" Width="60" FixedWidth="True" />
+                                <dxg:GridColumn FieldName="Upp" Width="60" FixedWidth="True" Header="UPP" />
+                                <dxg:GridColumn FieldName="DateCreated" Header="Date Picked" FixedWidth="True"  Width="120">
+                                    <dxg:GridColumn.EditSettings>
+                                        <dxe:TextEditSettings MaskType="DateTime" Mask="dd/MM/yyyy HH:mm" MaskUseAsDisplayFormat="True" HorizontalContentAlignment="Left"/>
+                                    </dxg:GridColumn.EditSettings>
+                                </dxg:GridColumn>
+                            </dxg:GridControl>
+                        </TabItem>
+
+                    </TabControl>
+                </Grid>
+
+            </Border>
+
+            <Border Grid.Row="2">
+                <Grid Margin="10,0">
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Close" Width="100" Command="{Binding CancelCommand}" Style="{DynamicResource TransactionButtonStyleCancel}" Margin="20,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</shared:WindowBase>

@@ -1,0 +1,42 @@
+{
+  "name": "globeweigh-tauritouch",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:VITE_API_TARGET='production'; & ./dev.ps1 dev\"",
+    "dev:vite": "vite",
+    "dev:api": "node ./dev-api.mjs",
+    "dev:tauri": "powershell -NoProfile -ExecutionPolicy Bypass -File ./dev.ps1 dev",
+    "dev:full": "concurrently --kill-others --names api,tauri --prefix-colors blue,green \"npm:dev:api\" \"npm:dev:tauri\"",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "deploy:touch": "npm --prefix .. run deploy:touch",
+    "deploy:admin": "npm --prefix .. run deploy:admin",
+    "deploy:api": "npm --prefix .. run deploy:api",
+    "deploy:api:only": "npm --prefix .. run deploy:api:only",
+    "migrate:local": "npm --prefix .. run migrate:local",
+    "migrate:prod": "npm --prefix .. run migrate:prod"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-http": "^2.5.9",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "^2",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
+    "bwip-js": "^4.11.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^10.0.3",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  }
+}

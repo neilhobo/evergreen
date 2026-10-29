@@ -1,0 +1,13 @@
+.vs
+bin
+obj
+debug
+release
+AppPackages
+Debug
+Release
+appsettings.Local.json
+
+# Device packages / companion APKs staged on the API (binaries, not source)
+Globeweigh.Api/_packages/
+Globeweigh.Api/_companions/

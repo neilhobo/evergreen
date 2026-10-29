@@ -1,0 +1,40 @@
+[package]
+name = "globeweigh-tauritouch"
+version = "0.1.12"
+description = "Globeweigh Touch — shop-floor touch-screen app"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "globeweigh_tauritouch_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-http = "2.5.9"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-os = "2"
+# COM-port enumeration for the weighscale setup screen (USB-serial indicator).
+serialport = "4"
+# Label pixels arrive from the UI as base64 (print_image).
+base64 = "0.22"
+
+# Printer enumeration via winspool EnumPrintersW — direct API, no WMI/PowerShell
+# (Get-CimInstance came back empty on a client Win10 PC).
+[target.'cfg(windows)'.dependencies]
+# Win32_Graphics_Gdi: windows-sys gates OpenPrinterW behind it.
+# Win32_Storage_Xps: StartDocW/EndDoc/StartPage/EndPage/DOCINFOW live there.
+windows-sys = { version = "0.60", features = ["Win32_Foundation", "Win32_Graphics_Printing", "Win32_Graphics_Gdi", "Win32_Storage_Xps"] }
+
