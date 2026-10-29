@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "../../widgets/DetailPanel.module.css";
 import { BackButton, Field, cx, useEscape } from "../../widgets/DetailPanel";
 import OrderGrids from "../../widgets/OrderGrids";
+import { confirmUnpick } from "../../widgets/unpick";
+import { messageDialog } from "../../components/confirmDialog";
 import DeliveryNoteModal from "./DeliveryNoteModal";
 import { fmtDate, fmtDateTime, fmtQty } from "../../format";
 import {
@@ -24,12 +26,15 @@ interface Props {
   onViewLoad?: (loadId: number) => void;
   // True while something (the load panel) sits over this panel; it has Escape, not us.
   covered?: boolean;
+  // Offer ⋮ Unpick on the picked pallets while the order is open (Dispatch page only — not Sales
+  // My Orders).
+  allowUnpick?: boolean;
 }
 
 // Everything recorded for one order, flown in over the page: what the order WAS down the left,
-// what was ordered, picked and changed on it down the right. Read-only throughout — an order is
-// edited from the Edit dialog, not from here.
-export default function OrderDetailPanel({ order, onClose, onViewLoad, covered = false }: Props) {
+// what was ordered, picked and changed on it down the right. Read-only apart from Unpick on a
+// picked pallet — an order is edited from the Edit dialog, not from here.
+export default function OrderDetailPanel({ order, onClose, onViewLoad, covered = false, allowUnpick = false }: Props) {
   const [items, setItems] = useState<DispatchOrderItem[]>([]);
   const [detail, setDetail] = useState<OrderEditDetail | null>(null);
   const [picked, setPicked] = useState<PickedPallet[]>([]);
@@ -64,6 +69,20 @@ export default function OrderDetailPanel({ order, onClose, onViewLoad, covered =
   const dispatched = order.dateDispatched != null;
   const deleted = order.dateDeleted != null;
   const status = deleted ? "Deleted" : dispatched ? "Dispatched" : "Open";
+
+  // Pallets can be unpicked until the order is dispatched; the lines' Picked counts come from the
+  // same picks, so both grids are re-read.
+  const canUnpick = allowUnpick && !dispatched && !deleted && loadState === "ready";
+  async function onUnpick(p: PickedPallet) {
+    if (!(await confirmUnpick(p))) return;
+    try {
+      const [its, pals] = await Promise.all([getOrderItems(order.id), getOrderPicked(order.id)]);
+      setItems(its);
+      setPicked(pals);
+    } catch (err) {
+      void messageDialog("Unpicked, but the order could not be re-read.\n" + (err as Error).message);
+    }
+  }
 
   // Ordered against picked. A short pick is the common one (the product ran out); an over-pick
   // means somebody put a pallet on the wrong order, and both want seeing.
@@ -276,6 +295,7 @@ export default function OrderDetailPanel({ order, onClose, onViewLoad, covered =
             failed={loadState === "failed"}
             orderId={order.id}
             auditStrip
+            onUnpick={canUnpick ? onUnpick : undefined}
           />
         </div>
       </div>

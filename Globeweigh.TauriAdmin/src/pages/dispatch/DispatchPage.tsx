@@ -17,6 +17,7 @@ import {
   getPendingLinkedOrders,
   returnPendingToLoads,
   uncompleteLoad,
+  getUncompleteCheck,
   LinkedOrder,
   weighIn,
   createOrder,
@@ -413,13 +414,26 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
     }
   }
 
-  // "Un-complete": clear the weigh-out so the load steps back to Pending. Nothing else is
-  // undone — the orders stay dispatched and the photos are kept.
+  // "Un-complete": undo the weigh-out so the load steps back to Pending — the out-weight, the
+  // orders' dispatch and the stock it took. Picks and photos are kept. Sage cannot be undone
+  // here, so any order it has already taken is named before asking.
   async function onUncompleteLoad(target: WbCompleted) {
+    let sageSent: number[] = [];
+    try {
+      sageSent = (await getUncompleteCheck(target.id)).sageSentOrderNos;
+    } catch (err) {
+      void messageDialog("Failed to check the load.\n" + (err as Error).message);
+      return;
+    }
     const ok = await confirmDialog(
       `Un-complete load ${target.id}?\n\n` +
-        "The load will go back to the Pending list. Only the weigh-out date/time and " +
-        "weight will be cleared — everything else on the load, including its photos, is kept.",
+        "The load will go back to the Pending list. The weigh-out date/time and weight are " +
+        "cleared, its orders go back to undispatched and their pallets go back into stock, " +
+        "so pallets can be unpicked and the load weighed out again. The picks and photos are kept." +
+        (sageSent.length > 0
+          ? `\n\nAlready sent to Sage, and NOT undone there: order${sageSent.length === 1 ? "" : "s"} ` +
+            `${sageSent.join(", ")}. Correct ${sageSent.length === 1 ? "it" : "them"} in Sage by hand.`
+          : ""),
     );
     if (!ok) return;
     try {
@@ -1089,6 +1103,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
           onClose={() => setViewingOrder(null)}
           onViewLoad={setViewLoad}
           covered={viewLoad != null}
+          allowUnpick
         />
       )}
 
@@ -1107,7 +1122,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
       )}
 
       {viewLoad != null && (
-        <LoadDetailPanel loadId={viewLoad} preCommercial={viewLoadPre} onClose={() => setViewLoad(null)} />
+        <LoadDetailPanel loadId={viewLoad} preCommercial={viewLoadPre} allowUnpick onClose={() => setViewLoad(null)} />
       )}
     </div>
   );

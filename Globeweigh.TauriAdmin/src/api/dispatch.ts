@@ -25,6 +25,8 @@ export const getOrderItems = (orderId:number) => apiGet<DispatchOrderItem[]>(`/d
 // The individual pallets picked onto one order (the per-pallet detail behind the item
 // grid's Picked totals) - same row shape as the picked array on a load.
 export const getOrderPicked = (orderId:number) => apiGet<PickedPallet[]>(`/dispatch/orders/${orderId}/picked`);
+// Unpick: take one picked pallet back off its (undispatched) order; the pallet is free to pick again.
+export const unpickPallet = (pickedId:number) => apiPost<void>(`/dispatch/picked/${pickedId}/unpick`, {});
 export interface OrderEditItem { productId:number; quantity:number|null; price:number|null; }
 // Items plus the header fields the grid rows omit (comments, addressId), for prefilling the edit form.
 // orderNoEditable: true only for a pre-hand-over open order, whose ad-hoc number may be corrected.
@@ -132,5 +134,7 @@ export const getPendingLinkedOrders = (id:number) => apiGet<LinkedOrder[]>(`/dis
 export const deletePending = (id:number) => request<{unassignedOrderNos:number[]}>("DELETE", `/dispatch/pending/${id}`);
 // "Remove from pending": clears the in-weight so the load steps back to the Loads grid.
 export const returnPendingToLoads = (id:number) => apiPost<void>(`/dispatch/pending/${id}/return-to-loads`, {});
-// "Un-complete": clears the out-weight so a completed load steps back to Pending.
-export const uncompleteLoad =(id:number) => apiPost<void>(`/dispatch/completed-weighbridge/${id}/uncomplete`, {});
+// "Un-complete": undoes the weigh-out (out-weight, dispatch, stock) so a completed load steps back to Pending.
+export const uncompleteLoad = (id:number) => apiPost<void>(`/dispatch/completed-weighbridge/${id}/uncomplete`, {});
+// The load's orders Sage has already taken, which Un-complete cannot pull back.
+export const getUncompleteCheck = (id:number) => apiGet<{ sageSentOrderNos:number[] }>(`/dispatch/completed-weighbridge/${id}/uncomplete-check`);

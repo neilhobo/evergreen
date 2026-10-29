@@ -181,6 +181,37 @@ public class DispatchController : ControllerBase
         return Ok(picked);
     }
 
+    // POST /api/dispatch/picked/{id}/unpick — take one picked pallet back off its order (the
+    // ⋮ Unpick on the load / order detail panels). Same as the picking app's pick/delete: the
+    // pick row is soft-deleted so the history is kept, and the master pallet record is freed
+    // once the order holds no other pick of that code. Stock isn't touched until dispatch, so
+    // there is nothing to restore — which is also why a dispatched order is refused.
+    [HttpPost("picked/{id:int}/unpick")]
+    public async Task<ActionResult> UnpickPallet(int id, CancellationToken ct = default)
+    {
+        var pick = await _db.Set<DispatchOrderPickedEntity>()
+            .FirstOrDefaultAsync(p => p.Id == id && p.DateDeleted == null, ct);
+        if (pick == null) return NotFound();
+        var order = await _db.Set<DispatchOrderEntity>().AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == pick.DispatchOrderId, ct);
+        if (order == null || order.DateDeleted != null) return NotFound();
+        if (order.DateDispatched != null)
+            return BadRequest(new { message = "This order has already been dispatched; its pallets cannot be unpicked." });
+
+        pick.DateDeleted = DateTime.Now;
+        pick.DeletedById = this.GetUserId();
+        await _db.SaveChangesAsync(ct);
+
+        var code = pick.PalletId ?? "";
+        var stillPicked = code.Length == 0 || await _db.Set<DispatchOrderPickedEntity>().AsNoTracking()
+            .AnyAsync(p => p.DateDeleted == null && p.PalletId == code && p.DispatchOrderId == order.Id, ct);
+        if (!stillPicked)
+            await _db.Set<CodicoPalletEntity>()
+                .Where(c => c.UniqueCode == code && c.PickedOrderId == order.Id)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.PickedOrderId, (int?)null), ct);
+        return NoContent();
+    }
+
     // GET /api/dispatch/orders/{id}/edit-items — raw line items (incl. Price) plus the
     // header fields the grid rows omit (Comments), for prefilling the edit form.
     [HttpGet("orders/{id:int}/edit-items")]
@@ -1848,8 +1879,9 @@ public class DispatchController : ControllerBase
         rec.DateWeightOut = DateTime.Now;
         if (rec.DateWeightIn == null) rec.DateWeightIn = DateTime.Now; // safety: never complete without an in-weight
 
-        // Orders already dispatched (a load Un-completed and weighed out again) keep their
-        // dispatch — depleting them a second time would write off pallets twice.
+        // Only orders not yet dispatched: one that already is keeps its dispatch, since
+        // depleting it a second time would write off pallets twice. (Un-complete undispatches
+        // the load's orders, so a re-weigh-out normally dispatches them all again.)
         var orders = await _db.Set<DispatchOrderEntity>()
             .Where(o => o.WeighbridgeRecordId == id && o.DateDispatched == null).ToListAsync(ct);
         var now = DateTime.Now;
@@ -1918,20 +1950,80 @@ public class DispatchController : ControllerBase
         return NoContent();
     }
 
-    // POST /api/dispatch/completed-weighbridge/{id}/uncomplete — "Un-complete": clear the
-    // out-weight so the record steps back from Completed to Pending. Only the weigh-out
-    // date/time and weight go: the orders stay dispatched, stock stays depleted, photos and
-    // queued Sage/print jobs are kept. Weighing it out again does not re-dispatch them
-    // (both weigh-out paths skip orders already dispatched).
+    // GET /api/dispatch/completed-weighbridge/{id}/uncomplete-check — the orders on the load
+    // that Sage has already taken (or is taking) and so cannot be pulled back by Un-complete;
+    // the confirmation names them before anything is undone.
+    [HttpGet("completed-weighbridge/{id:int}/uncomplete-check")]
+    public async Task<ActionResult> UncompleteCheck(int id, CancellationToken ct = default)
+    {
+        var orderIds = _db.Set<DispatchOrderEntity>().Where(o => o.WeighbridgeRecordId == id).Select(o => o.Id);
+        var sageSent = await _db.Set<SageExportJob>().AsNoTracking()
+            .Where(j => orderIds.Contains(j.DispatchOrderId)
+                && (j.Status == SageExportJob.Done || j.Status == SageExportJob.Exporting))
+            .Select(j => j.OrderNo).Distinct().OrderBy(n => n)
+            .ToListAsync(ct);
+        return Ok(new { sageSentOrderNos = sageSent });
+    }
+
+    // POST /api/dispatch/completed-weighbridge/{id}/uncomplete — "Un-complete": step the load
+    // back from Completed to Pending by undoing what the weigh-out did, so the orders can be
+    // unpicked and the load weighed out again from what is actually on it:
+    //   - the out-weight and its date/time are cleared;
+    //   - its orders are undispatched, their "Dispatch" stock-history rows removed, and the
+    //     pallets the dispatch marked out of stock put back (found by the dispatch timestamp
+    //     StockDepletion stamped on them, among the load's own products);
+    //   - a Sage export still waiting in the queue is dropped (the next weigh-out queues a
+    //     fresh one). One the sidecar has taken or posted cannot be pulled back — the UI
+    //     warns from uncomplete-check first.
+    // Photos, picks and printed/queued delivery notes are kept.
     [HttpPost("completed-weighbridge/{id:int}/uncomplete")]
     public async Task<ActionResult> UncompleteLoad(int id, CancellationToken ct = default)
     {
         var rec = await _db.Set<WeighbridgeRecord>().FirstOrDefaultAsync(r => r.Id == id && r.DateDeleted == null, ct);
         if (rec == null) return NotFound();
-        if (rec.DateWeightOut == null) return NoContent(); // already pending
+        // No early return for an already-pending load: one Un-completed before this undid the
+        // dispatch (weigh-out cleared, orders still dispatched) is put right by the same steps.
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+
+        var orders = await _db.Set<DispatchOrderEntity>()
+            .Where(o => o.WeighbridgeRecordId == id && o.DateDispatched != null)
+            .ToListAsync(ct);
+        var orderIds = orders.Select(o => o.Id).ToList();
+        var dispatchTimes = orders.Select(o => o.DateDispatched!.Value).Distinct().ToList();
+
+        if (orderIds.Count > 0)
+        {
+            var gtins = await (
+                from i in _db.Set<DispatchOrderItemEntity>()
+                join pr in _db.Set<Product>() on i.ProductId equals pr.Id
+                where orderIds.Contains(i.OrderId) && pr.Gtin13 != null
+                select pr.Gtin13
+            ).Distinct().ToListAsync(ct);
+            if (gtins.Count > 0)
+                await _db.Set<CodicoPalletEntity>()
+                    .Where(c => c.OutOfStockMethod == "Dispatch"
+                        && c.DateOutOfStock != null && dispatchTimes.Contains(c.DateOutOfStock.Value)
+                        && c.Code13 != null && gtins.Contains(c.Code13))
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(c => c.DateOutOfStock, (DateTime?)null)
+                        .SetProperty(c => c.OutOfStockMethod, (string?)null), ct);
+
+            await _db.Set<StockHistory>()
+                .Where(h => h.TransactionType == "Dispatch" && orderIds.Contains(h.EntityId))
+                .ExecuteDeleteAsync(ct);
+
+            await _db.Set<SageExportJob>()
+                .Where(j => orderIds.Contains(j.DispatchOrderId) && j.Status == SageExportJob.Queued)
+                .ExecuteDeleteAsync(ct);
+
+            foreach (var o in orders) o.DateDispatched = null;
+        }
+
         rec.DateWeightOut = null;
         rec.WeightOut = 0;
         await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return NoContent();
     }
 

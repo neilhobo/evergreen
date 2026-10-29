@@ -1,5 +1,6 @@
 import { priceUnitsPer } from "../api/products";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./DetailPanel.module.css";
 import { cx } from "./DetailPanel";
 import AuditTrailBar from "./AuditTrailBar";
@@ -7,6 +8,7 @@ import DataTable, { Column } from "../components/DataTable";
 import { AUDIT_ENTITY } from "../api/audit";
 import { DispatchOrderItem, PickedPallet, isTapPickedLine } from "../api/dispatch";
 import { fmtDateTime, fmtQty } from "../format";
+import { useRowMenu } from "../pages/dispatch/useRowMenu";
 
 interface Props {
   // One order's lines, and the pallets picked onto that same order.
@@ -25,6 +27,9 @@ interface Props {
   auditStrip?: boolean;
   // Anything extra for the lines column's header row (a Delivery Note button, say).
   itemsAction?: ReactNode;
+  // Given, the pallets grid gets a "⋮" column with Unpick. Left out where the order can no longer
+  // change (dispatched) or the viewer may not change it (Sales My Orders).
+  onUnpick?: (pallet: PickedPallet) => void;
 }
 
 // A line still owed: a pallet line picked to a different count, or a tap-picked line (POS board,
@@ -45,7 +50,9 @@ export default function OrderGrids({
   orderId,
   auditStrip,
   itemsAction,
+  onUnpick,
 }: Props) {
+  const [palletMenu, palletMenuApi] = useRowMenu<PickedPallet>();
   // The line whose pallets are showing. Held as an id and looked up rather than kept as an object,
   // so a reload that drops the line falls back to every pallet instead of filtering to one that is
   // no longer there.
@@ -270,8 +277,39 @@ export default function OrderGrids({
         fit: true,
         render: (r) => fmtDateTime(r.dateCreated),
       },
+      ...(onUnpick
+        ? [
+            {
+              // Far-right "⋮" — opens the per-pallet actions menu (see palletMenu).
+              key: "menu",
+              header: "",
+              fit: true,
+              className: "col-menu-tight",
+              align: "center",
+              noSort: true,
+              render: (r) => (
+                <button
+                  type="button"
+                  className="dsp-row-menu-btn"
+                  title="More actions"
+                  aria-haspopup="menu"
+                  aria-expanded={palletMenu?.row.id === r.id}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    palletMenuApi.open(r, e.currentTarget);
+                  }}
+                >
+                  ⋮
+                </button>
+              ),
+            } satisfies Column<PickedPallet>,
+          ]
+        : []),
     ],
-    [],
+    // palletMenuApi is a fresh object each render but only wraps stable setters and a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onUnpick, palletMenu?.row.id],
   );
 
   return (
@@ -330,6 +368,31 @@ export default function OrderGrids({
           }
         />
       </section>
+
+      {/* At page level: the panel slides in on a transform, which would carry a fixed menu with it. */}
+      {palletMenu &&
+        onUnpick &&
+        createPortal(
+          <div
+            ref={palletMenuApi.ref}
+            className="dsp-row-menu"
+            role="menu"
+            style={{ top: palletMenu.top, right: palletMenu.right }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="dsp-row-menu-item danger"
+              onClick={() => {
+                palletMenuApi.close();
+                onUnpick(palletMenu.row);
+              }}
+            >
+              Unpick
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
 import styles from "../../widgets/DetailPanel.module.css";
 import { BackButton, Field, cx, useEscape } from "../../widgets/DetailPanel";
 import OrderGrids from "../../widgets/OrderGrids";
+import { confirmUnpick } from "../../widgets/unpick";
 import { AuditEvent, AuditTrailColumn } from "../../widgets/AuditTrailBar";
 import { AUDIT_ENTITY } from "../../api/audit";
 import DeliveryNoteModal from "../completed-orders/DeliveryNoteModal";
@@ -13,6 +14,7 @@ import {
   LoadDetail,
   LoadPhoto,
   OrderEditDetail,
+  PickedPallet,
   getLoadDetail,
   getOrderEditItems,
   loadPhotoUrl,
@@ -24,6 +26,8 @@ interface Props {
   // Opened from the Loads grid (not yet in Pending): the orders are not picked yet, so the invoice button is the
   // Pre-Commercial Invoice — ordered pallets at the products' average weights.
   preCommercial?: boolean;
+  // Offer ⋮ Unpick on the picked pallets (Dispatch page only — not Sales My Orders).
+  allowUnpick?: boolean;
   onClose: () => void;
 }
 
@@ -34,7 +38,7 @@ interface Props {
 // anything on the right means anything — hence the tab strip. But the weights, the times and above
 // all the PHOTOS belong to the lorry, not to any one order on it, so they stay at the root in the
 // left column where they cannot be read as belonging to whichever order happens to be selected.
-export default function LoadDetailPanel({ loadId, preCommercial = false, onClose }: Props) {
+export default function LoadDetailPanel({ loadId, preCommercial = false, allowUnpick = false, onClose }: Props) {
   const [detail, setDetail] = useState<LoadDetail | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "failed">("loading");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -141,6 +145,22 @@ export default function LoadDetailPanel({ loadId, preCommercial = false, onClose
     () => (detail?.picked ?? []).filter((p) => p.orderId === selectedOrderId),
     [detail, selectedOrderId],
   );
+
+  // Pallets can be unpicked until the lorry weighs out and the order is dispatched; after that
+  // the stock has gone and the pick is history.
+  const canUnpick =
+    allowUnpick &&
+    loadState === "ready" &&
+    rec?.dateWeightOut == null &&
+    orders.find((o) => o.id === selectedOrderId)?.dateDispatched == null;
+  async function onUnpick(p: PickedPallet) {
+    if (!(await confirmUnpick(p))) return;
+    try {
+      setDetail(await getLoadDetail(loadId));
+    } catch (err) {
+      void messageDialog("Unpicked, but the load could not be re-read.\n" + (err as Error).message);
+    }
+  }
 
   // Load totals — every order on the lorry added up, which is what the weighbridge is comparing
   // its own reading against.
@@ -424,6 +444,7 @@ export default function LoadDetailPanel({ loadId, preCommercial = false, onClose
                 loading={loadState === "loading"}
                 failed={loadState === "failed"}
                 orderId={selectedOrderId ?? undefined}
+                onUnpick={canUnpick ? onUnpick : undefined}
               />
             </>
           )}

@@ -901,8 +901,9 @@ public class PickingController : ControllerBase
         rec.DateWeightOut = DateTime.Now;
         if (rec.DateWeightIn == null) rec.DateWeightIn = DateTime.Now; // safety: never complete without an in-weight
 
-        // Orders already dispatched (a load Un-completed in Admin and weighed out again) keep
-        // their dispatch — depleting them a second time would write off pallets twice.
+        // Only orders not yet dispatched: one that already is keeps its dispatch, since
+        // depleting it a second time would write off pallets twice. (Admin's Un-complete
+        // undispatches the load's orders, so a re-complete normally dispatches them all again.)
         var orders = await _db.Set<DispatchOrderEntity>()
             .Where(o => o.WeighbridgeRecordId == id && o.DateDispatched == null).ToListAsync(ct);
         var now = DateTime.Now;

@@ -567,6 +567,16 @@ select.cl-delivery-order {
   background: rgba(15, 23, 42, 0.08);
   color: #0f172a;
 }
+/* A half-width "⋮" column (the detail panels' Picked Pallets): a narrower button and almost no
+   cell padding, ~19px against the usual ~38px. */
+.data-table th.col-menu-tight,
+.data-table td.col-menu-tight {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.data-table td.col-menu-tight .dsp-row-menu-btn {
+  width: 15px;
+}
 .dsp-row-menu {
   position: fixed;
   z-index: 1200;
