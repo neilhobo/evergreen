@@ -2027,6 +2027,45 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit {
   color: #0a5aa8;
 }
 
+/* A line priced from another costing zone than the customer's (a sales rep's Change in Add
+   Order Item): the zone row with its Change link, the amber name, and the grids' marker. */
+.zone-change-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.form-static.zone-changed {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.zone-changed-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.zone-price-mark {
+  margin-right: 5px;
+  font-size: 9px;
+  color: #b45309;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.zone-choice-tag {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0a5aa8;
+  background: #e6f0fa;
+}
+
 /* ---------- Production: Scanned badge + live feed ---------- */
 
 /* Green tick on a shaded rounded badge (Production "Scanned" column). Kept as an

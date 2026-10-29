@@ -5,7 +5,8 @@ namespace Globeweigh.Api.Data.Entities;
 
 // dbo.AuditTrail (Migrations/AddAuditTrail.sql) — one row per field that changed on a record
 // after it was created. Written by GbEvergreenContext.SaveChanges for any entity listed in
-// Data/Auditing/AuditedEntities.cs; nothing writes one by hand.
+// Data/Auditing/AuditedEntities.cs. The one row written by hand is a sales rep's costing-zone
+// choice, carried onto the order when the office approves it (SalesOrdersController.Approve).
 public class AuditEntry
 {
     public int Id { get; set; }

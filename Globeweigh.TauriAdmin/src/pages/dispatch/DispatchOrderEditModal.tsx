@@ -51,6 +51,8 @@ interface ItemRow {
   productId: number;
   quantity: number | null;
   price: number | null;
+  // Priced from another zone than the customer's (a sales rep's Change); null = the customer's.
+  costingZoneId?: number | null;
   // Marks the POS board's grid row. Not a real line: it is the order's hasPos flag drawn as
   // one, pinned to the bottom, and never saved as an item.
   isPos?: true;
@@ -93,7 +95,7 @@ export default function DispatchOrderEditModal({ existing, onClose, sales, appro
   const [comments, setComments] = useState(fromSales?.comments ?? ""); // prints on the delivery note
   const [pickingComments, setPickingComments] = useState(fromSales?.pickingComments ?? "");
   const [items, setItems] = useState<ItemRow[]>(
-    (fromSales?.items ?? []).map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+    (fromSales?.items ?? []).map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price, costingZoneId: i.costingZoneId ?? null })),
   );
   // A POS (point-of-sale) board: 0 or 1 per order, no product/stock/price behind it.
   const [hasPos, setHasPos] = useState(fromSales?.hasPos ?? false);
@@ -156,7 +158,7 @@ export default function DispatchOrderEditModal({ existing, onClose, sales, appro
           setSalesRepId(detail.salesRepId);
           if (detail.salesRepFixed) setSalesRepFixed(detail.salesRepName ?? "The rep who sent it");
           setItems(
-            detail.items.map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+            detail.items.map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price, costingZoneId: i.costingZoneId })),
           );
         }
       } catch (err) {
@@ -301,7 +303,7 @@ export default function DispatchOrderEditModal({ existing, onClose, sales, appro
     }
     const itemInputs: OrderItemInput[] = items
       .filter((i) => i.productId > 0)
-      .map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price }));
+      .map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price, costingZoneId: i.costingZoneId ?? null }));
 
     const payload: OrderInput = {
       customerId,
@@ -668,7 +670,16 @@ export default function DispatchOrderEditModal({ existing, onClose, sales, appro
                           header: "Price",
                           width: 80,
                           align: "right",
-                          render: (r: ItemRow) => (r.price != null ? r.price.toFixed(2) : ""),
+                          render: (r: ItemRow) => (
+                            <>
+                              {r.costingZoneId != null && (
+                                <span className="zone-price-mark" title="Priced from another costing zone (this order only)">
+                                  ◆
+                                </span>
+                              )}
+                              {r.price != null ? r.price.toFixed(2) : ""}
+                            </>
+                          ),
                         },
                         {
                           key: "total",
@@ -736,6 +747,8 @@ export default function DispatchOrderEditModal({ existing, onClose, sales, appro
           hideStock={!!sales}
           costingZoneId={selectedCustomer?.costingZoneId ?? 0}
           costingZoneName={selectedCustomer?.costingZone ?? null}
+          // A rep may price a line from another zone, for this order only.
+          allowZoneChange={!!sales}
           alreadySelectedProductIds={items
             .filter((_, i) => i !== itemModal.index)
             .map((i) => i.productId)}

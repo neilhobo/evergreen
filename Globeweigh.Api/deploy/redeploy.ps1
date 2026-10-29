@@ -10,7 +10,7 @@
 
 param(
     [string]$Pub      = 'C:\Globeweigh\EvergreenApi',
-    [string]$Repo     = 'D:\Git-Globeweigh\Evergreen',
+    [string]$Repo     = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
     [switch]$SkipWeb                      # pass -SkipWeb to redeploy API only (no npm build)
 )
 

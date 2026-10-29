@@ -210,20 +210,27 @@ public static class AuditedEntities
                 // Money keeps its pence: the general decimal format drops a trailing zero, and
                 // "3.43 -> 3.6" is a price nobody ever typed.
                 [nameof(DispatchOrderItemEntity.Price)] = (_, v) => Money(v),
+                // Empty = priced from the customer's own zone, which is how every line starts.
+                [nameof(DispatchOrderItemEntity.CostingZoneId)] = (db, v) => ZoneName(db, v) ?? CustomersZone,
             },
             AuditAddedAndRemoved = true,
             AlreadyHasRows = (db, orderId) =>
                 db.Set<DispatchOrderItemEntity>().AsNoTracking().Any(i => i.OrderId == orderId),
-            Describe = (_, e) =>
+            Describe = (db, e) =>
             {
                 var qty = e.Property(nameof(DispatchOrderItemEntity.Quantity)).CurrentValue as int?;
                 var price = e.Property(nameof(DispatchOrderItemEntity.Price)).CurrentValue as decimal?;
                 var pallets = qty == null ? "No quantity" : $"{qty} pallet{(qty == 1 ? "" : "s")}";
-                return price == null ? pallets : $"{pallets} @ {price:0.00}";
+                var line = price == null ? pallets : $"{pallets} @ {price:0.00}";
+                // A line priced from another zone than the customer's says which.
+                return ZoneName(db, e.Property(nameof(DispatchOrderItemEntity.CostingZoneId)).CurrentValue) is { } zone
+                    ? $"{line} ({zone} price)"
+                    : line;
             },
             Labels = new Dictionary<string, string>
             {
                 [nameof(DispatchOrderItemEntity.Quantity)] = "Quantity (pallets)",
+                [nameof(DispatchOrderItemEntity.CostingZoneId)] = "Costing Zone",
                 ["Line"] = "Order Line",
             },
         },
@@ -406,6 +413,23 @@ public static class AuditedEntities
             ? db.Set<Product>().AsNoTracking()
                   .Where(p => p.Id == key).Select(p => p.Description).FirstOrDefault() ?? $"#{key}"
             : null;
+
+    /// <summary>How an order line's empty CostingZoneId reads: priced from the customer's own zone.</summary>
+    public const string CustomersZone = "Customer's zone";
+
+    /// <summary>A costing zone's name with its secondary description — several zones share a
+    /// Description ("ROI Full Load €" × 3), so the name alone does not say which. Also used by
+    /// SalesOrdersController for the history and the audit rows it writes for a rep.</summary>
+    internal static string? ZoneName(GbEvergreenContext db, object? id) =>
+        Key(id) is { } key and > 0
+            ? db.Set<CostingZone>().AsNoTracking().Where(z => z.Id == key).ToList()
+                  .Select(ZoneLabel).FirstOrDefault() ?? $"Zone #{key}"
+            : null;
+
+    internal static string ZoneLabel(CostingZone z) =>
+        string.IsNullOrWhiteSpace(z.SecondaryDescription)
+            ? (z.Description ?? $"Zone #{z.Id}").Trim()
+            : $"{(z.Description ?? $"Zone #{z.Id}").Trim()} ({z.SecondaryDescription.Trim()})";
 
     private static string? UserName(GbEvergreenContext db, object? id) =>
         Key(id) is { } key and > 0

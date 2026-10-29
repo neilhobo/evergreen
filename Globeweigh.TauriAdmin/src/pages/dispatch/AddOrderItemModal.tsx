@@ -13,14 +13,18 @@ import {
   Product,
   ProductTypeRef,
 } from "../../api/products";
-import { getPricesForCustomer, getZonePrices } from "../../api/costing";
+import { getPricesForCustomer, getZoneChoices, getZonePrices, ZoneChoice } from "../../api/costing";
 import { getStockSummary, StockSummaryItem } from "../../api/stock";
 import { ORDER_DIALOG_WIDTH, ORDER_DIALOG_HEIGHT } from "./orderDialogSize";
+import ChangeZoneModal from "./ChangeZoneModal";
 
 export interface OrderItemDraft {
   productId: number;
   quantity: number | null;
   price: number | null;
+  // Priced from this zone instead of the customer's (a sales rep's Change); null/absent = the
+  // customer's zone.
+  costingZoneId?: number | null;
 }
 
 interface Props {
@@ -31,6 +35,9 @@ interface Props {
   hideStock?: boolean;
   costingZoneId: number;
   costingZoneName: string | null;
+  // A sales rep (My Orders) may price a line from another costing zone: Change beside Costing
+  // Zone. For that order only; the customer's zone is left as it is.
+  allowZoneChange?: boolean;
   alreadySelectedProductIds: number[];
   existing: OrderItemDraft | null; // null = add
   onAdd: (item: OrderItemDraft) => void;
@@ -45,6 +52,7 @@ export default function AddOrderItemModal({
   hideStock = false,
   costingZoneId,
   costingZoneName,
+  allowZoneChange = false,
   alreadySelectedProductIds,
   existing,
   onAdd,
@@ -63,6 +71,11 @@ export default function AddOrderItemModal({
   const [selected, setSelected] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState<number | null>(existing?.quantity ?? null);
   const [price, setPrice] = useState<number | null>(existing?.price ?? null);
+  // The zone the selected line is priced from when the rep changed it; null = the customer's.
+  const [zoneId, setZoneId] = useState<number | null>(existing?.costingZoneId ?? null);
+  // Every zone's price for the selected product (Change, and naming a changed zone).
+  const [zoneChoices, setZoneChoices] = useState<ZoneChoice[] | null>(null);
+  const [zonePicker, setZonePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   // Add mode: items queued on this screen (right panel) and committed together on Save.
   const [toAdd, setToAdd] = useState<OrderItemDraft[]>([]);
@@ -122,13 +135,49 @@ export default function AddOrderItemModal({
     };
   }, [customerId, costingZoneId, existing, hideStock]);
 
+  // The selected product's price in every zone — only needed where the zone can be changed, or a
+  // line already priced from another zone has to be named.
+  const selectedId = selected?.id ?? 0;
+  useEffect(() => {
+    setZoneChoices(null);
+    if (selectedId <= 0 || (!allowZoneChange && zoneId == null)) return;
+    let cancelled = false;
+    getZoneChoices(selectedId)
+      .then((c) => !cancelled && setZoneChoices(c))
+      .catch(() => !cancelled && setZoneChoices([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, allowZoneChange, zoneId != null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changedZone = zoneId != null ? zoneChoices?.find((c) => c.costingZoneId === zoneId) ?? null : null;
+  const changedZoneName =
+    zoneId == null
+      ? null
+      : zoneChoices == null
+        ? "…"
+        : changedZone
+          ? `${changedZone.description ?? `Zone #${zoneId}`}${changedZone.secondaryDescription ? ` (${changedZone.secondaryDescription})` : ""}`
+          : `Zone #${zoneId}`;
+  // The price the Zone option offers: the changed zone's when there is one, else the customer's.
+  const zonePriceOf = (productId: number) =>
+    zoneId != null ? (changedZone?.price ?? null) : (priceMap[productId] ?? null);
+
   function selectProduct(p: Product) {
     if (added.has(p.id) && existing?.productId !== p.id) return; // already on the order
     setSelected(p);
     if (!existing || existing.productId !== p.id) {
       setPrice(priceMap[p.id] ?? null);
+      setZoneId(null); // a new pick prices from the customer's zone again
       setQuantity((q) => q ?? null);
+    } else {
+      setZoneId(existing.costingZoneId ?? null);
     }
+  }
+
+  function pickZone(c: ZoneChoice) {
+    setZoneId(c.costingZoneId === costingZoneId ? null : c.costingZoneId);
+    setPrice(c.price);
   }
 
   // Queue the current selection into the right-hand list and reset for the next pick.
@@ -142,10 +191,11 @@ export default function AddOrderItemModal({
       void messageDialog("Enter a price.");
       return;
     }
-    setToAdd((list) => [...list, { productId: selected.id, quantity, price }]);
+    setToAdd((list) => [...list, { productId: selected.id, quantity, price, costingZoneId: zoneId }]);
     setSelected(null);
     setQuantity(null);
     setPrice(null);
+    setZoneId(null);
   }
 
   function removeFromList(idx: number) {
@@ -163,7 +213,7 @@ export default function AddOrderItemModal({
         void messageDialog("Enter a quantity.");
         return;
       }
-      onAdd({ productId: selected.id, quantity, price });
+      onAdd({ productId: selected.id, quantity, price, costingZoneId: zoneId });
       onClose();
       return;
     }
@@ -174,7 +224,7 @@ export default function AddOrderItemModal({
         void messageDialog("Enter a price.");
         return;
       }
-      items.push({ productId: selected.id, quantity, price });
+      items.push({ productId: selected.id, quantity, price, costingZoneId: zoneId });
     }
     if (items.length === 0) {
       void messageDialog("Add at least one item.");
@@ -297,7 +347,7 @@ export default function AddOrderItemModal({
           </div>
           <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 10 }} />
 
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 140px minmax(0, 1fr)", gap: 10, flex: 1, minHeight: 0, minWidth: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 170px minmax(0, 1fr)", gap: 10, flex: 1, minHeight: 0, minWidth: 0 }}>
           {/* Left: products grid */}
           {/* -fit (auto layout) only while the best-fit In Stock column is there. */}
           <div className={`dsp-prod-grid${hideStock ? "" : " dsp-prod-grid-fit"}`} style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
@@ -360,19 +410,23 @@ export default function AddOrderItemModal({
                       <input
                         type="radio"
                         name="price-source"
-                        checked={price === priceMap[selected.id] && price !== customerPriceMap[selected.id]}
-                        disabled={priceMap[selected.id] == null}
-                        onChange={() => setPrice(priceMap[selected.id] ?? null)}
+                        checked={price === zonePriceOf(selected.id) && price !== customerPriceMap[selected.id]}
+                        disabled={zonePriceOf(selected.id) == null}
+                        onChange={() => setPrice(zonePriceOf(selected.id))}
                       />
                       <span>Zone</span>
-                      <strong>{priceMap[selected.id] != null ? priceMap[selected.id].toFixed(2) : "—"}</strong>
+                      <strong>{zonePriceOf(selected.id)?.toFixed(2) ?? "—"}</strong>
                     </label>
                     <label className="stock-radio cust-price-option">
                       <input
                         type="radio"
                         name="price-source"
                         checked={price === customerPriceMap[selected.id]}
-                        onChange={() => setPrice(customerPriceMap[selected.id])}
+                        onChange={() => {
+                          // The customer's own price is not a zone's: a changed zone goes back.
+                          setPrice(customerPriceMap[selected.id]);
+                          setZoneId(null);
+                        }}
                       />
                       <span>Customer</span>
                       <strong className="cust-price-value">{customerPriceMap[selected.id].toFixed(2)}</strong>
@@ -391,8 +445,30 @@ export default function AddOrderItemModal({
                   />
                 </div>
                 <div className="form-field">
-                  <label className="form-label">Costing Zone</label>
-                  <span className="form-static">{costingZoneName ?? "—"}</span>
+                  <div className="zone-change-row">
+                    <label className="form-label">Costing Zone</label>
+                    {allowZoneChange && (
+                      <button
+                        type="button"
+                        className="link-btn"
+                        disabled={zoneChoices == null}
+                        onClick={() => setZonePicker(true)}
+                      >
+                        Change
+                      </button>
+                    )}
+                  </div>
+                  <span className={`form-static${zoneId != null ? " zone-changed" : ""}`}>
+                    {changedZoneName ?? costingZoneName ?? "—"}
+                  </span>
+                  {zoneId != null && (
+                    <span className="zone-changed-note">
+                      This order only — customer's zone is {costingZoneName ?? "not set"}
+                      {zoneChoices?.find((c) => c.costingZoneId === costingZoneId)?.secondaryDescription
+                        ? ` (${zoneChoices.find((c) => c.costingZoneId === costingZoneId)!.secondaryDescription})`
+                        : ""}
+                    </span>
+                  )}
                 </div>
                 <div style={{ borderBottom: "1px solid var(--border)" }} />
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -449,7 +525,16 @@ export default function AddOrderItemModal({
                         header: "Price",
                         width: 80,
                         align: "right",
-                        render: (i: OrderItemDraft) => (i.price != null ? i.price.toFixed(2) : ""),
+                        render: (i: OrderItemDraft) => (
+                          <>
+                            {i.costingZoneId != null && (
+                              <span className="zone-price-mark" title="Priced from another costing zone">
+                                ◆
+                              </span>
+                            )}
+                            {i.price != null ? i.price.toFixed(2) : ""}
+                          </>
+                        ),
                       },
                       {
                         key: "total",
@@ -492,6 +577,16 @@ export default function AddOrderItemModal({
           </div>
           </div>
         </div>
+      )}
+      {zonePicker && selected && zoneChoices && (
+        <ChangeZoneModal
+          productName={[selected.description, selected.size != null ? `${selected.size}L` : null].filter(Boolean).join(" ")}
+          choices={zoneChoices}
+          customerZoneId={costingZoneId}
+          currentZoneId={zoneId ?? costingZoneId}
+          onPick={pickZone}
+          onClose={() => setZonePicker(false)}
+        />
       )}
     </Modal>
   );

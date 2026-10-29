@@ -45,6 +45,17 @@ export const getZonePrices = (zoneId: number) =>
 export const getCostingProducts = () => apiGet<Product[]>(`/costing/products`);
 export const getProductZones = (productId: number) =>
   apiGet<CostingZonePrice[]>(`/costing/products/${productId}/zones`);
+
+// Every live costing zone with one product's price in it (null = the zone has none), for a sales
+// rep's Change in Add Order Item.
+export interface ZoneChoice {
+  costingZoneId: number;
+  description: string | null;
+  secondaryDescription: string | null;
+  price: number | null;
+}
+export const getZoneChoices = (productId: number) =>
+  apiGet<ZoneChoice[]>(`/costing/products/${productId}/zone-choices`);
 export const updateZonePrice = (id: number, input: ZonePriceInput) =>
   apiPut<CostingZonePrice>(`/costing/zone-price/${id}`, input);
 export const getZonePriceHistory = (id: number) =>

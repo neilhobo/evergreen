@@ -222,7 +222,7 @@ public class DispatchController : ControllerBase
         if (order == null) return NotFound();
         var rows = await _db.Set<DispatchOrderItemEntity>().AsNoTracking()
             .Where(i => i.OrderId == id)
-            .Select(i => new { i.ProductId, i.Quantity, i.Price })
+            .Select(i => new { i.ProductId, i.Quantity, i.Price, i.CostingZoneId })
             .ToListAsync(ct);
         return Ok(new
         {
@@ -1464,6 +1464,7 @@ public class DispatchController : ControllerBase
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
                 Price = item.Price,
+                CostingZoneId = item.CostingZoneId,
                 DateCreated = DateTime.Now,
             });
         }
@@ -1527,6 +1528,7 @@ public class DispatchController : ControllerBase
             {
                 line.Quantity = item.Quantity;
                 line.Price = item.Price;
+                line.CostingZoneId = item.CostingZoneId;
                 kept.Add(line.Id);
                 continue;
             }
@@ -1536,6 +1538,7 @@ public class DispatchController : ControllerBase
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
                 Price = item.Price,
+                CostingZoneId = item.CostingZoneId,
                 DateCreated = now,
             });
         }
@@ -2000,14 +2003,21 @@ public class DispatchController : ControllerBase
                 where orderIds.Contains(i.OrderId) && pr.Gtin13 != null
                 select pr.Gtin13
             ).Distinct().ToListAsync(ct);
-            if (gtins.Count > 0)
+            // Matched within a few ms, not exactly: both columns are SQL `datetime` (1/300 s), and
+            // a stamp like .133 is stored as .1333… — the .133 read back into .NET then misses
+            // it when EF compares as datetime2. (Exact matching restored nothing on prod.)
+            foreach (var t in gtins.Count > 0 ? dispatchTimes : [])
+            {
+                var lo = t.AddMilliseconds(-4);
+                var hi = t.AddMilliseconds(4);
                 await _db.Set<CodicoPalletEntity>()
                     .Where(c => c.OutOfStockMethod == "Dispatch"
-                        && c.DateOutOfStock != null && dispatchTimes.Contains(c.DateOutOfStock.Value)
+                        && c.DateOutOfStock >= lo && c.DateOutOfStock <= hi
                         && c.Code13 != null && gtins.Contains(c.Code13))
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(c => c.DateOutOfStock, (DateTime?)null)
                         .SetProperty(c => c.OutOfStockMethod, (string?)null), ct);
+            }
 
             await _db.Set<StockHistory>()
                 .Where(h => h.TransactionType == "Dispatch" && orderIds.Contains(h.EntityId))
@@ -2252,4 +2262,7 @@ public class OrderItemInput
     public int ProductId { get; set; }
     public int? Quantity { get; set; }
     public decimal? Price { get; set; }
+    // Priced from this zone, not the customer's (a sales rep's Change in Add Order Item); null =
+    // the customer's zone.
+    public int? CostingZoneId { get; set; }
 }

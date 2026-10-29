@@ -21,12 +21,14 @@ import "./CustomersSuppliers.css";
 interface Props {
   existing: CustomerSupplier | null; // null = new
   typeId: number;
+  // My Orders > Customers: a new customer gets the signed-in rep as its sales rep.
+  assignToMe?: boolean;
   onClose: (saved: boolean) => void;
 }
 
 // Add/edit a customer/supplier (General tab), its email addresses (Emails tab), and its
 // delivery addresses (Addresses / Delivery Note Info tabs — customers only).
-export default function CustomerSupplierEditModal({ existing, typeId, onClose }: Props) {
+export default function CustomerSupplierEditModal({ existing, typeId, assignToMe, onClose }: Props) {
   const isNew = existing === null;
   const [tab, setTab] = useState<"general" | "emails" | "addresses" | "deliveryNotes">("general");
   const [zones, setZones] = useState<CostingZoneRef[]>([]);
@@ -126,7 +128,7 @@ export default function CustomerSupplierEditModal({ existing, typeId, onClose }:
     setBusy(true);
     try {
       const input = { ...form, emails };
-      if (isNew) await createCustomerSupplier(input);
+      if (isNew) await createCustomerSupplier({ ...input, assignToMe });
       else {
         await updateCustomerSupplier(existing!.id, input);
         await saveDeliveryNotes();
@@ -281,6 +283,8 @@ export default function CustomerSupplierEditModal({ existing, typeId, onClose }:
                   </select>
                 </div>
               )}
+              {/* Customer-and-supplier is an office setting, not a rep's (My Orders > Customers). */}
+              {!assignToMe && (
               <label className="stock-radio" style={{ marginTop: 6 }}>
                 <input
                   type="checkbox"
@@ -289,6 +293,7 @@ export default function CustomerSupplierEditModal({ existing, typeId, onClose }:
                 />
                 Is Both
               </label>
+              )}
               <label className="stock-radio" style={{ marginTop: 6 }}>
                 <input
                   type="checkbox"

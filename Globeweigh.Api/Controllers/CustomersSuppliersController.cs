@@ -21,13 +21,22 @@ public class CustomersSuppliersController : ControllerBase
     // typeId 1 = Customers, 2 = Suppliers; 0 = all. Reads the vwCustomerSupplier view,
     // plus each record's address count and its email addresses (so the Emails panel
     // beside the list and the Edit > Emails tab need no second call).
+    // mine: only the customers whose Sales Rep is the caller (My Orders > Customers); a
+    // Sales-role caller ALWAYS gets only their own, asked or not.
     [HttpGet]
     public async Task<ActionResult> List(
         [FromQuery] int typeId = 0,
+        [FromQuery] bool mine = false,
         CancellationToken ct = default)
     {
         var q = _db.Set<CustomerSupplierRow>().AsNoTracking();
         if (typeId > 0) q = q.Where(c => c.TypeId == typeId);
+        if (mine || await IsSalesUser(ct))
+        {
+            var me = this.GetUserId();
+            var myIds = _db.Set<CustomerSupplier>().Where(c => c.SalesRepId == me).Select(c => c.Id);
+            q = q.Where(c => myIds.Contains(c.Id));
+        }
         var rows = await q.OrderBy(c => c.Name).ToListAsync(ct);
 
         // Address count per record, for the grid's "Address Count" column.
@@ -101,6 +110,13 @@ public class CustomersSuppliersController : ControllerBase
             DeletedById = 0,
         };
         Apply(c, input);
+        // Added from My Orders > Customers (and always by a Sales-role caller): a customer, with
+        // the caller as its sales rep, so it is in their list and their orders straight away.
+        if (input.AssignToMe || await IsSalesUser(ct))
+        {
+            c.TypeId = 1;
+            c.SalesRepId = this.GetUserId();
+        }
 
         // The email rows need the new id, so two saves — in one transaction, so a failure
         // on the second never leaves a record behind without its addresses.
@@ -128,9 +144,12 @@ public class CustomersSuppliersController : ControllerBase
         if (emails.Any(e => e.Length > 200))
             return BadRequest(new { message = "Email addresses must be 200 characters or fewer." });
 
+        if (await NotMine(id, ct)) return Forbid();
         var c = await _db.Set<CustomerSupplier>().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (c == null) return NotFound();
+        var typeWas = c.TypeId;
         Apply(c, input);
+        if (await IsSalesUser(ct)) c.TypeId = typeWas; // a rep's customer stays a customer
         await SyncEmails(c.Id, emails, ct);
         await _db.SaveChangesAsync(ct);
         return c;
@@ -145,6 +164,7 @@ public class CustomersSuppliersController : ControllerBase
         [FromBody] CostingZoneInput input,
         CancellationToken ct = default)
     {
+        if (await NotMine(id, ct)) return Forbid();
         var c = await _db.Set<CustomerSupplier>().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (c == null) return NotFound();
         c.CostingZoneId = input.CostingZoneId;
@@ -177,6 +197,7 @@ public class CustomersSuppliersController : ControllerBase
         [FromBody] SalesRepInput input,
         CancellationToken ct = default)
     {
+        if (await IsSalesUser(ct)) return Forbid(); // who looks after a customer is the office's call
         var c = await _db.Set<CustomerSupplier>().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (c == null) return NotFound();
         if (input.SalesRepId is { } rep && !(await SalesUserIds(ct)).Contains(rep))
@@ -184,6 +205,22 @@ public class CustomersSuppliersController : ControllerBase
         c.SalesRepId = input.SalesRepId;
         await _db.SaveChangesAsync(ct);
         return NoContent();
+    }
+
+    // A Sales-role caller may change only the customers assigned to them (My Orders > Customers);
+    // anyone else is unrestricted, as before.
+    private async Task<bool> NotMine(int customerId, CancellationToken ct)
+    {
+        if (!await IsSalesUser(ct)) return false;
+        var me = this.GetUserId();
+        return !await _db.Set<CustomerSupplier>().AsNoTracking().AnyAsync(c => c.Id == customerId && c.SalesRepId == me, ct);
+    }
+
+    private async Task<bool> IsSalesUser(CancellationToken ct)
+    {
+        var me = this.GetUserId();
+        return await _db.Set<UserRoleEntity>().AsNoTracking().AnyAsync(r => r.UserId == me && r.RoleId == RoleSales, ct)
+            || await _db.GlobeweighUsers.AsNoTracking().AnyAsync(u => u.Id == me && u.RoleId == RoleSales, ct);
     }
 
     // Users holding the Sales role: the Globeweigh_Role junction, or the legacy single RoleId.
@@ -200,6 +237,7 @@ public class CustomersSuppliersController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> Delete(int id, CancellationToken ct = default)
     {
+        if (await IsSalesUser(ct)) return Forbid();
         var c = await _db.Set<CustomerSupplier>().FirstOrDefaultAsync(x => x.Id == id, ct);
         if (c == null) return NotFound();
         c.DateDeleted = DateTime.Now;
@@ -215,6 +253,7 @@ public class CustomersSuppliersController : ControllerBase
         [FromBody] AddressInput input,
         CancellationToken ct = default)
     {
+        if (await NotMine(id, ct)) return Forbid();
         var a = new CustomerSupplierAddress
         {
             CustomerSupplierId = id,
@@ -237,6 +276,7 @@ public class CustomersSuppliersController : ControllerBase
     {
         var a = await _db.Set<CustomerSupplierAddress>().FirstOrDefaultAsync(x => x.Id == addrId, ct);
         if (a == null) return NotFound();
+        if (await NotMine(a.CustomerSupplierId, ct)) return Forbid();
         ApplyAddress(a, input);
         a.DateLastModified = DateTime.Now;
         await _db.SaveChangesAsync(ct);
@@ -249,6 +289,7 @@ public class CustomersSuppliersController : ControllerBase
     {
         var a = await _db.Set<CustomerSupplierAddress>().FirstOrDefaultAsync(x => x.Id == addrId, ct);
         if (a == null) return NotFound();
+        if (await NotMine(a.CustomerSupplierId, ct)) return Forbid();
         _db.Remove(a);
         await _db.SaveChangesAsync(ct);
         return NoContent();
@@ -265,6 +306,7 @@ public class CustomersSuppliersController : ControllerBase
     {
         var a = await _db.Set<CustomerSupplierAddress>().FirstOrDefaultAsync(x => x.Id == addrId, ct);
         if (a == null) return NotFound();
+        if (await NotMine(a.CustomerSupplierId, ct)) return Forbid();
         var text = input.Text?.Trim();
         a.DeliveryNote = string.IsNullOrEmpty(text) ? null : text;
         a.DateLastModified = DateTime.Now;
@@ -408,6 +450,8 @@ public class CustomerSupplierInput
     public bool Inactive { get; set; }
     // The record's whole email list (see Update).
     public List<string?>? Emails { get; set; }
+    // Create only: make the caller its sales rep (added from My Orders > Customers).
+    public bool AssignToMe { get; set; }
 }
 
 public class CostingZoneInput

@@ -15,6 +15,9 @@ public class DispatchOrderItemEntity
     public DateTime? DateCreated { get; set; }
     // kg/m³, entered when a cubic meter line is marked picked — see Migrations/AddDispatchOrderItemDensity.sql.
     public decimal? Density { get; set; }
+    // The zone the line was priced from when a sales rep changed it for this order only; null =
+    // the customer's own zone. See Migrations/AddOrderItemCostingZone.sql.
+    public int? CostingZoneId { get; set; }
 
     public class Config : IEntityTypeConfiguration<DispatchOrderItemEntity>
     {

@@ -23,7 +23,7 @@
 #>
 param(
     [string]$Server = '\\evergreen\Globeweigh\EvergreenApi',
-    [string]$Repo   = 'D:\Git-Globeweigh\Evergreen',
+    [string]$Repo   = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path,
     [switch]$SkipUi,
     [switch]$AllowOlder,
     [ValidateSet('local', 'prod')]

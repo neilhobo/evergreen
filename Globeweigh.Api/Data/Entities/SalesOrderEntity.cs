@@ -53,6 +53,8 @@ public class SalesOrderItemEntity
     public int ProductId { get; set; }
     public int? Quantity { get; set; }
     public decimal? Price { get; set; }
+    // Priced from this zone instead of the customer's (Migrations/AddOrderItemCostingZone.sql).
+    public int? CostingZoneId { get; set; }
     public int SortOrder { get; set; }
 
     public class Config : IEntityTypeConfiguration<SalesOrderItemEntity>

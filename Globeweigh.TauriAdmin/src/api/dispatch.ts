@@ -16,7 +16,8 @@ export interface WbPending { id:number; idRef:string|null; isOutgoing:boolean; p
 // dispatchEmailSentAt/To: the dispatch confirmation sent from the Completed Loads grid, which
 // is what its Emailed column shows.
 export interface WbCompleted { id:number; haulierName:string|null; trailerNo:string|null; weightIn:number; dateWeightOut:string|null; weightOut:number; netWeight:number|null; orderCount:number|null; pickedQuantity:number; emailSentAt:string|null; emailSentTo:string|null; dispatchEmailSentAt:string|null; dispatchEmailSentTo:string|null; }
-export interface OrderItemInput { productId:number; quantity:number|null; price:number|null; }
+// costingZoneId: the zone the line was priced from when a sales rep changed it for this order; null = the customer's zone.
+export interface OrderItemInput { productId:number; quantity:number|null; price:number|null; costingZoneId?:number|null; }
 export interface OrderInput { customerId:number; addressId:number; haulierId:number; deliveryDate:string|null; poNumber:string|null; comments:string|null; pickingComments:string|null; hasPos:boolean; salesRepId?:number|null; vehicleReg:string|null; trailerNo:string|null; orderNo?:number|null; items:OrderItemInput[]; }
 export const getOpenOrders = () => apiGet<DispatchOrder[]>(`/dispatch/orders`);
 // mine: only orders whose Sales Rep is the signed-in user (My Orders > Completed).
@@ -27,7 +28,7 @@ export const getOrderItems = (orderId:number) => apiGet<DispatchOrderItem[]>(`/d
 export const getOrderPicked = (orderId:number) => apiGet<PickedPallet[]>(`/dispatch/orders/${orderId}/picked`);
 // Unpick: take one picked pallet back off its (undispatched) order; the pallet is free to pick again.
 export const unpickPallet = (pickedId:number) => apiPost<void>(`/dispatch/picked/${pickedId}/unpick`, {});
-export interface OrderEditItem { productId:number; quantity:number|null; price:number|null; }
+export interface OrderEditItem { productId:number; quantity:number|null; price:number|null; costingZoneId:number|null; }
 // Items plus the header fields the grid rows omit (comments, addressId), for prefilling the edit form.
 // orderNoEditable: true only for a pre-hand-over open order, whose ad-hoc number may be corrected.
 export interface OrderEditDetail { orderNo:number; orderNoEditable:boolean; comments:string|null; pickingComments:string|null; hasPos:boolean; addressId:number; salesRepId:number|null; salesRepName:string|null; salesRepFixed:boolean; items:OrderEditItem[]; }

@@ -33,7 +33,10 @@ const TYPE_ITEMS: { key: number; label: string }[] = [
 // The list on the left switches between Customers (typeId 1) and Suppliers (typeId 2);
 // selecting a row shows its addresses, their delivery note info and its email addresses
 // in the side panel.
-export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
+// mine (My Orders > Customers, the Sales role): only the customers whose Sales Rep is the
+// signed-in user — no Type list, no Sales Rep column, no Delete or label setup; Add makes the
+// rep the new customer's sales rep (the API also holds a Sales-role user to all of this).
+export default function CustomersSuppliersPage({ mine = false }: { user: AdminUserDto; mine?: boolean }) {
   const [typeId, setTypeId] = useState(1);
   const [rows, setRows] = useState<CustomerSupplier[]>([]);
   const [selected, setSelected] = useState<CustomerSupplier | null>(null);
@@ -68,7 +71,7 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
     const seq = ++loadSeq.current;
     setLoading(true);
     try {
-      const data = await getCustomersSuppliers(id);
+      const data = await getCustomersSuppliers(id, mine);
       if (seq !== loadSeq.current) return;
       setRows(data);
       if (keepSelection && selected) {
@@ -97,6 +100,7 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
 
   useEffect(() => {
     void refresh(1);
+    if (mine) return; // no Sales Rep column
     getSalesReps()
       .then(setSalesReps)
       .catch(() => setSalesReps([]));
@@ -178,6 +182,34 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
     sortValue: (r) => r.emails.length,
   };
 
+  // A dropdown in the cell, saved on change. Its clicks stay in the cell, so picking a rep does
+  // not also select (or, double-clicked, open) the row. Not in My Orders > Customers.
+  const salesRepColumn: Column<CustomerSupplier> = {
+    key: "salesRepId",
+    header: "Sales Rep",
+    width: 170,
+    render: (r) => (
+      <select
+        className="cs-rep-select"
+        value={r.salesRepId ?? ""}
+        onClick={(e) => e.stopPropagation()}
+        onDoubleClick={(e) => e.stopPropagation()}
+        onChange={(e) => void changeSalesRep(r, e.target.value === "" ? null : Number(e.target.value))}
+      >
+        <option value="">—</option>
+        {salesReps
+          .filter((s) => !s.disabled || s.id === r.salesRepId)
+          .map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+              {s.disabled ? " (disabled)" : ""}
+            </option>
+          ))}
+      </select>
+    ),
+    sortValue: (r) => salesReps.find((s) => s.id === r.salesRepId)?.name ?? "",
+  };
+
   // Code and costing zones only apply to customers — suppliers show name only.
   const columns: Column<CustomerSupplier>[] =
     typeId === 1
@@ -185,33 +217,7 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
           { key: "code", header: "Code", width: 100, render: (r) => <Highlight text={r.code} term={term} /> },
           { key: "name", header: "Name", render: (r) => <Highlight text={r.name} term={term} /> },
           { key: "costingZone", header: "Costing Zone", width: 160, render: (r) => r.costingZone },
-          {
-            key: "salesRepId",
-            header: "Sales Rep",
-            width: 170,
-            // A dropdown in the cell, saved on change. Its clicks stay in the cell, so picking a
-            // rep does not also select (or, double-clicked, open) the row.
-            render: (r) => (
-              <select
-                className="cs-rep-select"
-                value={r.salesRepId ?? ""}
-                onClick={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => e.stopPropagation()}
-                onChange={(e) => void changeSalesRep(r, e.target.value === "" ? null : Number(e.target.value))}
-              >
-                <option value="">—</option>
-                {salesReps
-                  .filter((s) => !s.disabled || s.id === r.salesRepId)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                      {s.disabled ? " (disabled)" : ""}
-                    </option>
-                  ))}
-              </select>
-            ),
-            sortValue: (r) => salesReps.find((s) => s.id === r.salesRepId)?.name ?? "",
-          },
+          ...(mine ? [] : [salesRepColumn]),
           { key: "addressCount", header: "Address Count", fit: true, align: "right", render: (r) => r.addressCount },
           emailCountColumn,
         ]
@@ -233,10 +239,11 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
     <div className={cc.page}>
       <div className={cc.card}>
         <PageHeader
-          title="Customers/Suppliers"
+          title={mine ? "My Customers" : "Customers/Suppliers"}
           meta={loading && rows.length === 0 ? "Loading…" : `${filtered.length} ${typeId === 1 ? "customers" : "suppliers"}`}
         />
         <div className={cc.body}>
+          {!mine && (
           <aside className={cc.listCol} style={{ flexBasis: 120 }}>
             <div className={cc.colHeader}>
               <h2 className={cc.colTitle}>Type</h2>
@@ -258,6 +265,7 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
               ))}
             </div>
           </aside>
+          )}
 
       <div className="po-open-layout">
         <div className="po-main">
@@ -276,11 +284,13 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
               <button className="toolbar-btn" disabled={!selected} onClick={() => setEditing(selected)}>
                 Edit
               </button>
-              <button className="toolbar-btn" disabled={!selected} onClick={onDelete}>
-                Delete
-              </button>
+              {!mine && (
+                <button className="toolbar-btn" disabled={!selected} onClick={onDelete}>
+                  Delete
+                </button>
+              )}
               {/* The customer's label logo override — the only label setting there is. */}
-              {typeId === 1 && (
+              {typeId === 1 && !mine && (
                 <button className="toolbar-btn" disabled={!selected} onClick={() => setConfiguringLabel(true)}>
                   Configure Label…
                 </button>
@@ -393,6 +403,7 @@ export default function CustomersSuppliersPage(_props: { user: AdminUserDto }) {
         <CustomerSupplierEditModal
           existing={editing === "new" ? null : editing}
           typeId={typeId}
+          assignToMe={mine}
           onClose={(saved) => {
             setEditing(null);
             if (saved) void refresh(typeId, true);

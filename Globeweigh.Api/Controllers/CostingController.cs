@@ -44,6 +44,32 @@ public class CostingController : ControllerBase
             .ToListAsync(ct);
     }
 
+    // GET /api/costing/products/{productId}/zone-choices — every live costing zone with this
+    // product's price in it (null where the zone has none), for a sales rep's Change in Add Order
+    // Item: price one line from another zone, for that order only.
+    [HttpGet("products/{productId:int}/zone-choices")]
+    public async Task<ActionResult<IEnumerable<object>>> ZoneChoices(int productId, CancellationToken ct = default)
+    {
+        var zones = await _db.Set<CostingZone>().AsNoTracking()
+            .Where(z => z.DateDeleted == null)
+            .OrderBy(z => z.Description)
+            .ToListAsync(ct);
+        var prices = await _db.Set<CostingZonePriceRow>().AsNoTracking()
+            .Where(p => p.ProductId == productId)
+            .ToListAsync(ct);
+        return Ok(zones.Select(z =>
+        {
+            var p = prices.FirstOrDefault(x => x.CostingZoneId == z.Id);
+            return new
+            {
+                costingZoneId = z.Id,
+                description = z.Description,
+                secondaryDescription = z.SecondaryDescription,
+                price = p == null || p.NA ? (decimal?)null : p.Price,
+            };
+        }));
+    }
+
     // GET /api/costing/prices — every zone price row (the "Costing Full" matrix
     // pivots these client-side into one column per zone).
     [HttpGet("prices")]

@@ -81,7 +81,11 @@ const MAIN_NAV: NavItem[] = [
 // super-admin-only grid columns.
 // The Sales role sees this one page and nothing else: their own orders, sent to the office
 // for approval (see pages/sales/MyOrdersPage.tsx).
-const SALES_NAV: NavItem = { key: "my-orders", label: "My Orders", icon: "Purchase-Order-96.png" };
+// Under it, Customers: the rep's own customers (Sales Rep = them), and adding new ones.
+const SALES_NAV: NavItem[] = [
+  { key: "my-orders", label: "My Orders", icon: "Purchase-Order-96.png" },
+  { key: "my-customers", label: "Customers", icon: "Customers-96.png" },
+];
 
 const DEVICES_NAV: NavItem = { key: "devices", label: "Device Manager", icon: "Computer-96.png" };
 const ADMIN_NAV: NavItem[] = [
@@ -104,7 +108,7 @@ interface Staged {
 const ALL_STAGED_ON: Staged = { sageLinkOn: true, reportsOn: true, oilTanksOn: true };
 
 function navFor(user: AdminUserDto, staged: Staged): { main: NavItem[]; admin: NavItem[] } {
-  if (hasRole(user, UserRole.Sales)) return { main: [SALES_NAV], admin: [] };
+  if (hasRole(user, UserRole.Sales)) return { main: SALES_NAV, admin: [] };
   // The Admin (data setup) item is gated by DataSetupVisible (OfficeAdmin/GlobeweighAdmin),
   // as in MainWindow.xaml. The "Globeweigh Admin" section is restricted to a single named
   // user, not the role. Costing is always shown (no gating in the WPF nav).
@@ -128,7 +132,7 @@ function navFor(user: AdminUserDto, staged: Staged): { main: NavItem[]; admin: N
           // Per user, chosen in Super Admin > Oil Tanks.
           (item.key !== "oil-tanks" || staged.oilTanksOn),
       ),
-      SALES_NAV,
+      ...SALES_NAV,
     ],
     // Device Manager is the one either/or case: the super-admin (on the deployed server
     // too, not just dev), or any local dev build.
@@ -272,6 +276,8 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
         return <SuperAdminPage user={user} />;
       case "my-orders":
         return <MyOrdersPage user={user} />;
+      case "my-customers":
+        return <CustomersSuppliersPage user={user} mine />;
       case "devices":
         return <DevicesPage user={user} />;
       default:

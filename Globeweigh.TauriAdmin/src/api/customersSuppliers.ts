@@ -7,9 +7,11 @@ export interface CustomerAddress { id:number; customerSupplierId:number; address
 export interface CostingZoneRef { id:number; description:string|null; }
 // Writable fields. `emails` is the record's whole list: on an update, addresses left out
 // are removed and new ones added.
-export interface CustomerSupplierInput { typeId:number; code:string|null; name:string|null; costingZoneId:number; isBoth:boolean; inactive:boolean; emails:string[]; }
+// assignToMe (create only): the caller becomes its sales rep — a customer added from My Orders > Customers.
+export interface CustomerSupplierInput { typeId:number; code:string|null; name:string|null; costingZoneId:number; isBoth:boolean; inactive:boolean; emails:string[]; assignToMe?:boolean; }
 export interface AddressInput { addressName:string|null; address1:string|null; address2:string|null; address3:string|null; address4:string|null; address5:string|null; telephone:string|null; telephone2:string|null; email:string|null; contactName:string|null; }
-export const getCustomersSuppliers = (typeId:number) => apiGet<CustomerSupplier[]>(`/customers-suppliers?typeId=${typeId}`);
+// mine: only the customers whose Sales Rep is the signed-in user (My Orders > Customers).
+export const getCustomersSuppliers = (typeId:number, mine = false) => apiGet<CustomerSupplier[]>(`/customers-suppliers?typeId=${typeId}${mine ? "&mine=true" : ""}`);
 export const getAddresses = (id:number) => apiGet<CustomerAddress[]>(`/customers-suppliers/${id}/addresses`);
 export const getCostingZones = () => apiGet<CostingZoneRef[]>("/customers-suppliers/costing-zones");
 export const createCustomerSupplier = (i:CustomerSupplierInput) => apiPost<CustomerSupplier>("/customers-suppliers", i);

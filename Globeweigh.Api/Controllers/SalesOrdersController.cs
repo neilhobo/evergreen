@@ -1,5 +1,6 @@
 using Globeweigh.Api.Auth;
 using Globeweigh.Api.Data;
+using Globeweigh.Api.Data.Auditing;
 using Globeweigh.Api.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -136,12 +137,16 @@ public class SalesOrdersController : ControllerBase
         await _db.SaveChangesAsync(ct);
 
         AddItems(order.Id, input.Items);
+        // A new order lists no lines in its history, except one priced from another zone than
+        // the customer's: that is the rep's call, and it is kept on record from the start.
+        var zoneChanges = await DescribeChanges(new SalesOrderEntity { CustomerId = input.CustomerId },
+            [], input, ct, zonesOnly: true);
         AddEvent(order.Id, input.CopiedFromId switch
         {
             > 0 and var from => $"Started as a copy of {Ref(from)}",
             < 0 and var office => $"Started as a copy of office order {await OrderNoOf(-office, ct)}",
             _ => "Started the order",
-        });
+        }, zoneChanges);
         await _db.SaveChangesAsync(ct);
         return Ok((await ToRows(new List<SalesOrderEntity> { order }, ct))[0]);
     }
@@ -265,6 +270,7 @@ public class SalesOrdersController : ControllerBase
             Items = input.Items,
         };
         var oldItems = await _db.Set<SalesOrderItemEntity>().Where(i => i.SalesOrderId == id).ToListAsync(ct);
+        await AuditRepZoneChoices(order, oldItems, dispatch, input.Items, ct);
         var changes = await DescribeChanges(order, oldItems, asSent, ct);
         if (changes.Count > 0)
         {
@@ -380,6 +386,7 @@ public class SalesOrdersController : ControllerBase
                 ProductId = i.ProductId,
                 Quantity = i.Quantity,
                 Price = i.Price,
+                CostingZoneId = i.CostingZoneId,
                 SortOrder = n++,
             });
     }
@@ -397,10 +404,34 @@ public class SalesOrdersController : ControllerBase
     // An edit, in sentences the salesperson (and later the office) can read: the header fields
     // old → new, then the lines — added, removed, and quantity or price changed. Lines are
     // matched by product, as the order holds each product once.
+    // zonesOnly: just the lines priced from another zone than the customer's (a new order's
+    // history mentions those and nothing else).
     private async Task<List<string>> DescribeChanges(
-        SalesOrderEntity order, List<SalesOrderItemEntity> oldItems, SalesOrderInput input, CancellationToken ct)
+        SalesOrderEntity order, List<SalesOrderItemEntity> oldItems, SalesOrderInput input, CancellationToken ct,
+        bool zonesOnly = false)
     {
         var changes = new List<string>();
+        var newItems = input.Items.Where(i => i.ProductId > 0).ToList();
+
+        // A line's zone, by name: its own (the rep pressed Change) or the customer's.
+        var customerZoneId = await _db.Set<CustomerSupplier>().AsNoTracking()
+            .Where(c => c.Id == input.CustomerId).Select(c => c.CostingZoneId).FirstOrDefaultAsync(ct);
+        var zoneIds = oldItems.Select(i => i.CostingZoneId).Concat(newItems.Select(i => i.CostingZoneId))
+            .OfType<int>().Append(customerZoneId).Distinct().ToList();
+        var zones = await _db.Set<CostingZone>().AsNoTracking()
+            .Where(z => zoneIds.Contains(z.Id))
+            .ToDictionaryAsync(z => z.Id, AuditedEntities.ZoneLabel, ct);
+        var customerZone = zones.GetValueOrDefault(customerZoneId) ?? "none";
+        string ZoneName(int? id) => id is { } z ? zones.GetValueOrDefault(z) ?? $"Zone #{z}" : $"{customerZone} (customer's zone)";
+        string ZoneNote(int? id) => id == null ? "" : $" — {ZoneName(id)} price, not the customer's zone ({customerZone})";
+
+        if (zonesOnly)
+        {
+            var names = await ProductNames(newItems.Where(i => i.CostingZoneId != null).Select(i => i.ProductId), ct);
+            foreach (var n in newItems.Where(i => i.CostingZoneId != null))
+                changes.Add($"Added {names.GetValueOrDefault(n.ProductId)}: {Qty(n.Quantity)} at {Money(n.Price)}{ZoneNote(n.CostingZoneId)}");
+            return changes;
+        }
 
         if (order.CustomerId != input.CustomerId)
         {
@@ -424,11 +455,7 @@ public class SalesOrdersController : ControllerBase
         if (order.HasPos != input.HasPos)
             changes.Add(input.HasPos ? "Added a POS board" : "Removed the POS board");
 
-        var newItems = input.Items.Where(i => i.ProductId > 0).ToList();
-        var productIds = oldItems.Select(i => i.ProductId).Concat(newItems.Select(i => i.ProductId)).Distinct().ToList();
-        var products = await _db.Set<Product>().AsNoTracking()
-            .Where(p => productIds.Contains(p.Id))
-            .ToDictionaryAsync(p => p.Id, p => p.Size is { } s ? $"{(p.Description ?? $"#{p.Id}").Trim()} {s}L" : p.Description?.Trim() ?? $"#{p.Id}", ct);
+        var products = await ProductNames(oldItems.Select(i => i.ProductId).Concat(newItems.Select(i => i.ProductId)), ct);
         string Name(int productId) => products.GetValueOrDefault(productId) ?? $"#{productId}";
 
         foreach (var n in newItems)
@@ -436,11 +463,13 @@ public class SalesOrdersController : ControllerBase
             var o = oldItems.FirstOrDefault(x => x.ProductId == n.ProductId);
             if (o == null)
             {
-                changes.Add($"Added {Name(n.ProductId)}: {Qty(n.Quantity)} at {Money(n.Price)}");
+                changes.Add($"Added {Name(n.ProductId)}: {Qty(n.Quantity)} at {Money(n.Price)}{ZoneNote(n.CostingZoneId)}");
                 continue;
             }
             if (o.Quantity != n.Quantity)
                 changes.Add($"{Name(n.ProductId)}: {Qty(o.Quantity)} → {Qty(n.Quantity)}");
+            if (o.CostingZoneId != n.CostingZoneId)
+                changes.Add($"{Name(n.ProductId)} costing zone: {ZoneName(o.CostingZoneId)} → {ZoneName(n.CostingZoneId)}");
             if (o.Price != n.Price)
                 changes.Add($"{Name(n.ProductId)} price: {Money(o.Price)} → {Money(n.Price)}");
         }
@@ -462,6 +491,60 @@ public class SalesOrdersController : ControllerBase
         static string Day(DateTime? d) => d == null ? "ASAP" : d.Value.ToString("ddd d MMM");
         static string Qty(int? q) => q == null ? "no quantity" : q == 1 ? "1 pallet" : $"{q} pallets";
         static string Money(decimal? p) => p == null ? "no price" : p.Value.ToString("0.00");
+    }
+
+    // Products as the history names them: description and size ("Gro-Sure Multi 50L").
+    private async Task<Dictionary<int, string>> ProductNames(IEnumerable<int> ids, CancellationToken ct)
+    {
+        var list = ids.Distinct().ToList();
+        return await _db.Set<Product>().AsNoTracking()
+            .Where(p => list.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Size is { } s ? $"{(p.Description ?? $"#{p.Id}").Trim()} {s}L" : p.Description?.Trim() ?? $"#{p.Id}", ct);
+    }
+
+    // The order's own audit trail starts when the office approves it, so a line the rep priced
+    // from another zone would otherwise reach it as nothing at all (a new order's lines are not
+    // audited). Each such line gets a Costing Zone row in the rep's name, from the customer's
+    // zone to the one they picked, beside the office's Created row.
+    private async Task AuditRepZoneChoices(
+        SalesOrderEntity order, List<SalesOrderItemEntity> repItems, DispatchOrderEntity dispatch,
+        List<OrderItemInput> approved, CancellationToken ct)
+    {
+        var lines = approved.Where(i => i.CostingZoneId != null).ToList();
+        if (lines.Count == 0) return;
+
+        var customerZoneId = await _db.Set<CustomerSupplier>().AsNoTracking()
+            .Where(c => c.Id == dispatch.CustomerId).Select(c => c.CostingZoneId).FirstOrDefaultAsync(ct);
+        var customerZone = AuditedEntities.ZoneName(_db, customerZoneId) ?? AuditedEntities.CustomersZone;
+        var products = await _db.Set<Product>().AsNoTracking()
+            .Where(p => lines.Select(l => l.ProductId).Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Description, ct);
+        var users = await _db.GlobeweighUsers.AsNoTracking()
+            .Where(u => u.Id == order.SalesUserId || u.Id == this.GetUserId())
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.Surname}".Trim(), ct);
+        var now = DateTime.Now;
+
+        foreach (var line in lines)
+        {
+            // The rep's choice as sent; the office cannot change a line's zone, but should one
+            // arrive changed it is the approver's doing, not the rep's.
+            var byRep = repItems.Any(r => r.ProductId == line.ProductId && r.CostingZoneId == line.CostingZoneId);
+            var who = byRep ? order.SalesUserId : this.GetUserId();
+            _db.AuditTrail.Add(new AuditEntry
+            {
+                EntityName = AuditedEntities.DispatchOrder,
+                EntityId = dispatch.Id,
+                FieldName = nameof(DispatchOrderItemEntity.CostingZoneId),
+                FieldScope = products.GetValueOrDefault(line.ProductId) ?? $"#{line.ProductId}",
+                OldValue = customerZone,
+                NewValue = AuditedEntities.ZoneName(_db, line.CostingZoneId),
+                Action = AuditEntry.ActionUpdated,
+                DateChanged = now,
+                UserId = who,
+                UserName = users.GetValueOrDefault(who),
+                Source = byRep ? "My Orders" : null,
+            });
+        }
     }
 
     // Rows for the list: the order's own fields, its lines, the customer and address as text,
@@ -526,7 +609,7 @@ public class SalesOrdersController : ControllerBase
                 LoadHaulier = load?.HaulierName,
                 DateDispatched = d?.DateDispatched,
                 Items = items.Where(i => i.SalesOrderId == o.Id)
-                    .Select(i => new OrderItemInput { ProductId = i.ProductId, Quantity = i.Quantity, Price = i.Price })
+                    .Select(i => new OrderItemInput { ProductId = i.ProductId, Quantity = i.Quantity, Price = i.Price, CostingZoneId = i.CostingZoneId })
                     .ToList(),
             };
         }).ToList();
@@ -586,7 +669,7 @@ public class SalesOrdersController : ControllerBase
                 LoadHaulier = load?.HaulierName,
                 DateDispatched = d.DateDispatched,
                 Items = items.Where(i => i.OrderId == d.Id)
-                    .Select(i => new OrderItemInput { ProductId = i.ProductId, Quantity = i.Quantity, Price = i.Price })
+                    .Select(i => new OrderItemInput { ProductId = i.ProductId, Quantity = i.Quantity, Price = i.Price, CostingZoneId = i.CostingZoneId })
                     .ToList(),
             };
         }).ToList();
