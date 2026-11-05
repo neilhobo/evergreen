@@ -21,7 +21,8 @@ function ringLength(r: IntercomRing): string {
 // Weighbridge door intercom (Dahua VTO). The API listens to the unit's event stream; this
 // page polls it for call state and shows the unit's camera through go2rtc like Gate/Barrier.
 // Phase 1: see who is there and when they rang. Talk-back and door release come later.
-export default function IntercomPage() {
+// embedded: drawn inside another page's card (Super Admin > Intercom), so no card or header of its own.
+export default function IntercomPage({ embedded = false }: { embedded?: boolean }) {
   const [status, setStatus] = useState<IntercomStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [thumbs, setThumbs] = useState<Record<number, string>>({});
@@ -73,11 +74,7 @@ export default function IntercomPage() {
         ? { cls: "ic-pill-on", text: "Connected" }
         : { cls: "ic-pill-bad", text: "Disconnected" };
 
-  return (
-    <div className={cc.page}>
-      <div className={cc.card}>
-        <PageHeader title="Intercom" />
-        <div className={cc.body}>
+  const content = (
           <div className="ic-page">
             {/* Fixed-width column: the units and the call state stay put; the event log takes the
                 rest of the height and scrolls on its own, so nothing here can squeeze the video. */}
@@ -166,7 +163,14 @@ export default function IntercomPage() {
               )}
             </div>
           </div>
-        </div>
+  );
+  if (embedded) return content;
+
+  return (
+    <div className={cc.page}>
+      <div className={cc.card}>
+        <PageHeader title="Intercom" />
+        <div className={cc.body}>{content}</div>
       </div>
     </div>
   );

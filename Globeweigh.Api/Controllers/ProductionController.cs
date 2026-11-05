@@ -58,8 +58,12 @@ public class ProductionController : ControllerBase
                 DateScanned = cp.DateScanned,
                 ScanSource = cp.ScanSource,
                 IsManual = cp.IsManual,
+                // Only a twin created close by counts — see TwinWindowDays: the code recurs
+                // on certain dates months apart, and that is not a duplicate label.
                 IsDuplicate = _db.Set<CodicoPalletEntity>()
-                    .Any(o => o.UniqueCode == cp.UniqueCode && o.Id != cp.Id),
+                    .Any(o => o.UniqueCode == cp.UniqueCode && o.Id != cp.Id
+                        && o.DateCreated > cp.DateCreated!.Value.AddDays(-CodicoPalletEntity.TwinWindowDays)
+                        && o.DateCreated < cp.DateCreated!.Value.AddDays(CodicoPalletEntity.TwinWindowDays)),
                 // The missed-scan alarm for this pallet has been silenced (see the alarm
                 // endpoints below) — the UI dims its red row.
                 AlarmAcked = _db.Set<ProductionAlarmAck>().Any(a => a.PalletId == cp.Id),

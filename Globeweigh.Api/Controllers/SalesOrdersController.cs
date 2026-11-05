@@ -125,6 +125,7 @@ public class SalesOrdersController : ControllerBase
     {
         if (input.CustomerId <= 0) return BadRequest(new { message = "Choose a customer." });
         if (await NotMyCustomer(input.CustomerId, ct)) return BadRequest(new { message = NotMyCustomerMessage });
+        if (await DispatchController.FractionalQuantityError(_db, input.Items, ct) is { } bad) return BadRequest(new { message = bad });
 
         var order = new SalesOrderEntity
         {
@@ -161,6 +162,7 @@ public class SalesOrdersController : ControllerBase
         if (!IsEditable(order)) return BadRequest(new { message = "Only a draft can be changed. Take it back from the office first." });
         if (input.CustomerId <= 0) return BadRequest(new { message = "Choose a customer." });
         if (await NotMyCustomer(input.CustomerId, ct)) return BadRequest(new { message = NotMyCustomerMessage });
+        if (await DispatchController.FractionalQuantityError(_db, input.Items, ct) is { } bad) return BadRequest(new { message = bad });
 
         // What this save changes, worked out before anything is overwritten. A save that changes
         // nothing writes no history.
@@ -245,6 +247,7 @@ public class SalesOrdersController : ControllerBase
     {
         if (await IsSalesUser(ct)) return Forbid();
         if (input.CustomerId <= 0) return BadRequest(new { message = "Choose a customer." });
+        if (await DispatchController.FractionalQuantityError(_db, input.Items, ct) is { } bad) return BadRequest(new { message = bad });
 
         // One transaction: the order number is only spent if the sales order is marked too.
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
@@ -326,6 +329,62 @@ public class SalesOrdersController : ControllerBase
         order.DateDeleted = DateTime.Now;
         AddEvent(id, "Deleted by the office");
         await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // POST /api/sales-orders/unapprove/{dispatchOrderId} — Open Orders ⋮ > Un-approve order: undo
+    // an approval made by mistake. The open order it became goes, and the sales order is back
+    // waiting for approval. Only while nothing has happened to the order (not on a load, nothing
+    // picked). Its number goes back to the counter when it was the last one handed out and was
+    // never emailed, so the series keeps no gap; otherwise the order is soft-deleted like Delete.
+    [HttpPost("unapprove/{dispatchOrderId:int}")]
+    public async Task<ActionResult> Unapprove(int dispatchOrderId, CancellationToken ct = default)
+    {
+        if (await IsSalesUser(ct)) return Forbid();
+
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
+        var dispatch = await _db.Set<DispatchOrderEntity>()
+            .FirstOrDefaultAsync(o => o.Id == dispatchOrderId && o.DateDeleted == null, ct);
+        if (dispatch == null) return NotFound();
+        var order = await _db.Set<SalesOrderEntity>().FirstOrDefaultAsync(o =>
+            o.DispatchOrderId == dispatchOrderId && o.Status == SalesOrderEntity.StatusApproved && o.DateDeleted == null, ct);
+        var no = dispatch.OrderNo;
+        if (order == null)
+            return BadRequest(new { message = $"Order {no} was not approved from a sales order, so there is nothing to un-approve." });
+        if (dispatch.DateDispatched != null)
+            return BadRequest(new { message = $"Order {no} has been dispatched." });
+        if (dispatch.WeighbridgeRecordId > 0)
+            return BadRequest(new { message = $"Order {no} is on a load. Take it off the load first." });
+        var picks = _db.Set<DispatchOrderPickedEntity>().Where(p => p.DispatchOrderId == dispatchOrderId);
+        if (await picks.AnyAsync(p => p.DateDeleted == null, ct))
+            return BadRequest(new { message = $"Order {no} has pallets picked. Unpick them first." });
+
+        order.Status = SalesOrderEntity.StatusPending;
+        order.DispatchOrderId = null;
+        order.DateApproved = null;
+        AddEvent(order.Id, $"Un-approved by the office (order {no} cancelled)");
+
+        var giveNumberBack =
+            !await _db.Set<DispatchOrderEmail>().AnyAsync(e => e.DispatchOrderId == dispatchOrderId, ct)
+            && !await picks.AnyAsync(ct)
+            && !await _db.Set<DispatchOrderEntity>().AnyAsync(o => o.OrderNo > no, ct);
+        if (!giveNumberBack) dispatch.DateDeleted = DateTime.Now;
+        await _db.SaveChangesAsync(ct);
+
+        if (giveNumberBack)
+        {
+            // Gone outright, so the next order takes the number again (MAX+1 with the counter off).
+            await _db.AuditTrail
+                .Where(a => a.EntityName == AuditedEntities.DispatchOrder && a.EntityId == dispatchOrderId)
+                .ExecuteDeleteAsync(ct);
+            await _db.Set<DispatchOrderItemEntity>().Where(i => i.OrderId == dispatchOrderId).ExecuteDeleteAsync(ct);
+            await _db.Set<DispatchOrderEntity>().Where(o => o.Id == dispatchOrderId).ExecuteDeleteAsync(ct);
+            await _db.Database.ExecuteSqlAsync($@"
+                UPDATE dbo.Setting SET NextOrderNo = NextOrderNo - 1
+                WHERE NextOrderNoEnabled = 1 AND NextOrderNo = {no + 1}
+                  AND id = (SELECT MIN(id) FROM dbo.Setting)", ct);
+        }
+        await tx.CommitAsync(ct);
         return NoContent();
     }
 
@@ -489,7 +548,7 @@ public class SalesOrdersController : ControllerBase
         static string Quote(string? s) =>
             s == null ? "none" : "\"" + (s.Length > 60 ? s[..57].Replace("\n", " ") + "…" : s.Replace("\n", " ")) + "\"";
         static string Day(DateTime? d) => d == null ? "ASAP" : d.Value.ToString("ddd d MMM");
-        static string Qty(int? q) => q == null ? "no quantity" : q == 1 ? "1 pallet" : $"{q} pallets";
+        static string Qty(decimal? q) => q == null ? "no quantity" : q == 1 ? "1 pallet" : $"{q.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} pallets";
         static string Money(decimal? p) => p == null ? "no price" : p.Value.ToString("0.00");
     }
 

@@ -1,0 +1,87 @@
+default_platform(:android)
+
+platform :android do
+  # Discards any stale draft release sitting on the given track. A leftover
+  # draft with an older version code blocks the new rollout with "doesn't
+  # allow any existing users to upgrade" (hit 2026-07-19 with a forgotten
+  # 1.1.3 draft on production), so clear drafts before every upload.
+  private_lane :discard_stale_drafts do |options|
+    require "google/apis/androidpublisher_v3"
+    require "googleauth"
+
+    track_name = options[:track]
+    pkg = CredentialsManager::AppfileConfig.try_fetch_value(:package_name)
+    key = CredentialsManager::AppfileConfig.try_fetch_value(:json_key_file)
+
+    publisher = Google::Apis::AndroidpublisherV3::AndroidPublisherService.new
+    publisher.authorization = Google::Auth::ServiceAccountCredentials.make_creds(
+      json_key_io: File.open(key),
+      scope: "https://www.googleapis.com/auth/androidpublisher",
+    )
+
+    edit = publisher.insert_edit(pkg)
+    begin
+      track = publisher.get_edit_track(pkg, edit.id, track_name)
+      drafts = (track.releases || []).select { |r| r.status == "draft" }
+      if drafts.any?
+        track.releases = track.releases - drafts
+        publisher.update_edit_track(pkg, edit.id, track_name, track)
+        publisher.commit_edit(pkg, edit.id)
+        UI.important("Discarded stale draft release(s) on '#{track_name}': " +
+                     drafts.map { |r| "#{r.name} (#{r.version_codes&.join(',')})" }.join(", "))
+      else
+        publisher.delete_edit(pkg, edit.id)
+      end
+    rescue StandardError => e
+      publisher.delete_edit(pkg, edit.id) rescue nil
+      UI.important("Draft cleanup skipped (#{e.message}) — continuing with upload.")
+    end
+  end
+
+  desc "Upload the latest AAB to the Internal Testing track."
+  lane :internal do
+    aab = File.expand_path(
+      "../../build/app/outputs/bundle/release/app-release.aab",
+      __dir__,
+    )
+    UI.user_error!("No AAB at #{aab}. Build it first with `npm run release`.") unless File.exist?(aab)
+
+    upload_to_play_store(
+      track: "internal",
+      aab: aab,
+      release_status: "completed",
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Upload the latest AAB to the Production track and start a 100% rollout (still subject to Google review)."
+  lane :production do
+    aab = File.expand_path(
+      "../../build/app/outputs/bundle/release/app-release.aab",
+      __dir__,
+    )
+    UI.user_error!("No AAB at #{aab}. Build it first with `npm run release`.") unless File.exist?(aab)
+
+    discard_stale_drafts(track: "production")
+
+    upload_to_play_store(
+      track: "production",
+      aab: aab,
+      # Submit straight for Google review at 100% rollout — no manual
+      # 'Roll out' click in Play Console needed. Google still reviews
+      # before the app actually goes live to users.
+      release_status: "completed",
+      rollout: "1.0",
+      skip_upload_metadata: true,
+      # "What's new" comes from metadata/android/en-GB/changelogs/default.txt
+      # (refresh it before a production release, same routine as the iOS
+      # fastlane/metadata release notes).
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end

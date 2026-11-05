@@ -6,11 +6,12 @@ import EmailSetupPanel from "./EmailSetupPanel";
 import StagingPanel from "./StagingPanel";
 import ScaleRelayStylesPanel from "./ScaleRelayStylesPanel";
 import OilTanksAccessPanel from "./OilTanksAccessPanel";
+import IntercomPage from "../intercom/IntercomPage";
 
 // Globeweigh-internal setup, super-admin only (the "Globeweigh Admin" nav section).
 // Same master/detail shape as the Admin page: a list of views on the left, the selected
 // one's panel on the right. Add a view by adding an ITEMS row and a case below.
-type View = "email" | "staging" | "styles" | "oil-tanks";
+type View = "email" | "staging" | "styles" | "oil-tanks" | "intercom";
 const ITEMS: { key: View; label: string }[] = [
   { key: "email", label: "Email Setup" },
   // Features that are built and deployed but not switched on yet — see src/features.tsx.
@@ -19,6 +20,8 @@ const ITEMS: { key: View; label: string }[] = [
   { key: "styles", label: "Scale/Relay Styles" },
   // Which users see the Oil Tanks page — see OilTanksAccessPanel.tsx.
   { key: "oil-tanks", label: "Oil Tanks" },
+  // The weighbridge door intercoms: connection, ring log and cameras — pages/intercom.
+  { key: "intercom", label: "Intercom" },
 ];
 
 export default function SuperAdminPage(_props: { user: AdminUserDto }) {
@@ -52,6 +55,7 @@ export default function SuperAdminPage(_props: { user: AdminUserDto }) {
           {view === "staging" && <StagingPanel />}
           {view === "styles" && <ScaleRelayStylesPanel />}
           {view === "oil-tanks" && <OilTanksAccessPanel />}
+          {view === "intercom" && <IntercomPage embedded />}
         </div>
       </div>
     </div>

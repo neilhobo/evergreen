@@ -17,8 +17,9 @@ import { useRowMenu } from "./useRowMenu";
 // sales reps have built in My Orders and sent to the office, waiting to be approved. Longest
 // waiting first. Drafts are the reps' own and never appear here. Approve opens the order in the
 // order dialog (the office may change it and add the haulier) and saving makes it an open
-// order; Return sends it back to the rep with a note. `onApproved` refreshes Open Orders.
-export default function SalesOrdersSection({ onApproved }: { onApproved?: () => void }) {
+// order; Return sends it back to the rep with a note. `onApproved` refreshes Open Orders;
+// a change of `reloadKey` reloads this list (an order un-approved from Open Orders).
+export default function SalesOrdersSection({ onApproved, reloadKey = 0 }: { onApproved?: () => void; reloadKey?: number }) {
   const [rows, setRows] = useState<SalesOrderRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +62,10 @@ export default function SalesOrdersSection({ onApproved }: { onApproved?: () => 
     const t = window.setInterval(() => void refresh(), 60000);
     return () => window.clearInterval(t);
   }, [refresh]);
+
+  useEffect(() => {
+    if (reloadKey) void refresh();
+  }, [reloadKey, refresh]);
 
   const pallets = (o: SalesOrderRow) => o.items.reduce((n, i) => n + (i.quantity ?? 0), 0);
   const value = (o: SalesOrderRow) =>

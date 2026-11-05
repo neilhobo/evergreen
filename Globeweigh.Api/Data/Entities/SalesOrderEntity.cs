@@ -51,7 +51,7 @@ public class SalesOrderItemEntity
     public int Id { get; set; }
     public int SalesOrderId { get; set; }
     public int ProductId { get; set; }
-    public int? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public decimal? Price { get; set; }
     // Priced from this zone instead of the customer's (Migrations/AddOrderItemCostingZone.sql).
     public int? CostingZoneId { get; set; }
@@ -65,6 +65,7 @@ public class SalesOrderItemEntity
             b.HasKey(e => e.Id);
             b.Property(e => e.Id).HasColumnName("id");
             b.Property(e => e.Price).HasColumnType("decimal(18,4)");
+            b.Property(e => e.Quantity).HasColumnType("decimal(10,2)");
         }
     }
 }

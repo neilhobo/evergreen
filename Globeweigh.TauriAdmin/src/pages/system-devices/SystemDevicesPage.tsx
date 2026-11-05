@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import DataTable, { Column } from "../../components/DataTable";
 import { confirmDialog, messageDialog } from "../../components/confirmDialog";
 import {
@@ -29,7 +29,8 @@ function fmtDateTime(s: string | null): string {
 // config (TOUCH-IN / TOUCH-OUT) go via the GlobeweighService bridge; everything else
 // goes via the API's per-device bridge (droidVNC-NG on the tablets).
 // A dev build adds housekeeping tools (hard Delete, Hide, Show hidden).
-export default function SystemDevicesPage(_props: { user: AdminUserDto }) {
+// Shown as the Devices tab of Devices (pages/devices/DevicesHubPage), which passes its tab strip in.
+export default function SystemDevicesPage({ tabs }: { user: AdminUserDto; tabs?: ReactNode }) {
   const dev = import.meta.env.DEV;
   const [rows, setRows] = useState<SystemDevice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,6 +130,7 @@ export default function SystemDevicesPage(_props: { user: AdminUserDto }) {
     <div className={cc.page}>
       <div className={cc.card}>
         <PageHeader title="Devices" meta={`${rows.length} devices`} />
+        {tabs}
         <div className={cc.body}>
       <div className="po-open-layout system-devices">
         <div className="po-main">

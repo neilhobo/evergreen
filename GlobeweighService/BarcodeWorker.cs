@@ -19,6 +19,9 @@ public class BarcodeWorker
     private static readonly string[] _prodCdKeys = { "ProdCd:", "ERRORd:" };
     private static readonly string[] _knownKeys = { "ProdCd:", "ERRORd:", "Weight:", "UniqueCode:" };
 
+    // Same-code rows further apart than this are different pallets (see ProcessBarcode).
+    private const int TwinWindowDays = 2;
+
     private static readonly TimeSpan ReconnectDelay = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan ConnectionRecycleInterval = TimeSpan.FromHours(4);
@@ -312,9 +315,21 @@ public class BarcodeWorker
         {
             using (var db = CreateDbContext())
             {
-                var pallet = await db.CodicoPallets
+                // The 3rd party's UniqueCode has no zero padding (day+month+yyyy+line+seq), so
+                // some dates print the same codes as one earlier in the year: 3/11 = 31/1,
+                // 2/11 = 21/1, 1/12 = 11/2, 2/12 = 21/2. Matching the first row found used to
+                // hit January's long-scanned pallet, so today's was never marked and raised
+                // the missed-scan alarm. Only the newest pallet and its near twins (a genuine
+                // duplicate lands within minutes) are candidates; an unscanned one wins.
+                var matches = await db.CodicoPallets
                     .Where(x => x.UniqueCode == scan.UniqueCode)
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
+                var newest = matches.Count > 0 ? matches.Max(x => x.DateCreated) ?? DateTime.MinValue : DateTime.MinValue;
+                var current = matches
+                    .Where(x => (x.DateCreated ?? DateTime.MinValue) > newest.AddDays(-TwinWindowDays))
+                    .OrderBy(x => x.id)
+                    .ToList();
+                var pallet = current.FirstOrDefault(x => x.IsScanned != true) ?? current.LastOrDefault();
 
                 if (pallet == null)
                 {

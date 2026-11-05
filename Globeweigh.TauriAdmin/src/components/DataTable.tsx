@@ -53,7 +53,12 @@ interface Props<T> {
   // existing grid changes behaviour. Don't combine with grouping — a re-sort would
   // scatter the groups and repeat their header rows.
   sortable?: boolean;
+  // Drag a header's right edge to resize that column; double-click the edge to put it back.
+  // On by default for every grid; widths last as long as the grid is on screen.
+  resizable?: boolean;
 }
+
+const MIN_COL_WIDTH = 30;
 
 // Compact read-only grid in the SpecGauge table style. Selection + double-click
 // mirror the WPF GridControl behaviour.
@@ -70,11 +75,50 @@ export default function DataTable<T>({
   groupKey,
   groupLabel,
   sortable,
+  resizable = true,
 }: Props<T>) {
-  const hasFit = columns.some((c) => c.fit);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hoverCol, setHoverCol] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
+  // Widths the user has dragged, by column key. A resized column is a plain fixed-width
+  // column from then on (no longer best-fit), so its cells clamp to exactly that width.
+  const [widths, setWidths] = useState<Record<string, number>>({});
+  // The click that ends a drag lands on the header; it must not also sort the column.
+  const resizingRef = useRef(false);
+  const widthOf = (c: Column<T>) => widths[c.key] ?? c.width;
+  const isFit = (c: Column<T>) => !!c.fit && widths[c.key] == null;
+  const hasFit = columns.some(isFit);
+
+  const startResize = (c: Column<T>, e: MouseEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = e.currentTarget.parentElement as HTMLElement;
+    const startX = e.clientX;
+    const startWidth = th.offsetWidth;
+    resizingRef.current = true;
+    document.body.classList.add("data-table-resizing");
+    const move = (ev: globalThis.MouseEvent) => {
+      const w = Math.max(MIN_COL_WIDTH, Math.round(startWidth + ev.clientX - startX));
+      setWidths((prev) => (prev[c.key] === w ? prev : { ...prev, [c.key]: w }));
+    };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      document.body.classList.remove("data-table-resizing");
+      // Cleared after the click that follows this mouseup has been dispatched.
+      setTimeout(() => (resizingRef.current = false), 0);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+  const resetWidth = (c: Column<T>, e: MouseEvent<HTMLSpanElement>) => {
+    e.stopPropagation();
+    setWidths((prev) => {
+      const next = { ...prev };
+      delete next[c.key];
+      return next;
+    });
+  };
 
   const canSort = (c: Column<T>) => !!sortable && !c.noSort;
   // Shared by body/footer/filter cells: hover tint and the lavender super-admin shading.
@@ -171,19 +215,31 @@ export default function DataTable<T>({
                     .join(" ") || undefined
                 }
                 style={{
-                  width: c.fit ? "1%" : c.width,
-                  minWidth: c.width,
-                  whiteSpace: c.fit ? "nowrap" : undefined,
+                  width: isFit(c) ? "1%" : widthOf(c),
+                  minWidth: widthOf(c),
+                  maxWidth: widths[c.key],
+                  overflow: widths[c.key] != null ? "hidden" : undefined,
+                  textOverflow: widths[c.key] != null ? "ellipsis" : undefined,
+                  whiteSpace: isFit(c) ? "nowrap" : undefined,
                   textAlign: c.align ?? "left",
                 }}
                 onMouseEnter={c.hoverHighlight ? () => setHoverCol(c.key) : undefined}
                 onMouseLeave={c.hoverHighlight ? () => setHoverCol(null) : undefined}
-                onClick={canSort(c) ? () => toggleSort(c) : undefined}
+                onClick={canSort(c) ? () => !resizingRef.current && toggleSort(c) : undefined}
                 title={canSort(c) ? "Click to sort" : undefined}
               >
                 {c.header}
                 {sort?.key === c.key && (
                   <span className="data-table-sort">{sort.dir === "asc" ? "▲" : "▼"}</span>
+                )}
+                {resizable && (
+                  <span
+                    className="data-table-resize"
+                    title="Drag to resize · double-click to reset"
+                    onMouseDown={(e) => startResize(c, e)}
+                    onDoubleClick={(e) => resetWidth(c, e)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 )}
               </th>
             ))}
@@ -247,9 +303,9 @@ export default function DataTable<T>({
                       textAlign: c.align ?? "left",
                       // Flexible columns clamp (maxWidth 0 + the existing ellipsis CSS) when the
                       // table has best-fit columns, so it can never overflow horizontally.
-                      maxWidth: c.width ?? (hasFit && !c.fit ? 0 : undefined),
-                      width: c.fit ? "1%" : undefined,
-                      whiteSpace: c.fit ? "nowrap" : undefined,
+                      maxWidth: widthOf(c) ?? (hasFit && !isFit(c) ? 0 : undefined),
+                      width: isFit(c) ? "1%" : widths[c.key],
+                      whiteSpace: isFit(c) ? "nowrap" : undefined,
                     }}
                     title={
                       !c.render ? String((row as never)[c.key] ?? "") || undefined : undefined

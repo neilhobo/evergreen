@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import DataTable, { Column } from "../../components/DataTable";
 import { confirmDialog, messageDialog } from "../../components/confirmDialog";
 import { AdminUserDto } from "../../types";
@@ -30,7 +30,8 @@ function fmtSize(bytes: number): string {
 
 // Mobile-app deployment console (dev-only). Lists registered Picking devices, uploads
 // release APKs, and pushes a release to the per-device update queue the app polls.
-export default function DevicesPage(_props: { user: AdminUserDto }) {
+// Shown as the Device Manager tab of Devices (DevicesHubPage), which passes its tab strip in.
+export default function DevicesPage({ tabs }: { user: AdminUserDto; tabs?: ReactNode }) {
   const [devices, setDevices] = useState<DeviceRow[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [online, setOnline] = useState<Record<number, boolean>>({});
@@ -238,7 +239,8 @@ export default function DevicesPage(_props: { user: AdminUserDto }) {
   return (
     <div className={cc.page}>
       <div className={cc.card}>
-        <PageHeader title="Device Manager" meta={`${devices.length} devices`} />
+        <PageHeader title="Devices" meta={`${devices.length} devices`} />
+        {tabs}
         <div className={cc.body}>
       <div className="po-open-layout">
         <div className="po-main">

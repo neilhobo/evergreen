@@ -26,6 +26,7 @@ import {
   LoadEmailKind,
 } from "../../api/dispatch";
 import { getCustomersSuppliers, getAddresses } from "../../api/customersSuppliers";
+import { unapproveSalesOrder } from "../../api/salesOrders";
 import { getHauliers } from "../../api/hauliers";
 import { getProducts } from "../../api/products";
 import { fmtDate, fmtDateTime, fmtQty, todayInput } from "../../format";
@@ -345,8 +346,30 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
     }
   }
 
-  // ---- per-row "⋮" menus on the Loads, Pending and Completed Loads grids (see useRowMenu) ----
+  // ---- per-row "⋮" menus on the Open Orders, Loads, Pending and Completed Loads grids (see useRowMenu) ----
+  const [orderMenu, orderMenuApi] = useRowMenu<DispatchOrder>();
   const [loadMenu, loadMenuApi] = useRowMenu<WeighbridgePreLoad>();
+  // Bumped after an un-approve, so the Orders (from sales) list shows the order again at once.
+  const [salesReload, setSalesReload] = useState(0);
+
+  // "Un-approve order": an order approved from sales by mistake goes back to waiting for
+  // approval, and the open order it became is removed (the API refuses once it is on a load
+  // or picked).
+  async function onUnapproveOrder(row: DispatchOrder) {
+    const ok = await confirmDialog(
+      `Un-approve order ${row.orderNo}?\n\n` +
+        "The order is removed from Open Orders and goes back to Orders from sales, waiting for approval.",
+    );
+    if (!ok) return;
+    try {
+      await unapproveSalesOrder(row.id);
+      setSelected(null);
+      await refreshOrders();
+      setSalesReload((n) => n + 1);
+    } catch (err) {
+      void messageDialog("Failed to un-approve the order.\n" + (err as Error).message);
+    }
+  }
   const [pendingMenu, pendingMenuApi] = useRowMenu<WbPending>();
   const [completedMenu, completedMenuApi] = useRowMenu<WbCompleted>();
 
@@ -511,6 +534,32 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
           sentTo={r.confirmationSentTo ?? null}
           label="Order confirmation emailed"
         />
+      ),
+    },
+    {
+      // Far-right "⋮" — opens the per-row actions menu (see orderMenu).
+      key: "menu",
+      header: "",
+      fit: true,
+      align: "center",
+      noSort: true,
+      render: (r) => (
+        <button
+          type="button"
+          className="dsp-row-menu-btn"
+          title="More actions"
+          aria-haspopup="menu"
+          aria-expanded={orderMenu?.row.id === r.id}
+          onMouseDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelected(r);
+            orderMenuApi.open(r, e.currentTarget);
+          }}
+        >
+          ⋮
+        </button>
       ),
     },
   ];
@@ -777,7 +826,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
           </div>
         )}
         {/* The orders the sales reps have sent from My Orders, waiting for the office. */}
-        <SalesOrdersSection onApproved={() => void refreshOrders()} />
+        <SalesOrdersSection onApproved={() => void refreshOrders()} reloadKey={salesReload} />
       </div>
 
       {/* col 2: Loads */}
@@ -933,6 +982,29 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
             if (saved) void refreshOrders();
           }}
         />
+      )}
+
+      {orderMenu && (
+        <div
+          ref={orderMenuApi.ref}
+          className="dsp-row-menu"
+          role="menu"
+          style={{ top: orderMenu.top, right: orderMenu.right }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="dsp-row-menu-item"
+            disabled={!orderMenu.row.salesOrderId}
+            title={orderMenu.row.salesOrderId ? undefined : "Only an order approved from sales can be un-approved"}
+            onClick={() => {
+              orderMenuApi.close();
+              void onUnapproveOrder(orderMenu.row);
+            }}
+          >
+            Un-approve order
+          </button>
+        </div>
       )}
 
       {loadMenu && (

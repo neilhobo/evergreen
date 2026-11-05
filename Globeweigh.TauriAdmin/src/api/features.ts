@@ -12,6 +12,7 @@ export const FEATURE = {
   productionPlanning: "ProductionPlanning",
   sageLink: "SageLink",
   reports: "Reports",
+  annualLeave: "AnnualLeave",
 } as const;
 
 // Appearance switches, held in the same store: Super Admin > Scale/Relay Styles. Not staged
@@ -69,6 +70,16 @@ export const STAGED_FEATURES: StagedFeature[] = [
       "notes, which the Sage sidecar on the server mirrors every few hours and on request. The " +
       "members and their Sage accounts are edited on the page. Exports to Excel. Shown to office admins.",
     whenOff: "No Reports item in the menu. The sidecar still keeps the sales mirror fresh.",
+  },
+  {
+    name: FEATURE.annualLeave,
+    title: "Annual Leave",
+    description:
+      "Adds an Annual Leave page to the menu for office admins: staff and their leave balances " +
+      "(28 days, set company days + floating days, pro-rata for starters), leave requests with " +
+      "approve / decline and the policy checks, a team calendar, and the company days and " +
+      "categories behind it all. Replaces the Annual Leave Request Log spreadsheet.",
+    whenOff: "Only the super-admin sees Annual Leave (in the lavender restricted style); the API refuses everyone else.",
   },
 ];
 

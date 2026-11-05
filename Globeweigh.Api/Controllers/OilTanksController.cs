@@ -74,6 +74,8 @@ public class OilTanksController : ControllerBase
 
     // eUserType.Touch — Touch-only users never sign in to the admin app, so are not listed.
     private const int UserTypeTouch = 2;
+    // eUserType.NoLogin — never signs in, so not listed either.
+    private const int UserTypeNoLogin = 4;
 
     // Whether the signed-in user may see the page: switched on for them, or the super-admin.
     private async Task<bool> CanViewAsync(CancellationToken ct)
@@ -114,7 +116,7 @@ public class OilTanksController : ControllerBase
     // Live, non-Touch users (not the built-in GlobeweighAdmin, id 1), by name.
     private async Task<List<OilTanksAccessRow>> AccessRowsAsync(CancellationToken ct) =>
         await _db.GlobeweighUsers.AsNoTracking()
-            .Where(u => u.DateDeleted == null && u.Id != 1 && u.UserTypeId != UserTypeTouch)
+            .Where(u => u.DateDeleted == null && u.Id != 1 && u.UserTypeId != UserTypeTouch && u.UserTypeId != UserTypeNoLogin)
             .OrderBy(u => u.FirstName).ThenBy(u => u.Surname)
             .Select(u => new OilTanksAccessRow
             {

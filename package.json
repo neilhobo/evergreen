@@ -10,6 +10,14 @@
     "deploy:api:only": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.Api/deploy/deploy-to-evergreen.ps1 -SkipUi",
     "deploy:touch": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriTouch/deploy-touch-ui.ps1",
     "deploy:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriAdmin/deploy-admin-ui.ps1",
-    "dist:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriAdmin/dist-tauriadmin.ps1"
+    "dist:admin": "powershell -NoProfile -ExecutionPolicy Bypass -File Globeweigh.TauriAdmin/dist-tauriadmin.ps1",
+    "mobile": "powershell -ExecutionPolicy Bypass -File mobile/tools/dev-app.ps1 -BaseUrl https://evergreen.specdigital.com",
+    "mobile:local": "powershell -ExecutionPolicy Bypass -File mobile/tools/dev-app.ps1",
+    "mobile:release:android": "powershell -ExecutionPolicy Bypass -File mobile/tools/release-android.ps1",
+    "mobile:release:android:prod": "powershell -ExecutionPolicy Bypass -File mobile/tools/release-android.ps1 -Track production",
+    "mobile:release:ios": "powershell -ExecutionPolicy Bypass -File mobile/tools/release-ios.ps1",
+    "mobile:release:ios:prod": "powershell -ExecutionPolicy Bypass -File mobile/tools/release-ios.ps1 -Track production",
+    "mobile:patch:android": "powershell -ExecutionPolicy Bypass -File mobile/tools/patch-android.ps1",
+    "mobile:patch:ios": "powershell -ExecutionPolicy Bypass -File mobile/tools/patch-ios.ps1"
   }
 }

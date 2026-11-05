@@ -73,7 +73,10 @@ namespace Globeweigh.Model
         [Description("Touch Operator")]
         Touch = 2,
         [Description("Both")]
-        Both = 3
+        Both = 3,
+        // Kept for Annual Leave only (drivers, factory): no username, password or passcode.
+        [Description("No login")]
+        NoLogin = 4
     }
 
     public enum eInvoiceLineType

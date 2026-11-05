@@ -611,6 +611,12 @@ select.cl-delivery-order {
   background: #fef3f2;
   color: #b42318;
 }
+.dsp-row-menu-item:disabled,
+.dsp-row-menu-item:disabled:hover {
+  background: transparent;
+  color: #94a3b8;
+  cursor: default;
+}
 
 /* Select Customer & Address: the highlighted address's Delivery Note Info sits under the
    address list at a fixed height, so picking a different address never shifts the layout. */
@@ -1148,12 +1154,16 @@ select.cl-delivery-order {
   grid-template-columns: 380px minmax(0, 1fr);
 }
 
-/* User Type: the three choices along the row. */
+/* User Type: the four choices along the row, never broken across lines. */
 .us-choices {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   min-height: 26px;
+}
+
+.us-choices .ld-check {
+  white-space: nowrap;
 }
 
 /* The roles, one under another; the first sits level with its label. */
@@ -1178,6 +1188,20 @@ select.cl-delivery-order {
    than out on the details column's 124px. */
 .us-body .us-access .ld-row {
   grid-template-columns: 44px minmax(0, 1fr);
+}
+
+/* Annual Leave, under Access in the right column (shown to whoever manages Annual Leave): the
+   person's leave profile. Its labels are longer than Role, shorter than the details'. */
+.us-right {
+  min-width: 0;
+}
+
+.us-leave {
+  margin-top: 14px;
+}
+
+.us-body .us-leave .ld-row {
+  grid-template-columns: 104px minmax(0, 1fr);
 }
 
 /* ── Orders (from sales) (SalesOrdersSection) — the foot of the Open Orders column: the reps'

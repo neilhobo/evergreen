@@ -21,6 +21,11 @@ public class StaffController : ControllerBase
 
     // eUserType.Touch — Touch-only users have no username/password, just a passcode.
     private const int UserTypeTouch = 2;
+    // eUserType.NoLogin — staff kept for Annual Leave who never sign in (drivers, factory): no
+    // username, password, passcode or role. Give them a type with a login to let them in.
+    private const int UserTypeNoLogin = 4;
+
+    private static bool HasNoOfficeLogin(int userTypeId) => userTypeId is UserTypeTouch or UserTypeNoLogin;
 
     // eUserRole values a user can be given: Office Admin, Office User, Sales. GlobeweighAdmin (1)
     // is never assignable; Factory User (4) and Weighbridge User (5) are retired.
@@ -29,7 +34,7 @@ public class StaffController : ControllerBase
     // A user holds exactly one role (Touch-only users none), so the legacy single RoleId column
     // is kept equal to it — the login folds that column in, and a stale one would add a role.
     private static int SingleRole(StaffInput input) =>
-        input.UserTypeId == UserTypeTouch || input.RoleIds == null || input.RoleIds.Length == 0 ? 0 : input.RoleIds[0];
+        HasNoOfficeLogin(input.UserTypeId) || input.RoleIds == null || input.RoleIds.Length == 0 ? 0 : input.RoleIds[0];
 
     // GET /api/staff — staff list with their effective role ids.
     [HttpGet]
@@ -61,9 +66,9 @@ public class StaffController : ControllerBase
             UserTypeId    = input.UserTypeId,
             FirstName     = input.FirstName,
             Surname       = input.Surname,
-            Username      = input.UserTypeId == UserTypeTouch ? null : input.Username,
-            Password      = input.UserTypeId == UserTypeTouch ? null : input.Password,
-            Passcode      = input.Passcode,
+            Username      = HasNoOfficeLogin(input.UserTypeId) ? null : input.Username,
+            Password      = HasNoOfficeLogin(input.UserTypeId) ? null : input.Password,
+            Passcode      = input.UserTypeId == UserTypeNoLogin ? null : input.Passcode,
             Disabled      = input.Disabled,
             CostingAccess = input.CostingAccess,
             RoleId        = SingleRole(input),
@@ -75,7 +80,7 @@ public class StaffController : ControllerBase
         await SyncRoles(user.Id, input, ct);
         await _db.SaveChangesAsync(ct);
 
-        return ToRow(user, input.UserTypeId == UserTypeTouch ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
+        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
     }
 
     // PUT /api/staff/{id} — update a staff user (+ resync role rows).
@@ -91,9 +96,9 @@ public class StaffController : ControllerBase
         user.UserTypeId    = input.UserTypeId;
         user.FirstName     = input.FirstName;
         user.Surname       = input.Surname;
-        user.Username      = input.UserTypeId == UserTypeTouch ? null : input.Username;
-        user.Password      = input.UserTypeId == UserTypeTouch ? null : input.Password;
-        user.Passcode      = input.Passcode;
+        user.Username      = HasNoOfficeLogin(input.UserTypeId) ? null : input.Username;
+        user.Password      = HasNoOfficeLogin(input.UserTypeId) ? null : input.Password;
+        user.Passcode      = input.UserTypeId == UserTypeNoLogin ? null : input.Passcode;
         user.Disabled      = input.Disabled;
         user.CostingAccess = input.CostingAccess;
         user.RoleId        = SingleRole(input);
@@ -103,7 +108,7 @@ public class StaffController : ControllerBase
         await SyncRoles(id, input, ct);
         await _db.SaveChangesAsync(ct);
 
-        return ToRow(user, input.UserTypeId == UserTypeTouch ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
+        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
     }
 
     // DELETE /api/staff/{id} — soft delete (DateDeleted).
@@ -120,7 +125,7 @@ public class StaffController : ControllerBase
     private async Task SyncRoles(int userId, StaffInput input, CancellationToken ct)
     {
         // Touch-only users carry no office roles (matches the WPF editor).
-        if (input.UserTypeId == UserTypeTouch || input.RoleIds == null) return;
+        if (HasNoOfficeLogin(input.UserTypeId) || input.RoleIds == null) return;
         foreach (var roleId in input.RoleIds.Distinct())
         {
             _db.Add(new UserRoleEntity { UserId = userId, RoleId = roleId, DateCreated = DateTime.Now });
@@ -133,6 +138,9 @@ public class StaffController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(input.FirstName)) return "First Name is required.";
         if (string.IsNullOrWhiteSpace(input.Surname)) return "Surname is required.";
+        if (input.UserTypeId is < 1 or > 4) return "Choose a user type.";
+
+        if (input.UserTypeId == UserTypeNoLogin) return null;
 
         if (input.UserTypeId != UserTypeTouch)
         {

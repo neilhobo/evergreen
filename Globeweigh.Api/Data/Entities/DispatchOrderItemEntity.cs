@@ -10,7 +10,7 @@ public class DispatchOrderItemEntity
     public int Id { get; set; }
     public int OrderId { get; set; }
     public int ProductId { get; set; }
-    public int? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public decimal? Price { get; set; }
     public DateTime? DateCreated { get; set; }
     // kg/m³, entered when a cubic meter line is marked picked — see Migrations/AddDispatchOrderItemDensity.sql.
@@ -27,6 +27,7 @@ public class DispatchOrderItemEntity
             b.HasKey(e => e.Id);
             b.Property(e => e.Id).HasColumnName("id");
             b.Property(e => e.Density).HasColumnType("decimal(9,2)");
+            b.Property(e => e.Quantity).HasColumnType("decimal(10,2)");
         }
     }
 }

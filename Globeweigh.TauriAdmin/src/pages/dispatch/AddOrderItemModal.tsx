@@ -44,6 +44,14 @@ interface Props {
   onClose: () => void;
 }
 
+// Only a cubic meter product can be ordered in part (67.5 m³); pallets are whole. The API
+// refuses it too (DispatchController.FractionalQuantityError) — this just says so sooner.
+function partPallets(product: Product, quantity: number): boolean {
+  if (product.soldBy === "CubicMeter" || Number.isInteger(quantity)) return false;
+  void messageDialog(`${product.description ?? "This product"} is sold by the pallet, so its quantity must be a whole number.`);
+  return true;
+}
+
 // Mirrors the WPF AddEditDispatchOrderItemView popup: Product Type list (left),
 // searchable products grid with the customer's zone price (middle), and a
 // Quantity/Price panel (right). Price defaults from the customer's costing zone.
@@ -187,6 +195,7 @@ export default function AddOrderItemModal({
       void messageDialog("Enter a quantity.");
       return;
     }
+    if (partPallets(selected, quantity)) return;
     if (price == null) {
       void messageDialog("Enter a price.");
       return;
@@ -213,6 +222,7 @@ export default function AddOrderItemModal({
         void messageDialog("Enter a quantity.");
         return;
       }
+      if (partPallets(selected, quantity)) return;
       onAdd({ productId: selected.id, quantity, price, costingZoneId: zoneId });
       onClose();
       return;
@@ -220,6 +230,7 @@ export default function AddOrderItemModal({
     // Add mode: commit the queued list, plus a valid not-yet-queued selection.
     const items = [...toAdd];
     if (selected && quantity != null && quantity > 0 && !added.has(selected.id)) {
+      if (partPallets(selected, quantity)) return;
       if (price == null) {
         void messageDialog("Enter a price.");
         return;
@@ -395,6 +406,8 @@ export default function AddOrderItemModal({
                   <input
                     className="form-input"
                     type="number"
+                    min={0}
+                    step={selected.soldBy === "CubicMeter" ? "any" : 1}
                     style={{ width: "100%", textAlign: "left" }}
                     value={quantity ?? ""}
                     onChange={(e) => setQuantity(e.target.value === "" ? null : Number(e.target.value))}

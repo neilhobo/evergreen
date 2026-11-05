@@ -638,6 +638,24 @@ input {
   text-align: left;
 }
 
+/* Sync Data + DB switch share one row; each button drops its own top/side margin inside it. */
+.sidebar-dev-tools {
+  display: flex;
+  gap: 6px;
+  margin: 8px 8px 0;
+}
+
+.sidebar:not(.open) .sidebar-dev-tools {
+  flex-direction: column;
+}
+
+.sidebar-dev-tools > .sidebar-sync-data,
+.sidebar-dev-tools > .sidebar-db-switch {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+
 .sidebar-sync-data:hover {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -3576,6 +3594,27 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit {
 }
 .data-table thead th.sortable:hover {
   background: #dde3ec;
+}
+/* Column resize grip (DataTable resizable, on by default): an invisible strip over the
+   header's right border that shows a blue edge on hover. The th is sticky, so it already
+   positions the grip. body.data-table-resizing keeps the cursor and stops text selection
+   while the mouse is off the grip mid-drag. */
+.data-table-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 3;
+}
+.data-table-resize:hover {
+  background: linear-gradient(to right, transparent 3px, #3b82f6 3px);
+}
+body.data-table-resizing,
+body.data-table-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 .data-table-sort {
   margin-left: 4px;

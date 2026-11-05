@@ -145,7 +145,7 @@ public static class SageExport
         foreach (var r in rows)
         {
             products.TryGetValue(r.ProductId, out var product);
-            var ordered = r.Quantity ?? 0;
+            var ordered = (int)Math.Ceiling(r.Quantity ?? 0);
             var picked = r.PickedQuantity ?? 0;
             var pallets = anyPicked ? picked : ordered;
 

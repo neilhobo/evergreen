@@ -89,7 +89,7 @@ public class PlanningController : ControllerBase
                         CustomerName = l.CustomerName,
                         DeliveryDate = l.DeliveryDate,
                         DateCreated = l.DateCreated,
-                        Quantity = l.Quantity,
+                        Quantity = (int)Math.Ceiling(l.Quantity), // cubic meter products are filtered out above
                         Picked = l.Picked,
                     })
                     .ToList(),

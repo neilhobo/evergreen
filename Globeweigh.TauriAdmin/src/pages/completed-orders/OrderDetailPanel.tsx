@@ -6,7 +6,7 @@ import OrderGrids from "../../widgets/OrderGrids";
 import { confirmUnpick } from "../../widgets/unpick";
 import { messageDialog } from "../../components/confirmDialog";
 import DeliveryNoteModal from "./DeliveryNoteModal";
-import { fmtDate, fmtDateTime, fmtQty } from "../../format";
+import { fmtDate, fmtDateTime, fmtM3, fmtQty } from "../../format";
 import {
   DispatchOrder,
   DispatchOrderItem,
@@ -205,7 +205,7 @@ export default function OrderDetailPanel({ order, onClose, onViewLoad, covered =
             {peatLines.map((i) => (
               <Field
                 key={i.id}
-                label={`${fmtQty(i.quantity ?? 0)} m³`}
+                label={`${fmtM3(i.quantity ?? 0)} m³`}
                 value={
                   <>
                     {pickTag(i)}

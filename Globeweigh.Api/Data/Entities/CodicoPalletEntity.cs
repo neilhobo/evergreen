@@ -50,6 +50,13 @@ public class CodicoPalletEntity
     public const string ScannedByReprint = "Reprint";
     public const string ScannedByOperator = "Manual";
 
+    // The 3rd party builds UniqueCode as day + month + yyyy + line + 3-digit seq with NO
+    // zero padding, so some dates in a year print the SAME codes: 3/11 = 31/1 ("3112026..."),
+    // 2/11 = 21/1, 1/11 = 11/1, 1/12 = 11/2, 2/12 = 21/2. A genuine duplicate (one code
+    // pushed twice, two physical labels) lands within minutes. Rows with the same code
+    // further apart than this are DIFFERENT pallets — the newest is the live one.
+    public const int TwinWindowDays = 2;
+
     public class Config : IEntityTypeConfiguration<CodicoPalletEntity>
     {
         public void Configure(EntityTypeBuilder<CodicoPalletEntity> b)

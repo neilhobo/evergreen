@@ -1,0 +1,71 @@
+name: evergreen
+description: "Evergreen mobile app"
+publish_to: 'none'
+
+# Bumped by the release scripts (mobile/tools); the build number after "+" is
+# what the update prompt compares.
+version: 1.0.0+3
+
+environment:
+  # The Mac that builds iOS (and Shorebird) runs an older Flutter than this PC.
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  dio: ^5.7.0
+  go_router: ^14.6.2
+  flutter_secure_storage: ^9.2.2
+  package_info_plus: ^8.1.2
+  shorebird_code_push: ^2.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.8
+
+# The shamrock icon (client-supplied, ios_icon/AppIcon-1024.png) = assets/icon/icon.png.
+# The Android adaptive pair is derived from it: icon_background is a matching navy
+# vignette, icon_foreground the master at 76% with its edge feathered, so the leaf
+# tips survive every launcher mask (the master fills ~72%, the safe zone is 66%).
+# Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "assets/icon/icon_background.png"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - shorebird.yaml
+    - assets/images/
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+# The native launch screen: the client's logo (white-glow cut) on the login's
+# navy, so the hand-off to SplashScreen doesn't flash. Images rendered from
+# assets/images/evergreen_logo_glow_white.png: splash_logo is 240 dp at 4x;
+# splash_android12 fits the logo inside Android 12+'s 192 dp icon circle.
+# Regenerate with: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#1A2332"
+  image: assets/splash/splash_logo.png
+  android_12:
+    color: "#1A2332"
+    image: assets/splash/splash_android12.png
+  web: false

@@ -48,7 +48,7 @@ public static class StockDepletion
             // Picked is the truth (what physically left). A line with no picks depletes
             // nothing; the ordered quantity is only used when the WHOLE order was
             // dispatched without picking (manual/legacy path).
-            var qty = picked.Count > 0 ? picked.GetValueOrDefault(it.ProductId) : it.Ordered;
+            var qty = picked.Count > 0 ? picked.GetValueOrDefault(it.ProductId) : (int)Math.Ceiling(it.Ordered);
             db.Add(new StockHistory
             {
                 EntityId = orderId,

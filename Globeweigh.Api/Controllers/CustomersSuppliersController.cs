@@ -29,7 +29,9 @@ public class CustomersSuppliersController : ControllerBase
         [FromQuery] bool mine = false,
         CancellationToken ct = default)
     {
-        var q = _db.Set<CustomerSupplierRow>().AsNoTracking();
+        // The view does not filter soft-deleted records (Delete sets DateDeleted), so hide them here.
+        var live = _db.Set<CustomerSupplier>().Where(c => c.DateDeleted == null).Select(c => c.Id);
+        var q = _db.Set<CustomerSupplierRow>().AsNoTracking().Where(c => live.Contains(c.Id));
         if (typeId > 0) q = q.Where(c => c.TypeId == typeId);
         if (mine || await IsSalesUser(ct))
         {

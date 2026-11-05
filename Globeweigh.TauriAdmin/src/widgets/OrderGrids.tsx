@@ -7,7 +7,7 @@ import AuditTrailBar from "./AuditTrailBar";
 import DataTable, { Column } from "../components/DataTable";
 import { AUDIT_ENTITY } from "../api/audit";
 import { DispatchOrderItem, PickedPallet, isTapPickedLine } from "../api/dispatch";
-import { fmtDateTime, fmtQty } from "../format";
+import { fmtDateTime, fmtM3, fmtQty } from "../format";
 import { useRowMenu } from "../pages/dispatch/useRowMenu";
 
 interface Props {
@@ -130,7 +130,7 @@ export default function OrderGrids({
         // A peat line's quantity is m³ and the POS board is just "1", so neither joins the pallet
         // footer; and a tap-picked line is short only while it is still unpicked.
         render: (r) => {
-          const text = r.soldBy === "CubicMeter" ? `${fmtQty(r.quantity ?? 0)} m³` : r.quantity;
+          const text = r.soldBy === "CubicMeter" ? `${fmtM3(r.quantity ?? 0)} m³` : r.quantity;
           return lineShort(r) ? (
             <span className={styles.bad} style={{ fontWeight: 600 }}>{text}</span>
           ) : (

@@ -1,0 +1,14 @@
+{
+  "name": "evergreen-mobile-dev",
+  "private": true,
+  "description": "Dev helpers for the Flutter app: npm run dev:full = local API (local DB) + the app on the open Android emulator.",
+  "scripts": {
+    "dev": "flutter run -d emulator",
+    "dev:local": "flutter run -d emulator --dart-define=EVERGREEN_API_BASE_URL=http://10.0.2.2:5099",
+    "dev:api": "node ./tools/dev-api.mjs",
+    "dev:full": "node ./tools/dev-full.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -337,10 +337,19 @@ public class PickingController : ControllerBase
         // UniqueCode (2+ rows, same code, different id) and prints that many physical labels,
         // so we allow that pallet to be picked once per master record. An unknown code (0
         // rows — e.g. a wrongly-formatted label) is still allowed once and recorded.
-        var masters = await _db.Set<CodicoPalletEntity>().AsNoTracking()
+        // Only the newest pallet with this code and its near twins count: the code recurs
+        // on certain dates months apart (see TwinWindowDays), and an older pallet that
+        // happens to share it is a different pallet, long gone.
+        var allMasters = await _db.Set<CodicoPalletEntity>().AsNoTracking()
             .Where(c => c.UniqueCode == uniqueCode)
-            .Select(c => new { c.Weight })
+            .Select(c => new { c.Id, c.Weight, c.DateCreated })
             .ToListAsync(ct);
+        var newest = allMasters.Max(c => c.DateCreated) ?? DateTime.MinValue;
+        var masters = allMasters
+            .Where(c => (c.DateCreated ?? DateTime.MinValue) > newest.AddDays(-CodicoPalletEntity.TwinWindowDays))
+            .OrderBy(c => c.Id)
+            .ToList();
+        var masterIds = masters.Select(c => c.Id).ToList();
         var allowed = Math.Max(1, masters.Count);
 
         // How many times this pallet is already picked (non-deleted) onto this load.
@@ -407,7 +416,7 @@ public class PickingController : ControllerBase
             {
                 return new PickResultDto("alreadyComplete", f.OrderId, f.OrderNo, f.ProductId,
                     f.ProductDescription, uniqueCode, prodCode, 0m, null,
-                    f.Quantity ?? 0, f.Quantity ?? 0, false);
+                    Whole(f.Quantity), Whole(f.Quantity), false);
             }
             line = f;
             overPick = true;
@@ -444,14 +453,14 @@ public class PickingController : ControllerBase
         if (masters.Count > 0)
         {
             await _db.Set<CodicoPalletEntity>()
-                .Where(c => c.UniqueCode == uniqueCode && c.PickedOrderId == null)
+                .Where(c => masterIds.Contains(c.Id) && c.PickedOrderId == null)
                 .ExecuteUpdateAsync(s => s.SetProperty(c => c.PickedOrderId, line.OrderId), ct);
         }
 
         pickedByItem.TryGetValue(line.Id, out var prev);
         return new PickResultDto("ok", line.OrderId, line.OrderNo, line.ProductId,
             line.ProductDescription, uniqueCode, prodCode, weight, now,
-            prev + 1, line.Quantity ?? 0, masters.Count > 0, wasDuplicate, row.Id,
+            prev + 1, Whole(line.Quantity), masters.Count > 0, wasDuplicate, row.Id,
             false, overPick, weightEstimated);
     }
 
@@ -496,7 +505,7 @@ public class PickingController : ControllerBase
         if (overPick && !req.AllowOverPick)
             return new PickResultDto("alreadyComplete", line.OrderId, line.OrderNo,
                 line.ProductId, line.ProductDescription, "", "", 0m, null,
-                line.Quantity ?? 0, line.Quantity ?? 0, false);
+                Whole(line.Quantity), Whole(line.Quantity), false);
 
         var weight = await EstimatePalletWeight(line, ct);
         var now = DateTime.Now;
@@ -519,7 +528,7 @@ public class PickingController : ControllerBase
         await _db.SaveChangesAsync(ct);
 
         return new PickResultDto("ok", line.OrderId, line.OrderNo, line.ProductId,
-            line.ProductDescription, "", "", weight, now, done + 1, line.Quantity ?? 0,
+            line.ProductDescription, "", "", weight, now, done + 1, Whole(line.Quantity),
             false, false, row.Id, false, overPick, true);
     }
 
@@ -631,8 +640,12 @@ public class PickingController : ControllerBase
 
     // A line's pick target: its pallet count, or 1 for a cubic meter line (marked picked once,
     // whatever its m³).
-    private static int PickTarget(string? soldBy, int? quantity) =>
-        soldBy == ProductSoldBy.CubicMeter ? (quantity is > 0 ? 1 : 0) : quantity ?? 0;
+    private static int PickTarget(string? soldBy, decimal? quantity) =>
+        soldBy == ProductSoldBy.CubicMeter ? (quantity is > 0 ? 1 : 0) : Whole(quantity);
+
+    // A pallet line's ordered count. Only cubic meter lines can be fractional (UpdateOrder
+    // refuses a fraction on anything else), so this only rounds bad legacy data.
+    private static int Whole(decimal? quantity) => (int)Math.Ceiling(quantity ?? 0);
 
     // POST /api/picking/pending/{id}/orders/{orderId}/complete-picking — the picker ends the
     // order. Every order is finished by hand: with all its pallets on ("Complete order") or
@@ -762,7 +775,7 @@ public class PickingController : ControllerBase
 
         return new PickResultDto("ok", orderId, line?.OrderNo, pick.ProductId,
             line?.ProductDescription, uniqueCode, line?.Gtin, pick.Weight, null,
-            remaining, line?.Quantity ?? 0, false);
+            remaining, Whole(line?.Quantity), false);
     }
 
     // POST /api/picking/pending/{id}/photos — upload one "Complete Load" photo (multipart:
@@ -1181,7 +1194,7 @@ public record PickItemDto(
     // Product.SoldBy. A CubicMeter line is marked picked (PalletCount 1) and never scanned;
     // Quantity is then its m³ for display.
     string SoldBy = ProductSoldBy.Pallet,
-    int Quantity = 0);
+    decimal Quantity = 0);
 
 /// <summary>The captured out-weight (Kg) that completes a load.</summary>
 /// <summary>UserId: the tablet's signed-in user, for the audit trail of every order the load

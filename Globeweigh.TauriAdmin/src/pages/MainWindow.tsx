@@ -23,14 +23,13 @@ import ProductsPage from "./products/ProductsPage";
 import HauliersPage from "./hauliers/HauliersPage";
 import ReferenceDataPage from "./reference-data/ReferenceDataPage";
 import GateBarrierPage from "./gate-barrier/GateBarrierPage";
-import IntercomPage from "./intercom/IntercomPage";
-import DevicesPage from "./devices/DevicesPage";
-import SystemDevicesPage from "./system-devices/SystemDevicesPage";
+import DevicesHubPage from "./devices/DevicesHubPage";
 import SuperAdminPage from "./super-admin/SuperAdminPage";
 import MyOrdersPage from "./sales/MyOrdersPage";
 import SageLinkPage from "./sage-link/SageLinkPage";
 import ReportsPage from "./reports/ReportsPage";
 import OilTanksPage from "./oil-tanks/OilTanksPage";
+import AnnualLeavePage from "./annual-leave/AnnualLeavePage";
 import SwitchUserBanner from "../components/SwitchUserBanner";
 
 interface Props {
@@ -67,10 +66,11 @@ const MAIN_NAV: NavItem[] = [
   { key: "gate-barrier", label: "Gate/Barrier", icon: "gate-96.png" },
   // Oil Tanks (pages/oil-tanks) — the site's Specgauge oil-tank sensors.
   { key: "oil-tanks", label: "Oil Tanks", icon: "oil-tank-96.svg" },
-  // Weighbridge door intercoms - connection, ring log and cameras. Shown to everyone FOR NOW
-  // (2026-10-20, user's call); it was super-admin only and should go back to `superAdmin: true`.
-  // Calls themselves come through the overlay on every page either way.
-  { key: "intercom", label: "Intercom", icon: "Van-96.png" },
+  // Annual Leave (pages/annual-leave) — staff holiday entitlement. Staged: the super-admin only
+  // (lavender) until switched on in Super Admin > Staging, then office admins as well.
+  { key: "annual-leave", label: "Annual Leave", icon: "annual-leave-96.svg" },
+  // The weighbridge door intercoms' page (connection, ring log, cameras) is in Super Admin >
+  // Intercom since 2026-11-03. Calls themselves come through the overlay on every page.
 ];
 
 // "Globeweigh Admin" section — Globeweigh-internal tools restricted to this single named
@@ -87,10 +87,9 @@ const SALES_NAV: NavItem[] = [
   { key: "my-customers", label: "Customers", icon: "Customers-96.png" },
 ];
 
-const DEVICES_NAV: NavItem = { key: "devices", label: "Device Manager", icon: "Computer-96.png" };
+// Devices: the device overview and Device Manager as two tabs (pages/devices/DevicesHubPage).
+const DEVICES_NAV: NavItem = { key: "devices", label: "Devices", icon: "Computer-96.png" };
 const ADMIN_NAV: NavItem[] = [
-  // Client-facing device overview — still being built out, so dev-only for now.
-  { key: "system-devices", label: "Devices", icon: "Computer-96.png", dev: true },
   { key: "super-admin", label: "Super Admin", icon: "admin-96.png", superAdmin: true },
 ];
 
@@ -104,8 +103,14 @@ interface Staged {
   sageLinkOn: boolean;
   reportsOn: boolean;
   oilTanksOn: boolean;
+  annualLeaveOn: boolean;
 }
-const ALL_STAGED_ON: Staged = { sageLinkOn: true, reportsOn: true, oilTanksOn: true };
+const ALL_STAGED_ON: Staged = {
+  sageLinkOn: true,
+  reportsOn: true,
+  oilTanksOn: true,
+  annualLeaveOn: true,
+};
 
 function navFor(user: AdminUserDto, staged: Staged): { main: NavItem[]; admin: NavItem[] } {
   if (hasRole(user, UserRole.Sales)) return { main: SALES_NAV, admin: [] };
@@ -126,6 +131,9 @@ function navFor(user: AdminUserDto, staged: Staged): { main: NavItem[]; admin: N
         (item) =>
           visible(item) &&
           ((item.key !== "admin" && item.key !== "sage-link" && item.key !== "reports") || dataSetupVisible) &&
+          // Staged, but the super-admin sees it either way (that is how it gets tried first);
+          // once switched on, the office admins too.
+          (item.key !== "annual-leave" || superAdmin || (staged.annualLeaveOn && dataSetupVisible)) &&
           // Staged (Super Admin > Staging) until the client is ready for them.
           (item.key !== "sage-link" || staged.sageLinkOn) &&
           (item.key !== "reports" || staged.reportsOn) &&
@@ -184,6 +192,7 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
     sageLinkOn: isOn(FEATURE.sageLink),
     reportsOn: isOn(FEATURE.reports),
     oilTanksOn,
+    annualLeaveOn: isOn(FEATURE.annualLeave),
   };
   // Lazy initialiser: reads (and clears) the resume marker once, on the first render. The
   // resume looks the page up as if every staged item were on — the flags have not arrived
@@ -219,14 +228,16 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
     if (!featuresLoaded) return;
     if (![...mainNav, ...adminNav].some((item) => item.key === selected.key)) setSelected(mainNav[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staged.sageLinkOn, staged.reportsOn, staged.oilTanksOn, featuresLoaded]);
+  }, [staged.sageLinkOn, staged.reportsOn, staged.oilTanksOn, staged.annualLeaveOn, featuresLoaded]);
 
   function renderNavItem(item: NavItem) {
+    // Annual Leave while still staged is the super-admin's alone: drawn in the restricted style.
+    const restricted = item.dev || item.superAdmin || (item.key === "annual-leave" && !staged.annualLeaveOn);
     return (
       <li
         key={item.key}
         className={`nav-item${selected.key === item.key ? " active" : ""}${
-          item.dev || item.superAdmin ? " nav-item-dev" : ""
+          restricted ? " nav-item-dev" : ""
         }${item.sage ? " nav-item-sage" : ""}`}
         onClick={() => setSelected(item)}
         title={sidebarOpen ? undefined : item.label}
@@ -254,6 +265,8 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
         return <ProductionPage user={user} />;
       case "oil-tanks":
         return <OilTanksPage user={user} />;
+      case "annual-leave":
+        return <AnnualLeavePage />;
       case "customers-suppliers":
         return <CustomersSuppliersPage user={user} />;
       case "products":
@@ -268,10 +281,6 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
         return <ReferenceDataPage user={user} />;
       case "gate-barrier":
         return <GateBarrierPage user={user} />;
-      case "intercom":
-        return <IntercomPage />;
-      case "system-devices":
-        return <SystemDevicesPage user={user} />;
       case "super-admin":
         return <SuperAdminPage user={user} />;
       case "my-orders":
@@ -279,7 +288,7 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
       case "my-customers":
         return <CustomersSuppliersPage user={user} mine />;
       case "devices":
-        return <DevicesPage user={user} />;
+        return <DevicesHubPage user={user} />;
       default:
         return <ComingSoon section={selected.label} />;
     }
@@ -329,8 +338,13 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
               card — only ever one of the two is on screen. */}
           <UpdatePill sidebarOpen={sidebarOpen} onActiveChange={setShellUpdate} />
           {!shellUpdate && <UiRefreshPill sidebarOpen={sidebarOpen} />}
-          {import.meta.env.DEV && <SyncDataButton sidebarOpen={sidebarOpen} />}
-          {import.meta.env.DEV && <DbSwitcher sidebarOpen={sidebarOpen} />}
+          {/* Dev-only tools, side by side to save height (stacked again when collapsed). */}
+          {import.meta.env.DEV && (
+            <div className="sidebar-dev-tools">
+              <SyncDataButton sidebarOpen={sidebarOpen} />
+              <DbSwitcher sidebarOpen={sidebarOpen} />
+            </div>
+          )}
           <div className="sidebar-version">
             {sidebarOpen ? (
               <>

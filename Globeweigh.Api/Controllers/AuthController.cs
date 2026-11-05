@@ -23,6 +23,9 @@ public class AuthController : ControllerBase
     // picker and may sign in with a passcode.
     private static readonly int[] TouchUserTypes = { 2, 3 };
 
+    // eUserType.NoLogin — Staff kept for Annual Leave who never sign in; never a switch target.
+    private const int UserTypeNoLogin = 4;
+
     /// <summary>
     /// Desktop Admin login by Username + Password. Mirrors the existing desktop
     /// GlobeweighUserRepository behaviour: case-insensitive username, a blank stored
@@ -73,7 +76,7 @@ public class AuthController : ControllerBase
         if (me == null) return Forbid();
 
         var users = await _db.GlobeweighUsers.AsNoTracking()
-            .Where(u => u.DateDeleted == null && u.Id != me.Value.User.Id)
+            .Where(u => u.DateDeleted == null && u.Id != me.Value.User.Id && u.UserTypeId != UserTypeNoLogin)
             .ToListAsync(ct);
         var roles = await RoleIdsByUserAsync(users.Select(u => u.Id).ToList(), ct);
 
@@ -103,7 +106,7 @@ public class AuthController : ControllerBase
 
         var target = await _db.GlobeweighUsers.AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == req.TargetUserId && u.DateDeleted == null, ct);
-        if (target == null || target.Id == me.Value.User.Id)
+        if (target == null || target.Id == me.Value.User.Id || target.UserTypeId == UserTypeNoLogin)
             return NotFound(new { message = "User not found." });
         if (target.Disabled)
             return BadRequest(new { message = "That account is disabled." });

@@ -13,7 +13,7 @@ public class DispatchOrderItemRow
     public string? ProductDescription { get; set; }
     public int? Size { get; set; }
     public int Upp { get; set; }
-    public int? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public int? TotalUnits { get; set; }
     public int? PickedQuantity { get; set; }
     public decimal PickedWeight { get; set; }

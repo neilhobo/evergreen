@@ -218,9 +218,14 @@ public static class AuditedEntities
                 db.Set<DispatchOrderItemEntity>().AsNoTracking().Any(i => i.OrderId == orderId),
             Describe = (db, e) =>
             {
-                var qty = e.Property(nameof(DispatchOrderItemEntity.Quantity)).CurrentValue as int?;
+                var qty = e.Property(nameof(DispatchOrderItemEntity.Quantity)).CurrentValue as decimal?;
                 var price = e.Property(nameof(DispatchOrderItemEntity.Price)).CurrentValue as decimal?;
-                var pallets = qty == null ? "No quantity" : $"{qty} pallet{(qty == 1 ? "" : "s")}";
+                // A cubic meter line's quantity is m³, and may be fractional (67.5).
+                var cubic = Key(e.Property(nameof(DispatchOrderItemEntity.ProductId)).CurrentValue) is { } pid
+                    && db.Set<Product>().AsNoTracking().Any(p => p.Id == pid && p.SoldBy == ProductSoldBy.CubicMeter);
+                var pallets = qty == null ? "No quantity"
+                    : cubic ? $"{qty.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} m³"
+                    : $"{qty.Value:0} pallet{(qty == 1 ? "" : "s")}";
                 var line = price == null ? pallets : $"{pallets} @ {price:0.00}";
                 // A line priced from another zone than the customer's says which.
                 return ZoneName(db, e.Property(nameof(DispatchOrderItemEntity.CostingZoneId)).CurrentValue) is { } zone
@@ -229,7 +234,7 @@ public static class AuditedEntities
             },
             Labels = new Dictionary<string, string>
             {
-                [nameof(DispatchOrderItemEntity.Quantity)] = "Quantity (pallets)",
+                [nameof(DispatchOrderItemEntity.Quantity)] = "Quantity",
                 [nameof(DispatchOrderItemEntity.CostingZoneId)] = "Costing Zone",
                 ["Line"] = "Order Line",
             },

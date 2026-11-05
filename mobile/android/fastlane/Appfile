@@ -1,0 +1,2 @@
+json_key_file("D:/specgauge-keys/play-service-account.json")
+package_name("com.specdigital.evergreen")

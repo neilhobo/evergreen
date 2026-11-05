@@ -9,7 +9,7 @@
     "predev:api": "powershell -NoProfile -Command \"$api=(Resolve-Path '../Globeweigh.Api').Path; Get-Process Globeweigh.Api -ErrorAction SilentlyContinue | Where-Object { $_.Path -like ($api+'\\*') } | Stop-Process -Force; exit 0\"",
     "dev:api": "dotnet watch --non-interactive --project ../Globeweigh.Api/Globeweigh.Api.csproj run --launch-profile http",
     "dev:tauri": "powershell -NoProfile -ExecutionPolicy Bypass -File ./dev.ps1 dev",
-    "dev:full": "concurrently --kill-others --names api,vite,tauri --prefix-colors blue,magenta,green \"npm:dev:api\" \"vite\" \"powershell -NoProfile -ExecutionPolicy Bypass -File ./dev.ps1 dev -ExternalVite\"",
+    "dev:full": "npm run predev:api && concurrently --kill-others --names api,vite,tauri --prefix-colors blue,magenta,green \"dotnet watch --non-interactive --project ../Globeweigh.Api/Globeweigh.Api.csproj run --launch-profile http\" \"node node_modules/vite/bin/vite.js\" \"powershell -NoProfile -ExecutionPolicy Bypass -File ./dev.ps1 dev -ExternalVite\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",

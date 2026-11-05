@@ -32,6 +32,9 @@ export const UserType = {
   Office: 1,
   Touch: 2,
   Both: 3,
+  // Kept for Annual Leave only (drivers, factory): no username, password or passcode, so they
+  // cannot sign in to anything until given another type.
+  NoLogin: 4,
 } as const;
 
 export function userTypeLabel(id: number): string {
@@ -40,6 +43,8 @@ export function userTypeLabel(id: number): string {
       return "Office";
     case UserType.Touch:
       return "Touch";
+    case UserType.NoLogin:
+      return "No login";
     default:
       return "Both";
   }

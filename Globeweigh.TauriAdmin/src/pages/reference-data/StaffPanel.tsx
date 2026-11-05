@@ -9,6 +9,7 @@ import {
   roleLabel,
   userTypeLabel,
 } from "../../api/staff";
+import { getAnnualLeaveAccessMe, getStaffLeave } from "../../api/annualLeave";
 import StaffEditModal from "./StaffEditModal";
 
 // Admin "Staff (Login)" — mirrors the WPF GlobeweighUserListView (add/edit/delete).
@@ -18,6 +19,28 @@ export default function StaffPanel() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null | "new">(null);
+  // Annual Leave (staged): whether this user manages it, and each Staff user's leave category.
+  // Annual Leave has no staff of its own: people are put in it here, on their Staff record.
+  const [canManageLeave, setCanManageLeave] = useState(false);
+  const [leaveByUser, setLeaveByUser] = useState<Map<number, string>>(new Map());
+
+  async function loadLeave() {
+    try {
+      const rows = await getStaffLeave();
+      setLeaveByUser(new Map(rows.map((r) => [r.userId, r.categoryName])));
+    } catch {
+      setLeaveByUser(new Map());
+    }
+  }
+
+  useEffect(() => {
+    getAnnualLeaveAccessMe()
+      .then((a) => {
+        setCanManageLeave(a.canView);
+        if (a.canView) void loadLeave();
+      })
+      .catch(() => {});
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -85,6 +108,17 @@ export default function StaffPanel() {
       width: 90,
       render: (r) => (r.disabled ? "Disabled" : "Active"),
     },
+    ...(canManageLeave
+      ? [
+          {
+            key: "annualLeave",
+            header: "Annual Leave",
+            width: 120,
+            render: (r: StaffRow) => leaveByUser.get(r.id) ?? "",
+            sortValue: (r: StaffRow) => leaveByUser.get(r.id) ?? "",
+          } as Column<StaffRow>,
+        ]
+      : []),
   ];
 
   return (
@@ -107,7 +141,14 @@ export default function StaffPanel() {
           <button className="toolbar-btn" disabled={!selected} onClick={onDelete}>
             Delete
           </button>
-          <button className="toolbar-btn" onClick={() => void load()} disabled={loading}>
+          <button
+            className="toolbar-btn"
+            onClick={() => {
+              void load();
+              if (canManageLeave) void loadLeave();
+            }}
+            disabled={loading}
+          >
             Refresh
           </button>
         </div>
@@ -126,9 +167,13 @@ export default function StaffPanel() {
       {editing !== null && (
         <StaffEditModal
           existing={editing === "new" ? null : editing}
+          canManageLeave={canManageLeave}
           onClose={(saved) => {
             setEditing(null);
-            if (saved) void load();
+            if (saved) {
+              void load();
+              if (canManageLeave) void loadLeave();
+            }
           }}
         />
       )}

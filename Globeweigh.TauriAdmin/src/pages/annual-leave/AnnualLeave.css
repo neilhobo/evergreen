@@ -1,0 +1,680 @@
+/* Annual Leave (pages/annual-leave). Everything here is prefixed al- so it can't collide with the
+   rest of App.css, which is bundled after this file (see the CSS cascade note in MainWindow). */
+
+.al-year {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 14px var(--app-font);
+  color: var(--text-heading);
+}
+
+.al-year button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.al-year button:hover {
+  background: #f1f5f9;
+}
+
+.al-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.al-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 0;
+}
+
+/* ---- numbers ---- */
+.al-neg {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* Staff grid: an overdrawn Remaining cell is tinted (row colours go on td, not tr). */
+tr.al-row-neg td.al-remaining {
+  background: #fef2f2;
+}
+
+.al-muted {
+  color: #64748b;
+}
+
+.al-btn-danger {
+  height: 26px;
+  padding: 0 14px;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  background: #fff;
+  color: #b91c1c;
+  font: 600 11px/1 var(--ui-font);
+  cursor: pointer;
+}
+
+.al-btn-danger:hover:enabled {
+  background: #fef2f2;
+}
+
+.al-btn-danger:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---- status chips ---- */
+.al-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font: 600 11px/18px var(--ui-font);
+  white-space: nowrap;
+}
+
+.al-chip-0 { background: #fef3c7; color: #92400e; }
+.al-chip-1 { background: #dcfce7; color: #166534; }
+.al-chip-2 { background: #f1f5f9; color: #475569; }
+.al-chip-3 { background: #f1f5f9; color: #64748b; text-decoration: line-through; }
+
+/* ---- Requests: list + detail ---- */
+.al-req-list {
+  width: 330px;
+  flex: none;
+  border-right: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.al-req-filters {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.al-seg {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  font: 600 11px/1 var(--ui-font);
+  color: #334155;
+  cursor: pointer;
+}
+
+.al-seg.on {
+  background: #1a2332;
+  border-color: #1a2332;
+  color: #fff;
+}
+
+.al-req-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.al-req-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  border-left: 4px solid transparent;
+  background: transparent;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: 12px var(--ui-font);
+  color: #0f172a;
+}
+
+.al-req-item:hover {
+  background: #f1f5f9;
+}
+
+.al-req-item.on {
+  background: #fff;
+  border-left-color: var(--primary);
+}
+
+.al-req-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.al-req-item-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.al-req-item-flag {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.al-flag-warn { color: #9a3412; }
+.al-flag-ok { color: #166534; }
+
+.al-detail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.al-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.al-detail-name {
+  font: 600 20px var(--app-font);
+  color: var(--text-heading);
+}
+
+.al-detail-sub {
+  font: 12px var(--ui-font);
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.al-detail-when {
+  text-align: right;
+  font: 700 17px var(--app-font);
+}
+
+.al-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.al-tile {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.al-tile-label {
+  font: 500 11px var(--ui-font);
+  color: #64748b;
+}
+
+.al-tile-value {
+  font: 700 20px var(--app-font);
+  color: var(--text-heading);
+}
+
+.al-tile.bad {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.al-tile.bad .al-tile-value {
+  color: #b91c1c;
+}
+
+.al-checks {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 14px;
+  background: #fff;
+}
+
+.al-checks-title {
+  font: 600 13px var(--app-font);
+  padding: 8px 0 4px;
+}
+
+.al-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-top: 1px solid #f1f5f9;
+  font: 12.5px/1.45 var(--ui-font);
+}
+
+.al-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 11px var(--ui-font);
+  color: #fff;
+  margin-top: 1px;
+}
+
+.al-dot-ok { background: var(--primary); }
+.al-dot-info { background: #2563eb; }
+.al-dot-warn { background: #d97706; }
+.al-dot-error { background: #dc2626; }
+
+.al-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.al-actions .spacer {
+  flex: 1;
+}
+
+.al-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 12px var(--ui-font);
+  color: #334155;
+}
+
+.al-empty {
+  margin: auto;
+  text-align: center;
+  color: #64748b;
+  font: 13px var(--ui-font);
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+.al-empty strong {
+  display: block;
+  color: #0f172a;
+  font: 600 15px var(--app-font);
+  margin-bottom: 4px;
+}
+
+.al-facts {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 6px 12px;
+  font: 12.5px var(--ui-font);
+}
+
+.al-facts dt {
+  color: #64748b;
+}
+
+.al-facts dd {
+  margin: 0;
+}
+
+/* ---- Calendar ---- */
+.al-cal-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #d3dae4;
+  border-radius: 4px;
+}
+
+.al-cal {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  table-layout: fixed;
+  font: 12px var(--ui-font);
+}
+
+.al-cal th,
+.al-cal td {
+  border-right: 1px solid #eef2f6;
+  border-bottom: 1px solid #eef2f6;
+  padding: 0;
+}
+
+.al-cal thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #e8edf4;
+  border-bottom-color: #d3dae4;
+  font: 600 11px/1.2 var(--ui-font);
+  text-align: center;
+  padding: 3px 0;
+  color: #111827;
+}
+
+.al-cal thead th.al-cal-today {
+  background: #1a2332;
+  color: #fff;
+}
+
+.al-cal .al-cal-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  width: 190px;
+  text-align: left;
+  padding: 0 8px;
+  height: 26px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.al-cal thead th.al-cal-name {
+  z-index: 3;
+  background: #e8edf4;
+}
+
+.al-cal-name small {
+  color: #64748b;
+  margin-left: 6px;
+}
+
+.al-cell {
+  height: 26px;
+  cursor: pointer;
+  position: relative;
+}
+
+.al-cell:hover {
+  outline: 2px solid #94a3b8;
+  outline-offset: -2px;
+}
+
+.al-cell-weekend { background: #e2e8f0; cursor: default; }
+.al-cell-weekend:hover { outline: none; }
+.al-cell-company { background: var(--primary); cursor: default; }
+.al-cell-company:hover { outline: none; }
+.al-cell-leave { background: #2563eb; }
+.al-cell-waiting { background: repeating-linear-gradient(45deg, #93c5fd 0 3px, #dbeafe 3px 6px); }
+/* Half / quarter day: only that share of the cell is filled. */
+.al-cell-part { background: linear-gradient(to right, var(--al-part-colour) var(--al-part), #fff var(--al-part)); }
+
+.al-cal tr.al-cal-count td {
+  background: #f8fafc;
+  font-weight: 600;
+  text-align: center;
+  height: 24px;
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid #d3dae4;
+}
+
+.al-cal tr.al-cal-count td.al-cal-name {
+  text-align: left;
+}
+
+.al-cal tr.al-cal-count td.busy {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.al-cal-month-sep {
+  border-left: 2px solid #94a3b8 !important;
+}
+
+.al-cal-year .al-cell {
+  height: 20px;
+}
+
+.al-cal-year .al-cal-name {
+  height: 20px;
+}
+
+.al-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 11px var(--ui-font);
+  color: #334155;
+  flex-wrap: wrap;
+}
+
+.al-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.al-sw {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.al-sw-company { background: var(--primary); }
+.al-sw-leave { background: #2563eb; }
+.al-sw-waiting { background: repeating-linear-gradient(45deg, #93c5fd 0 3px, #dbeafe 3px 6px); }
+.al-sw-weekend { background: #e2e8f0; }
+
+.al-month-title {
+  font: 600 14px var(--app-font);
+  min-width: 130px;
+  text-align: center;
+}
+
+/* ---- Company days + categories ---- */
+.al-two-col {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 16px;
+  padding: 10px;
+}
+
+.al-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.al-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.al-card-title {
+  font: 600 14px var(--app-font);
+  color: var(--text-heading);
+}
+
+.al-card-sub {
+  font: 11.5px var(--ui-font);
+  color: #64748b;
+}
+
+.al-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.al-card-foot {
+  padding: 10px 14px;
+  border-top: 1px solid #e2e8f0;
+  font: 12px/1.5 var(--ui-font);
+  color: #475569;
+}
+
+.al-grid {
+  border-collapse: collapse;
+  width: 100%;
+  font: 12px var(--ui-font);
+}
+
+.al-grid th {
+  position: sticky;
+  top: 0;
+  background: #e8edf4;
+  color: #111827;
+  font: 600 11.5px var(--ui-font);
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #d3dae4;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.al-grid td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #eef2f6;
+  white-space: nowrap;
+}
+
+.al-grid tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.al-grid .c {
+  text-align: center;
+}
+
+.al-grid .r {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.al-grid tfoot td {
+  font-weight: 600;
+  background: #f8fafc;
+  border-top: 1px solid #d3dae4;
+  position: sticky;
+  bottom: 0;
+}
+
+.al-grid tr.al-past td {
+  color: #94a3b8;
+}
+
+.al-tick {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.al-flag {
+  margin-left: 6px;
+  font: 600 10.5px var(--ui-font);
+  color: #9a3412;
+  background: #fff7ed;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.al-link {
+  border: 0;
+  background: none;
+  padding: 0 4px;
+  color: #2563eb;
+  font: 600 11.5px var(--ui-font);
+  cursor: pointer;
+}
+
+.al-link.danger {
+  color: #b91c1c;
+}
+
+.al-link:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.al-rules {
+  font: 12.5px/1.6 var(--ui-font);
+  color: #334155;
+  padding: 12px 16px;
+}
+
+.al-rules h3 {
+  font: 600 13px var(--app-font);
+  margin: 10px 0 4px;
+  color: var(--text-heading);
+}
+
+.al-rules h3:first-child {
+  margin-top: 0;
+}
+
+.al-rules p {
+  margin: 0 0 6px;
+}
+
+/* ---- dialogs ---- */
+.al-lengths {
+  display: flex;
+  gap: 6px;
+}
+
+.al-lengths .al-seg {
+  flex: 1;
+  height: 28px;
+}
+
+.al-preview {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  margin-top: 4px;
+}
+
+.al-preview-sum {
+  display: flex;
+  justify-content: space-between;
+  font: 600 13px var(--ui-font);
+  padding: 2px 0 6px;
+}
+
+.al-error {
+  color: #dc2626;
+  font: 12.5px/1.5 var(--ui-font);
+  margin: 8px 0 0;
+}
+
+.al-cat-ticks {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.al-adj {
+  margin-top: 6px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 10px;
+}
+
+.al-adj-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}

@@ -23,6 +23,13 @@ export function fmtQty(n: number | null | undefined): string {
   return Math.round(n).toLocaleString("en-GB");
 }
 
+// A cubic meter quantity: up to 2 decimals, none when whole (46.7, 90). fmtQty would round
+// 46.7 m³ to 47.
+export function fmtM3(n: number | null | undefined): string {
+  if (n == null) return "";
+  return n.toLocaleString("en-GB", { maximumFractionDigits: 2 });
+}
+
 // Like fmtQty but keeps 2 decimal places (e.g. sample box weights).
 export function fmtQty2(n: number | null | undefined): string {
   if (n == null) return "";

@@ -44,12 +44,19 @@ public class DispatchController : ControllerBase
                 .ToListAsync(ct))
             .GroupBy(e => e.DispatchOrderId)
             .ToDictionary(g => g.Key, g => g.First());
+        var fromSales = await _db.Set<SalesOrderEntity>().AsNoTracking()
+            .Where(s => s.DispatchOrderId != null && ids.Contains(s.DispatchOrderId.Value)
+                && s.Status == SalesOrderEntity.StatusApproved && s.DateDeleted == null)
+            .ToDictionaryAsync(s => s.DispatchOrderId!.Value, s => s.Id, ct);
         foreach (var r in rows)
+        {
             if (latest.TryGetValue(r.Id, out var e))
             {
                 r.ConfirmationSentAt = e.DateSent;
                 r.ConfirmationSentTo = e.SentTo;
             }
+            if (fromSales.TryGetValue(r.Id, out var salesId)) r.SalesOrderId = salesId;
+        }
         return rows;
     }
 
@@ -327,8 +334,8 @@ public class DispatchController : ControllerBase
                 Description = i.ProductDescription,
                 Size = i.Size,
                 Upp = i.Upp,
-                Pallets = (confirmation ? i.Quantity : i.PickedQuantity) ?? 0,
-                TotalBags = ((confirmation ? i.Quantity : i.PickedQuantity) ?? 0) * i.Upp,
+                Pallets = confirmation ? (int)Math.Ceiling(i.Quantity ?? 0) : i.PickedQuantity ?? 0,
+                TotalBags = (confirmation ? (int)Math.Ceiling(i.Quantity ?? 0) : i.PickedQuantity ?? 0) * i.Upp,
                 // Raw peat is never picked: its line goes out as ordered, in m³.
                 SoldBy = i.SoldBy,
                 CubicMeters = i.SoldBy == ProductSoldBy.CubicMeter ? i.Quantity ?? 0 : 0,
@@ -483,7 +490,7 @@ public class DispatchController : ControllerBase
 
         var items = rows.Select(r =>
         {
-            var pallets = estimate ? r.Quantity ?? 0 : r.PickedQuantity ?? 0;
+            var pallets = estimate ? (int)Math.Ceiling(r.Quantity ?? 0) : r.PickedQuantity ?? 0;
             var units = pallets * r.Upp;
             var rate = prices.GetValueOrDefault(r.Id);
             var product = products.GetValueOrDefault(r.ProductId);
@@ -1418,11 +1425,29 @@ public class DispatchController : ControllerBase
         // The number and the order it belongs to are written in one transaction: if the
         // insert fails the allocation rolls back with it, rather than burning a number
         // and leaving a gap in a series the old system never had gaps in.
+        if (await FractionalQuantityError(_db, input.Items, ct) is { } bad) return BadRequest(new { message = bad });
+
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
         var order = await InsertOrder(_db, input, this.GetUserId(), ct);
         await tx.CommitAsync(ct);
 
         return Ok(new { id = order.Id, orderNo = order.OrderNo });
+    }
+
+    // Only a product sold by the cubic meter can be ordered in part (67.5 m³); a pallet or bag
+    // line is a whole count. Null when every line is fine. Shared with SalesOrdersController.
+    internal static async Task<string?> FractionalQuantityError(
+        GbEvergreenContext db, IEnumerable<OrderItemInput> items, CancellationToken ct)
+    {
+        var partIds = items.Where(i => i.Quantity is { } q && q != decimal.Truncate(q))
+            .Select(i => i.ProductId).Distinct().ToList();
+        if (partIds.Count == 0) return null;
+        var name = await db.Set<Product>().AsNoTracking()
+            .Where(p => partIds.Contains(p.Id) && p.SoldBy != ProductSoldBy.CubicMeter)
+            .Select(p => p.Description)
+            .FirstOrDefaultAsync(ct);
+        return name == null ? null
+            : $"{name} is sold by the pallet, so its quantity must be a whole number. Only cubic meter products can take a part quantity.";
     }
 
     // A new open order and its lines, numbered by AllocateOrderNo. The caller owns the
@@ -1478,6 +1503,7 @@ public class DispatchController : ControllerBase
     {
         var order = await _db.Set<DispatchOrderEntity>().FirstOrDefaultAsync(o => o.Id == id, ct);
         if (order == null || order.DateDeleted != null) return NotFound();
+        if (await FractionalQuantityError(_db, input.Items, ct) is { } bad) return BadRequest(new { message = bad });
 
         // Order number: editable only for a pre-hand-over open order (see IsOrderNoEditable).
         // The UI hides the field otherwise, but never trust the client - re-check here and
@@ -1644,7 +1670,7 @@ public class DispatchController : ControllerBase
                 ProductDescription = (string?)g.Key.ProductDescription,
                 g.Key.Size,
                 Upp = g.Key.Upp ?? 0,
-                Quantity = (int?)null,
+                Quantity = (decimal?)null,
                 TotalUnits = (int?)null,
                 PickedQuantity = (int?)g.Count(),
                 PickedWeight = g.Sum(p => p.Weight),
@@ -2163,7 +2189,7 @@ public class DeliveryNoteItemDto
     public int Pallets { get; set; }
     public int TotalBags { get; set; }
     public string SoldBy { get; set; } = ProductSoldBy.Pallet;
-    public int CubicMeters { get; set; } // CubicMeter lines only: the m³ that went out
+    public decimal CubicMeters { get; set; } // CubicMeter lines only: the m³ that went out
 }
 
 public class CommercialInvoiceDto
@@ -2260,7 +2286,7 @@ public class OrderInput
 public class OrderItemInput
 {
     public int ProductId { get; set; }
-    public int? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public decimal? Price { get; set; }
     // Priced from this zone, not the customer's (a sales rep's Change in Add Order Item); null =
     // the customer's zone.

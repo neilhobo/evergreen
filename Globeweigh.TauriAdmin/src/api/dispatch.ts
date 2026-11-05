@@ -2,7 +2,9 @@ import { apiDownload, apiGet, apiPost, apiPut, request } from "./client";
 import type { SoldBy } from "./products";
 export interface DispatchOrder { id:number; orderNo:number; customerId:number; haulierId:number; deliveryDate:string|null; dateCreated:string|null; dateDispatched:string|null; dateDeleted:string|null; customerRef:string|null; customerName:string|null; addressFull:string|null; orderStatus:string|null; vehicleReg:string|null; createdBy:string|null; haulierName:string|null; poNumber:string|null; trailerNo:string|null; pickedQuantity:number; pickedWeight:number; totalQuantityOrdered:number; assigned:boolean|null; weighbridgeRecordId:number; sortOrder:number|null;
   // Open Orders only: the latest order confirmation emailed to the customer (the Emailed column).
-  confirmationSentAt?:string|null; confirmationSentTo?:string|null; }
+  confirmationSentAt?:string|null; confirmationSentTo?:string|null;
+  // Open Orders only: the sales order (My Orders) it was approved from — the ⋮ menu's Un-approve order.
+  salesOrderId?:number|null; }
 // isUnordered: picked, then the order line was removed by an edit - the pallets were
 // never shipped. The API lists them so the picked pallets and the item totals agree.
 export interface DispatchOrderItem { id:number; orderId:number; productId:number; productDescription:string|null; size:number|null; upp:number; quantity:number|null; totalUnits:number|null; pickedQuantity:number|null; pickedWeight:number; gtin:string|null; unitDisplay:string|null; orderNo:number|null; soldBy?:SoldBy|"Pos"; density?:number|null; pickedAt?:string|null; isUnordered?:boolean; }

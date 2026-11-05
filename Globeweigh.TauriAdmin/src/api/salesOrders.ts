@@ -88,3 +88,7 @@ export const returnSalesOrder = (id: number, note: string) =>
   apiPost<void>(`/sales-orders/${id}/return`, { note });
 // The office deleting a sent order outright; it goes from the rep's My Orders too.
 export const deleteOfficeSalesOrder = (id: number) => request<void>("DELETE", `/sales-orders/office/${id}`);
+// Undo an approval made by mistake (Open Orders ⋮): the open order goes and the sales order is
+// waiting for approval again. Takes the OPEN order's id.
+export const unapproveSalesOrder = (dispatchOrderId: number) =>
+  apiPost<void>(`/sales-orders/unapprove/${dispatchOrderId}`, {});
