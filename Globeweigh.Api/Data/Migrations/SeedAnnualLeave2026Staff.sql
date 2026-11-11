@@ -8,8 +8,8 @@
 -- Everyone is an Admin > Staff user (Annual Leave has no staff of its own): each name is matched
 -- to an existing Staff user by first name + surname (case-insensitive), and only someone with no
 -- Staff user gets one made, of type 4 "No login" (no username, password or passcode).
--- Mairead McLernon on the spreadsheet is matched to Staff "Mairead McCann" if there is no
--- McLernon - confirm they are the same person.
+-- Mairead McLernon on the spreadsheet is Staff "Mairead McCann" (confirmed by the client,
+-- 2026-11-10): matched to a McLernon if there is one, else to McCann.
 --
 -- Corrections made on the way in (the spreadsheet is typed by hand):
 --   Josh Hanlon: "20.07.2027" read as 2026-07-20
@@ -26,7 +26,8 @@
 -- the pro-rata totals it shows (17.5, 11.5, 7.5) and their set days (13, 12, 11). Confirm them
 -- with the client: Lee Davidson 18 May, Niall Conlon 5 Aug, Adam Cushnahan 26 Sep.
 -- Emmett Brady, Ronan Fitzgerald, Gerard Logue are on the spreadsheet's name list but have no row in
--- the log: added with no leave and a note to check whether they still work there.
+-- the log, and nobody knows whether they still work there: LEFT OUT (2026-11-10). Add them in
+-- Admin > Staff if they do.
 SET QUOTED_IDENTIFIER ON;
 GO
 IF NOT EXISTS (SELECT 1 FROM dbo.LeaveEmployee)
@@ -52,20 +53,6 @@ BEGIN
         (@emp, '2026-06-10', '2026-06-10', 1, 1, 1, N'From the 2026 spreadsheet', N'Collette', '2026-06-10'),
         (@emp, '2026-06-11', '2026-06-11', 1, 1, 1, N'From the 2026 spreadsheet', N'Collette', '2026-06-11'),
         (@emp, '2026-06-12', '2026-06-12', 1, 1, 1, N'From the 2026 spreadsheet', N'Collette', '2026-06-12');
-
-    SET @user = NULL;
-    SELECT TOP 1 @user = id FROM dbo.GlobeweighUser
-    WHERE DateDeleted IS NULL AND LTRIM(RTRIM(FirstName)) = N'Emmett' AND LTRIM(RTRIM(Surname)) IN (N'Brady') ORDER BY id;
-    IF @user IS NULL
-    BEGIN
-        INSERT INTO dbo.GlobeweighUser (UserTypeId, FirstName, Surname, RoleId, Disabled, CostingAccess, DateCreated)
-        VALUES (4, N'Emmett', N'Brady', 0, 0, 0, GETDATE());
-        SET @user = SCOPE_IDENTITY();
-    END
-    INSERT INTO dbo.LeaveEmployee (GlobeweighUserId, CategoryId, StartDate, Notes)
-    SELECT @user, id, NULL, N'On the 2026 spreadsheet name list but not in the log - check they still work here.'
-    FROM dbo.LeaveCategory WHERE Name = N'Factory / HGV';
-    SET @emp = SCOPE_IDENTITY();
 
     SET @user = NULL;
     SELECT TOP 1 @user = id FROM dbo.GlobeweighUser
@@ -148,20 +135,6 @@ BEGIN
 
     SET @user = NULL;
     SELECT TOP 1 @user = id FROM dbo.GlobeweighUser
-    WHERE DateDeleted IS NULL AND LTRIM(RTRIM(FirstName)) = N'Ronan' AND LTRIM(RTRIM(Surname)) IN (N'Fitzgerald') ORDER BY id;
-    IF @user IS NULL
-    BEGIN
-        INSERT INTO dbo.GlobeweighUser (UserTypeId, FirstName, Surname, RoleId, Disabled, CostingAccess, DateCreated)
-        VALUES (4, N'Ronan', N'Fitzgerald', 0, 0, 0, GETDATE());
-        SET @user = SCOPE_IDENTITY();
-    END
-    INSERT INTO dbo.LeaveEmployee (GlobeweighUserId, CategoryId, StartDate, Notes)
-    SELECT @user, id, NULL, N'On the 2026 spreadsheet name list but not in the log - check they still work here.'
-    FROM dbo.LeaveCategory WHERE Name = N'Factory / HGV';
-    SET @emp = SCOPE_IDENTITY();
-
-    SET @user = NULL;
-    SELECT TOP 1 @user = id FROM dbo.GlobeweighUser
     WHERE DateDeleted IS NULL AND LTRIM(RTRIM(FirstName)) = N'Josh' AND LTRIM(RTRIM(Surname)) IN (N'Hanlon') ORDER BY id;
     IF @user IS NULL
     BEGIN
@@ -218,20 +191,6 @@ BEGIN
         (@emp, '2026-10-07', '2026-10-07', 1, 1, 1, N'From the 2026 spreadsheet', N'Colin', '2026-10-07'),
         (@emp, '2026-10-08', '2026-10-08', 1, 1, 1, N'From the 2026 spreadsheet', N'Colin', '2026-10-08'),
         (@emp, '2026-10-09', '2026-10-09', 1, 1, 1, N'From the 2026 spreadsheet', N'Colin', '2026-10-09');
-
-    SET @user = NULL;
-    SELECT TOP 1 @user = id FROM dbo.GlobeweighUser
-    WHERE DateDeleted IS NULL AND LTRIM(RTRIM(FirstName)) = N'Gerard' AND LTRIM(RTRIM(Surname)) IN (N'Logue') ORDER BY id;
-    IF @user IS NULL
-    BEGIN
-        INSERT INTO dbo.GlobeweighUser (UserTypeId, FirstName, Surname, RoleId, Disabled, CostingAccess, DateCreated)
-        VALUES (4, N'Gerard', N'Logue', 0, 0, 0, GETDATE());
-        SET @user = SCOPE_IDENTITY();
-    END
-    INSERT INTO dbo.LeaveEmployee (GlobeweighUserId, CategoryId, StartDate, Notes)
-    SELECT @user, id, NULL, N'On the 2026 spreadsheet name list but not in the log - check they still work here.'
-    FROM dbo.LeaveCategory WHERE Name = N'Factory / HGV';
-    SET @emp = SCOPE_IDENTITY();
 
     SET @user = NULL;
     SELECT TOP 1 @user = id FROM dbo.GlobeweighUser

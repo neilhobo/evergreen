@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RFB from "@novnc/novnc";
 import Modal from "../../components/Modal";
+import VncStage, { type VncStatus } from "./VncStage";
 import { Camera, RemoteScreen, getConfig } from "../../api/gateBarrier";
 import CameraStream from "../gate-barrier/CameraStream";
 import { getVideoBaseUrl } from "../../config";
@@ -12,17 +13,15 @@ interface Props {
   onClose: () => void;
 }
 
-type Status = "connecting" | "credentials" | "connected" | "disconnected" | "error";
+type Status = VncStatus;
 
 // Embedded remote-desktop view (full control) for a touchscreen, via noVNC over a
 // websockify proxy (screen.wsUrl). No VNC client install required. Replaces the old
 // external RealVNC launch.
 export default function RemoteScreenModal({ screen, onClose }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const rfbRef = useRef<RFB | null>(null);
   const [status, setStatus] = useState<Status>("connecting");
   const [message, setMessage] = useState("");
-  const [password, setPassword] = useState("");
   const [generation, setGeneration] = useState(0); // bump to (re)connect
 
   // "Show Camera" (footer switch): the dialog goes full screen and splits — the touchscreen on
@@ -65,67 +64,6 @@ export default function RemoteScreenModal({ screen, onClose }: Props) {
     const next = !showCamera;
     setShowCamera(next);
     writeShowCamera(next);
-  }
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    setStatus("connecting");
-    setMessage("");
-
-    let rfb: RFB;
-    try {
-      rfb = new RFB(container, screen.wsUrl, { shared: true });
-    } catch (e) {
-      setStatus("error");
-      setMessage((e as Error).message);
-      return;
-    }
-    rfb.viewOnly = false; // full keyboard/mouse control
-    rfb.scaleViewport = true; // fit the remote framebuffer to the panel
-    rfb.focusOnClick = true;
-    rfb.background = "#1a2332";
-    rfbRef.current = rfb;
-
-    const onConnect = () => {
-      setStatus("connected");
-      rfb.focus();
-    };
-    const onDisconnect = (e: Event) => {
-      const clean = (e as CustomEvent).detail?.clean;
-      setStatus("disconnected");
-      setMessage(clean ? "Disconnected." : "Connection lost — check the proxy / screen.");
-    };
-    const onCredentials = () => setStatus("credentials");
-    const onSecurityFailure = (e: Event) => {
-      const reason = (e as CustomEvent).detail?.reason;
-      setStatus("error");
-      setMessage("Authentication failed" + (reason ? `: ${reason}` : "."));
-    };
-
-    rfb.addEventListener("connect", onConnect);
-    rfb.addEventListener("disconnect", onDisconnect);
-    rfb.addEventListener("credentialsrequired", onCredentials);
-    rfb.addEventListener("securityfailure", onSecurityFailure);
-
-    return () => {
-      rfb.removeEventListener("connect", onConnect);
-      rfb.removeEventListener("disconnect", onDisconnect);
-      rfb.removeEventListener("credentialsrequired", onCredentials);
-      rfb.removeEventListener("securityfailure", onSecurityFailure);
-      try {
-        rfb.disconnect();
-      } catch {
-        /* already disconnected */
-      }
-      rfbRef.current = null;
-    };
-  }, [screen.wsUrl, generation]);
-
-  function submitPassword(e: FormEvent) {
-    e.preventDefault();
-    rfbRef.current?.sendCredentials({ password });
-    setStatus("connecting");
   }
 
   const statusLabel: Record<Status, string> = {
@@ -182,34 +120,17 @@ export default function RemoteScreenModal({ screen, onClose }: Props) {
       {/* Always this wrapper, so the VNC stage below keeps its element (and its connection) when
           the camera is switched on or off. */}
       <div className={`rs-split${showCamera ? " on" : ""}`}>
-      <div className="rs-stage">
-        <div ref={containerRef} className="rs-canvas" />
-
-        {status === "credentials" && (
-          <form className="rs-cred" onSubmit={submitPassword}>
-            <h3>{screen.name} — VNC password</h3>
-            <input
-              className="form-input"
-              type="password"
-              autoFocus
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button className="btn-blue" type="submit" disabled={!password}>
-              Connect
-            </button>
-          </form>
-        )}
-
-        {(status === "disconnected" || status === "error") && (
-          <div className="rs-overlay">
-            <div className="rs-overlay-msg">{message || "Disconnected."}</div>
-            <button className="btn-blue" onClick={() => setGeneration((g) => g + 1)}>
-              Reconnect
-            </button>
-          </div>
-        )}
-      </div>
+      <VncStage
+        wsUrl={screen.wsUrl}
+        name={screen.name}
+        generation={generation}
+        onReconnect={() => setGeneration((g) => g + 1)}
+        rfbRef={rfbRef}
+        onStatus={(s, m) => {
+          setStatus(s);
+          setMessage(m);
+        }}
+      />
 
       {showCamera && (
         <div className="rs-camera">

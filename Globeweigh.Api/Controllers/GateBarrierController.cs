@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Globeweigh.Api.Controllers;
 
-// Phase 1 experiment: anonymous so the web view works without a login flow.
-// Tighten to [Authorize] once the web UI carries a JWT.
+// Anonymous so the site's kiosks and scanners work without a login. Open/close coming
+// through the Cloudflare tunnel does require one (RefusedOffSite below).
 [AllowAnonymous]
 [ApiController]
 [Route("api/gate-barrier")]
@@ -45,41 +45,13 @@ public class GateBarrierController : ControllerBase
         };
     }
 
-    // Where the relay lives. Preferred: GlobeweighService HTTP (:8765), the always-on on-site
-    // service that owns the ONE persistent relay connection (same model as live weight). If unset,
-    // the API talks to the relay card directly via the in-process RelayService (dev / fallback).
-    private string? RelayBaseUrl()
-    {
-        var url = _config["GateBarrier:RelayServiceUrl"];
-        if (string.IsNullOrWhiteSpace(url)) url = _config["GateBarrier:WeighbridgeServiceUrl"];
-        return string.IsNullOrWhiteSpace(url) ? null : url.TrimEnd('/');
-    }
-
-    private const string Disconnected = "{\"connected\":false,\"gateOpen\":false,\"barrierOpen\":false}";
+    // The relay and weight calls live in Services/GateBarrierRelay, shared with the mobile
+    // app's signed-in MobileGateBarrierController.
 
     /// <summary>Current gate/barrier output states (proxied to GlobeweighService when configured).</summary>
     [HttpGet("state")]
-    public async Task<IActionResult> GetState(CancellationToken ct)
-    {
-        var baseUrl = RelayBaseUrl();
-        if (baseUrl == null)
-        {
-            var local = await _relay.GetStateAsync(ct);
-            return Ok(local);
-        }
-        try
-        {
-            var http = _httpFactory.CreateClient();
-            http.Timeout = TimeSpan.FromSeconds(4);
-            var resp = await http.GetAsync(baseUrl + "/relay/state", ct);
-            if (!resp.IsSuccessStatusCode) return Content(Disconnected, "application/json");
-            return Content(await resp.Content.ReadAsStringAsync(ct), "application/json");
-        }
-        catch
-        {
-            return Content(Disconnected, "application/json");
-        }
-    }
+    public Task<IActionResult> GetState(CancellationToken ct)
+        => GateBarrierRelay.GetState(_config, _httpFactory, _relay, ct);
 
     /// <summary>
     /// Live weight, proxied from the GlobeweighService on :8765. Always the production
@@ -89,69 +61,34 @@ public class GateBarrierController : ControllerBase
     /// </summary>
     [HttpGet("weight")]
     public Task<IActionResult> GetWeight(CancellationToken ct)
-        => ProxyWeight("/weighbridge/weight", ct);
+        => GateBarrierRelay.ProxyWeight(_config, _httpFactory, "/weighbridge/weight", ct);
 
     /// <summary>Live weight from the second weighbridge (GlobeweighService /weighbridge2/weight).</summary>
     [HttpGet("weight2")]
     public Task<IActionResult> GetWeight2(CancellationToken ct)
-        => ProxyWeight("/weighbridge2/weight", ct);
+        => GateBarrierRelay.ProxyWeight(_config, _httpFactory, "/weighbridge2/weight", ct);
 
-    private async Task<IActionResult> ProxyWeight(string path, CancellationToken ct)
-    {
-        var baseUrl = _config["GateBarrier:WeighbridgeServiceUrl"];
-        if (string.IsNullOrWhiteSpace(baseUrl))
-            return Content("{\"isConnected\":false}", "application/json");
-
-        var url = baseUrl.TrimEnd('/') + path;
-        try
-        {
-            var http = _httpFactory.CreateClient();
-            http.Timeout = TimeSpan.FromSeconds(3);
-            var json = await http.GetStringAsync(url, ct);
-            return Content(json, "application/json");
-        }
-        catch
-        {
-            // Service unreachable (Tailscale down, service stopped) — report disconnected, don't 500.
-            return Content("{\"isConnected\":false}", "application/json");
-        }
-    }
+    // Open/close from OFF-SITE (through the Cloudflare tunnel) needs a signed-in user: the
+    // remote TauriAdmin already sends its JWT, a stranger on the internet has none. On the site
+    // network nothing changes — the touch kiosks raise the barrier without a login. Reading
+    // weights and state stays open everywhere (remote users must see the live weights).
+    // Decided 2026-11-05 after finding the gate could be opened from the internet.
+    private bool RefusedOffSite() =>
+        GateBarrierRelay.ViaTunnel(Request) && User.Identity?.IsAuthenticated != true;
 
     /// <summary>Open/close the gate (relay 1).</summary>
     [HttpPost("gate")]
     public Task<IActionResult> SetGate([FromBody] RelayCommandDto cmd, CancellationToken ct)
-        => SendRelayCommand("gate", () => _relay.SetGateAsync(cmd.Open, ct), cmd.Open, ct);
+        => RefusedOffSite()
+            ? Task.FromResult<IActionResult>(Unauthorized(new { message = "Sign in to open or close the gate." }))
+            : GateBarrierRelay.SendCommand(_config, _httpFactory, _relay, "gate", cmd.Open, ct);
 
     /// <summary>Open/close the barrier (relay 2).</summary>
     [HttpPost("barrier")]
     public Task<IActionResult> SetBarrier([FromBody] RelayCommandDto cmd, CancellationToken ct)
-        => SendRelayCommand("barrier", () => _relay.SetBarrierAsync(cmd.Open, ct), cmd.Open, ct);
-
-    private async Task<IActionResult> SendRelayCommand(
-        string which, Func<Task<RelayService.RelayState>> local, bool open, CancellationToken ct)
-    {
-        var baseUrl = RelayBaseUrl();
-        if (baseUrl == null)
-        {
-            try { return Ok(await local()); }
-            catch (InvalidOperationException ex) { return StatusCode(503, new { message = ex.Message }); }
-        }
-        try
-        {
-            var http = _httpFactory.CreateClient();
-            http.Timeout = TimeSpan.FromSeconds(5);
-            var url = $"{baseUrl}/relay/{which}?open={(open ? "true" : "false")}";
-            var resp = await http.PostAsync(url, null, ct);
-            var json = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode)
-                return StatusCode(503, new { message = "Relay service unavailable." });
-            return Content(json, "application/json");
-        }
-        catch
-        {
-            return StatusCode(503, new { message = "Relay service unreachable." });
-        }
-    }
+        => RefusedOffSite()
+            ? Task.FromResult<IActionResult>(Unauthorized(new { message = "Sign in to open or close the barrier." }))
+            : GateBarrierRelay.SendCommand(_config, _httpFactory, _relay, "barrier", cmd.Open, ct);
 }
 
 public class RelayCommandDto

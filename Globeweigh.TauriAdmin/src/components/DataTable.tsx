@@ -50,8 +50,8 @@ interface Props<T> {
   groupLabel?: (row: T) => ReactNode;
   // Opt in to click-to-sort headers: first click sorts ascending, the second descending,
   // the third returns the grid to the order the caller supplied. Off by default so no
-  // existing grid changes behaviour. Don't combine with grouping — a re-sort would
-  // scatter the groups and repeat their header rows.
+  // existing grid changes behaviour. With grouping, a sort works inside each group: the
+  // groups keep the order they arrived in, so their header rows are never repeated.
   sortable?: boolean;
   // Drag a header's right edge to resize that column; double-click the edge to put it back.
   // On by default for every grid; widths last as long as the grid is on screen.
@@ -148,7 +148,18 @@ export default function DataTable<T>({
       return v instanceof Date ? v.getTime() : v;
     };
     const dir = sort.dir === "asc" ? 1 : -1;
+    // Grouped grid: each group's rank is where it first appears, so groups stay in place.
+    const groupRank = new Map<string, number>();
+    if (groupKey) for (const r of rows) {
+      const g = groupKey(r);
+      if (!groupRank.has(g)) groupRank.set(g, groupRank.size);
+    }
     return [...rows].sort((a, b) => {
+      if (groupKey) {
+        const ga = groupRank.get(groupKey(a))!;
+        const gb = groupRank.get(groupKey(b))!;
+        if (ga !== gb) return ga - gb;
+      }
       const x = value(a);
       const y = value(b);
       const xBlank = x == null || x === "";

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../data/sales_models.dart';
+import 'approval.dart' show ApproveButton;
 import 'order_screen.dart' show OfficeNote, SalesButton;
 import 'address_form.dart';
 import 'pickers.dart';
@@ -13,10 +14,18 @@ import 'sales_providers.dart';
 /// delivery, PO, comments and lines. Saved as a draft the office can't see,
 /// or saved and sent to the office in one go (TauriAdmin's Add/Edit Order
 /// dialog in sales mode).
+///
+/// The Sales overview (super-admin + Colin) uses it two more ways ([mode]):
+/// [OrderEditMode.officeNew] makes a real open order at once (Open Orders >
+/// New) with the customer's sales rep, or none; [OrderEditMode.approve] edits a
+/// waiting order and approves it with the changes.
+enum OrderEditMode { rep, officeNew, approve }
+
 class EditOrderScreen extends ConsumerStatefulWidget {
   final SalesOrder? existing;
   final Customer? customer;
-  const EditOrderScreen({super.key, this.existing, this.customer});
+  final OrderEditMode mode;
+  const EditOrderScreen({super.key, this.existing, this.customer, this.mode = OrderEditMode.rep});
 
   @override
   ConsumerState<EditOrderScreen> createState() => _EditOrderScreenState();
@@ -38,6 +47,7 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
   bool _loadingCustomer = false;
 
   SalesOrder? get _existing => widget.existing;
+  bool get _office => widget.mode != OrderEditMode.rep;
 
   @override
   void initState() {
@@ -67,7 +77,7 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
 
   Future<void> _loadExistingCustomer(SalesOrder o) async {
     try {
-      final mine = await ref.read(myCustomersProvider.future);
+      final mine = await ref.read((_office ? allCustomersProvider : myCustomersProvider).future);
       final c = mine.where((c) => c.id == o.customerId).firstOrNull ?? Customer(id: o.customerId, name: o.customerName);
       await _setCustomer(c, keepAddress: true);
     } catch (e) {
@@ -114,7 +124,7 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
   }
 
   Future<void> _pickCustomer() async {
-    final c = await pickCustomer(context);
+    final c = await pickCustomer(context, all: _office);
     if (c == null || c.id == _customer?.id) return;
     if (_items.isNotEmpty &&
         mounted &&
@@ -281,6 +291,45 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
     }
   }
 
+  /// The overview's save: a new open order, or the waiting order approved with the changes.
+  Future<void> _submitOffice() async {
+    final input = _input();
+    if (input == null) return;
+    if (_items.isEmpty) {
+      showError(context, 'Add at least one product.');
+      return;
+    }
+    final products = ref.read(productsProvider).valueOrNull ?? const {};
+    final c = _customer!;
+    final what =
+        '${c.displayName}: ${qty(_items.fold(0.0, (n, i) => n + (i.quantity ?? 0)))} pallets, ${gbp(orderTotal(_items, products))}';
+    final approving = widget.mode == OrderEditMode.approve;
+    final q = approving
+        ? 'Approve this order with your changes?\n\n$what\n\n'
+              'The rep sees what you changed in its history. Add the haulier in Open Orders.'
+        : 'Create this open order now?\n\n$what\nSales rep: ${c.salesRepName ?? 'none'}\n\n'
+              'It takes the next order number straight away. Add the haulier in Open Orders.';
+    if (!await confirm(context, q, ok: approving ? 'Approve' : 'Create')) return;
+    setState(() => _busy = true);
+    try {
+      final api = ref.read(salesApiProvider);
+      final no = approving
+          ? await api.approveWith(_existing!.id, input)
+          : await api.createOfficeOrder(input, salesRepId: c.salesRepId);
+      ref.invalidate(overviewOrdersProvider);
+      if (approving) ref.invalidate(overviewDetailProvider(_existing!.id));
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(approving ? 'Approved as order $no' : 'Order $no created')));
+    } catch (e) {
+      if (mounted) showError(context, apiMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final products = ref.watch(productsProvider).valueOrNull ?? const {};
@@ -293,8 +342,16 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
       body: Column(
         children: [
           SalesHeader(
-            overline: o == null ? 'New order' : '${o.ref} · ${o.status.label}',
-            title: o == null ? 'New order' : 'Edit order',
+            overline: switch (widget.mode) {
+              OrderEditMode.officeNew => 'Open order · no approval needed',
+              OrderEditMode.approve => '${o!.ref} · ${o.salesRepName ?? 'No rep'}',
+              OrderEditMode.rep => o == null ? 'New order' : '${o.ref} · ${o.status.label}',
+            },
+            title: switch (widget.mode) {
+              OrderEditMode.officeNew => 'New order',
+              OrderEditMode.approve => 'Edit, then approve',
+              OrderEditMode.rep => o == null ? 'New order' : 'Edit order',
+            },
             leading: HeaderIconButton(
               icon: Icons.arrow_back,
               tooltip: 'Back',
@@ -440,26 +497,34 @@ class _EditOrderScreenState extends ConsumerState<EditOrderScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 10,
-                      child: SalesButton(
-                        label: 'Save draft',
-                        primary: false,
-                        onPressed: _busy ? null : () => _save(send: false),
+                if (widget.mode == OrderEditMode.approve)
+                  ApproveButton(onPressed: _busy ? null : _submitOffice)
+                else if (widget.mode == OrderEditMode.officeNew)
+                  SizedBox(
+                    width: double.infinity,
+                    child: SalesButton(label: 'Create order', onPressed: _busy ? null : _submitOffice),
+                  )
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 10,
+                        child: SalesButton(
+                          label: 'Save draft',
+                          primary: false,
+                          onPressed: _busy ? null : () => _save(send: false),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 14,
-                      child: SalesButton(
-                        label: o?.status == SalesOrderStatus.returned ? 'Resend to office' : 'Send to office',
-                        onPressed: _busy ? null : () => _save(send: true),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 14,
+                        child: SalesButton(
+                          label: o?.status == SalesOrderStatus.returned ? 'Resend to office' : 'Send to office',
+                          onPressed: _busy ? null : () => _save(send: true),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -564,7 +629,11 @@ class _Line extends StatelessWidget {
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    '${item.price != null ? gbp(item.price!) : 'No price'} · ${gbp(lineTotal(item, product))}',
+                    [
+                      ?product?.sizeUpp,
+                      item.price != null ? gbp(item.price!) : 'No price',
+                      gbp(lineTotal(item, product)),
+                    ].join(' · '),
                     style: const TextStyle(fontSize: 12, color: Color(0xFF556070)),
                   ),
                 ],

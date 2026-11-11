@@ -5,6 +5,7 @@ import {
   RequestPreview,
   createLeaveRequest,
   fmtDays,
+  fmtLeft,
   previewLeaveRequest,
 } from "../../api/annualLeave";
 import { CheckList } from "./parts";
@@ -17,17 +18,18 @@ interface Props {
   onClose: (saved: boolean) => void;
 }
 
-// Add leave: how the office enters a holiday request — today from the paper Leave Request Form,
-// later the employees' own requests arrive the same way. Shows what it would cost and the policy
-// checks as the dates are picked; can be entered already approved (a signed form) or left
-// waiting for the approver.
+// Add leave: the office entering a holiday request on someone's behalf (their own requests come
+// from the employee app later). Shows what it would cost and the policy checks as the dates are
+// picked. Saved WAITING by default: the 2027 policy says leave is only authorised once an
+// administrator approves it in the app, and paper forms, verbal requests and messages are not
+// approval. An approver entering it can still approve it there and then, deliberately.
 export default function AddLeaveModal({ employees, employeeId, date, onClose }: Props) {
   const [empId, setEmpId] = useState<number | "">(employeeId ?? "");
   const [start, setStart] = useState(date ?? "");
   const [end, setEnd] = useState(date ?? "");
   const [length, setLength] = useState(1);
   const [note, setNote] = useState("");
-  const [approve, setApprove] = useState(true);
+  const [approve, setApprove] = useState(false);
   const [preview, setPreview] = useState<RequestPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -92,7 +94,7 @@ export default function AddLeaveModal({ employees, employeeId, date, onClose }: 
             <option value="">Choose…</option>
             {employees.map((e) => (
               <option key={e.id} value={e.id}>
-                {e.surname}, {e.forename} — {e.categoryName} ({fmtDays(e.remaining)} left)
+                {e.surname}, {e.forename} — {e.categoryName} ({e.remaining < 0 ? fmtLeft(e.remaining) : `${fmtDays(e.remaining)} left`})
               </option>
             ))}
           </select>
@@ -131,12 +133,12 @@ export default function AddLeaveModal({ employees, employeeId, date, onClose }: 
         )}
         <div className="form-field form-field-wide">
           <label className="form-label">Note (optional)</label>
-          <input className="form-input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Leave Request Form handed in 3 Nov" />
+          <input className="form-input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. asked in person on 3 Nov" />
         </div>
         <div className="form-field form-field-wide">
           <label className="al-check-label">
             <input type="checkbox" checked={approve} onChange={(e) => setApprove(e.target.checked)} />
-            Already approved (a signed form) — untick to leave it waiting for the approver
+            Approve it now (I am approving this leave) — otherwise it waits on Requests for an approver
           </label>
         </div>
       </div>
@@ -148,7 +150,7 @@ export default function AddLeaveModal({ employees, employeeId, date, onClose }: 
               Uses {fmtDays(preview.days)} day{preview.days === 1 ? "" : "s"}
             </span>
             <span className={preview.remainingAfter < 0 ? "al-neg" : undefined}>
-              {fmtDays(preview.remainingBefore)} → {fmtDays(preview.remainingAfter)} floating left
+              {fmtLeft(preview.remainingBefore)} → {fmtLeft(preview.remainingAfter)} {preview.remainingAfter < 0 ? "(paid leave used up)" : "floating left"}
             </span>
           </div>
           <CheckList checks={preview.checks} />

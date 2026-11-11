@@ -28,7 +28,8 @@ Future<bool> openAddressForm(
   final r = await Navigator.of(context).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => _AddressForm(title: title, initial: initial, initialNote: initialNote, onSave: onSave, onDelete: onDelete),
+      builder: (_) =>
+          _AddressForm(title: title, initial: initial, initialNote: initialNote, onSave: onSave, onDelete: onDelete),
     ),
   );
   return r ?? false;
@@ -106,7 +107,14 @@ class _AddressFormState extends State<_AddressForm> {
     }
   }
 
-  Widget _field(TextEditingController c, String label, {TextInputType? type, String? hint, int maxLines = 1, bool words = true}) {
+  Widget _field(
+    TextEditingController c,
+    String label, {
+    TextInputType? type,
+    String? hint,
+    int maxLines = 1,
+    bool words = true,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
@@ -131,7 +139,11 @@ class _AddressFormState extends State<_AddressForm> {
         children: [
           SalesHeader(
             title: widget.title,
-            leading: HeaderIconButton(icon: Icons.close, tooltip: 'Close', onPressed: () => Navigator.of(context).pop(false)),
+            leading: HeaderIconButton(
+              icon: Icons.close,
+              tooltip: 'Close',
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
           ),
           Expanded(
             child: ListView(
@@ -139,7 +151,11 @@ class _AddressFormState extends State<_AddressForm> {
               children: [
                 _field(_name, 'Address name', hint: 'e.g. Main yard, Shop'),
                 for (var i = 0; i < 5; i++)
-                  _field(_lines[i], lineLabels[i], hint: i == 0 ? 'Street' : (i >= 2 ? 'Town, county or postcode' : null)),
+                  _field(
+                    _lines[i],
+                    lineLabels[i],
+                    hint: i == 0 ? 'Street' : (i >= 2 ? 'Town, county or postcode' : null),
+                  ),
                 const SizedBox(height: 8),
                 const SectionLabel('Contact'),
                 _field(_contact, 'Contact name'),
@@ -167,7 +183,9 @@ class _AddressFormState extends State<_AddressForm> {
             ),
           ),
           Container(
-            decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFE5E9EF)))),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFFE5E9EF))),
+            ),
             padding: EdgeInsets.fromLTRB(18, 12, 18, 12 + MediaQuery.of(context).padding.bottom),
             child: Row(
               children: [

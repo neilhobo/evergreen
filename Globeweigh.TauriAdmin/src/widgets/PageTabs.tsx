@@ -3,6 +3,8 @@ import s from "./PageTabs.module.css";
 export interface PageTab<K extends string> {
   key: K;
   label: string;
+  /** Shown only to the super-admin (a staged tab not switched on): drawn in lavender. */
+  restricted?: boolean;
 }
 
 interface Props<K extends string> {
@@ -23,7 +25,7 @@ export default function PageTabs<K extends string>({ tabs, active, onChange }: P
           type="button"
           role="tab"
           aria-selected={t.key === active}
-          className={t.key === active ? `${s.tab} ${s.active}` : s.tab}
+          className={[s.tab, t.key === active && s.active, t.restricted && s.restricted].filter(Boolean).join(" ")}
           onClick={() => onChange(t.key)}
         >
           {t.label}

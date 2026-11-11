@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_client.dart';
 import '../../data/sales_models.dart';
+import 'approval.dart';
 import 'edit_order_screen.dart';
 import 'my_orders_screen.dart' show ErrorRetry;
 import 'sales_format.dart';
@@ -20,9 +21,14 @@ const _line = Color(0xFFE5E9EF);
 /// next, the delivery details, the lines with their total, and the history —
 /// with the actions its status allows along the foot (Edit / Send / Delete for
 /// a draft, Recall while with the office), as TauriAdmin's My Orders panel.
+///
+/// With [overview] (the super-admin and Colin): any rep's order, naming the
+/// rep, and while it waits for approval the office's two answers instead —
+/// Return to rep (with a note) and Approve.
 class OrderScreen extends ConsumerStatefulWidget {
   final int orderId;
-  const OrderScreen({super.key, required this.orderId});
+  final bool overview;
+  const OrderScreen({super.key, required this.orderId, this.overview = false});
 
   @override
   ConsumerState<OrderScreen> createState() => _OrderScreenState();
@@ -31,15 +37,18 @@ class OrderScreen extends ConsumerStatefulWidget {
 class _OrderScreenState extends ConsumerState<OrderScreen> {
   bool _busy = false;
 
+  AutoDisposeFutureProvider<SalesOrderDetail> get _detail =>
+      widget.overview ? overviewDetailProvider(widget.orderId) : orderDetailProvider(widget.orderId);
+
   Future<void> _act(Future<void> Function() run, {bool pop = false}) async {
     setState(() => _busy = true);
     try {
       await run();
-      ref.invalidate(salesOrdersProvider);
+      ref.invalidate(ordersFor(overview: widget.overview));
       if (pop) {
         if (mounted) Navigator.of(context).pop();
       } else {
-        ref.invalidate(orderDetailProvider(widget.orderId));
+        ref.invalidate(_detail);
       }
     } catch (e) {
       if (mounted) showError(context, apiMessage(e));
@@ -71,15 +80,49 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
 
   Future<void> _edit(SalesOrder o) async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditOrderScreen(existing: o)));
-    ref.invalidate(orderDetailProvider(widget.orderId));
+    ref.invalidate(_detail);
+  }
+
+  Future<void> _approve(SalesOrder o, double total) async {
+    final ok = await confirmApprove(context, o, total);
+    if (!ok || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final no = await ref.read(salesApiProvider).approve(o);
+      ref.invalidate(overviewOrdersProvider);
+      ref.invalidate(_detail);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Approved as order $no')));
+      }
+    } catch (e) {
+      if (mounted) showError(context, apiMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// The office's Edit: change the waiting order, then approve it with the changes.
+  Future<void> _editThenApprove(SalesOrder o) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EditOrderScreen(existing: o, mode: OrderEditMode.approve),
+      ),
+    );
+    ref.invalidate(_detail);
+  }
+
+  Future<void> _return(SalesOrder o) async {
+    final note = await askReturnNote(context, o);
+    if (note == null) return;
+    await _act(() => ref.read(salesApiProvider).returnToRep(o.id, note));
   }
 
   @override
   Widget build(BuildContext context) {
-    final detail = ref.watch(orderDetailProvider(widget.orderId));
+    final detail = ref.watch(_detail);
     final products = ref.watch(productsProvider).valueOrNull ?? const {};
     final o = detail.valueOrNull?.order;
-    final canEdit = o != null && o.status.isDraft && !o.fromOffice;
+    final canEdit = o != null && o.status.isDraft && !o.fromOffice && !widget.overview;
 
     return Scaffold(
       backgroundColor: _ground,
@@ -120,12 +163,9 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
           Expanded(
             child: detail.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ErrorRetry(
-                message: apiMessage(e),
-                onRetry: () => ref.invalidate(orderDetailProvider(widget.orderId)),
-              ),
+              error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(_detail)),
               data: (d) => RefreshIndicator(
-                onRefresh: () => ref.refresh(orderDetailProvider(widget.orderId).future),
+                onRefresh: () => ref.refresh(_detail.future),
                 child: _Body(detail: d, products: products),
               ),
             ),
@@ -139,9 +179,27 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
   Widget _actions(SalesOrder o, double total) {
     if (o.fromOffice) return const SizedBox.shrink();
     final List<Widget> buttons;
-    if (o.status.isDraft) {
+    if (widget.overview) {
+      if (o.status != SalesOrderStatus.pending) return const SizedBox.shrink();
       buttons = [
-        Expanded(flex: 10, child: _OutlineButton(label: 'Edit', onPressed: _busy ? null : () => _edit(o))),
+        Expanded(
+          flex: 9,
+          child: _OutlineButton(label: 'Return', onPressed: _busy ? null : () => _return(o)),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 8,
+          child: _OutlineButton(label: 'Edit', onPressed: _busy ? null : () => _editThenApprove(o)),
+        ),
+        const SizedBox(width: 8),
+        Expanded(flex: 11, child: ApproveButton(onPressed: _busy || o.items.isEmpty ? null : () => _approve(o, total))),
+      ];
+    } else if (o.status.isDraft) {
+      buttons = [
+        Expanded(
+          flex: 10,
+          child: _OutlineButton(label: 'Edit', onPressed: _busy ? null : () => _edit(o)),
+        ),
         const SizedBox(width: 10),
         Expanded(
           flex: 14,
@@ -153,7 +211,9 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
       ];
     } else if (o.status == SalesOrderStatus.pending) {
       buttons = [
-        Expanded(child: _OutlineButton(label: 'Recall to change it', onPressed: _busy ? null : () => _recall(o))),
+        Expanded(
+          child: _OutlineButton(label: 'Recall to change it', onPressed: _busy ? null : () => _recall(o)),
+        ),
       ];
     } else {
       return const SizedBox.shrink();
@@ -205,7 +265,8 @@ class _Body extends StatelessWidget {
                 children: [
                   StatusPill(o.status),
                   const Spacer(),
-                  if (o.dateSent != null) Text('Sent ${ago(o.dateSent!)}', style: const TextStyle(fontSize: 12, color: _muted)),
+                  if (o.dateSent != null)
+                    Text('Sent ${ago(o.dateSent!)}', style: const TextStyle(fontSize: 12, color: _muted)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -217,6 +278,7 @@ class _Body extends StatelessWidget {
         _Card(
           child: Column(
             children: [
+              if (o.salesRepName != null) _Row(icon: Icons.person_outline, label: 'Sales rep', value: o.salesRepName!),
               _Row(icon: Icons.event_outlined, label: 'Delivery', value: dayLabel(o.deliveryDate)),
               _Row(icon: Icons.place_outlined, label: 'Deliver to', value: address.isEmpty ? '—' : address),
               if (o.poNumber?.isNotEmpty ?? false) _Row(icon: Icons.tag, label: 'PO number', value: o.poNumber!),
@@ -255,7 +317,7 @@ class _Body extends StatelessWidget {
                               style: const TextStyle(fontSize: 14, color: _ink),
                             ),
                             Text(
-                              '${products[i.productId]?.qtyUnit ?? 'pallets'} · ${i.price != null ? gbp(i.price!) : 'no price'}',
+                              '${products[i.productId]?.sizeUpp ?? 'pallets'} · ${i.price != null ? gbp(i.price!) : 'no price'}',
                               style: const TextStyle(fontSize: 12, color: _muted),
                             ),
                           ],
@@ -276,7 +338,10 @@ class _Body extends StatelessWidget {
                   Expanded(
                     child: Text('${qty(o.pallets)} pallets', style: const TextStyle(fontSize: 12, color: _muted)),
                   ),
-                  Text(gbp(total), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink)),
+                  Text(
+                    gbp(total),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _ink),
+                  ),
                 ],
               ),
             ],
@@ -289,7 +354,8 @@ class _Body extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _CardTitle('History'),
-                for (final (k, e) in detail.events.indexed) _Event(e, latest: k == 0, last: k == detail.events.length - 1),
+                for (final (k, e) in detail.events.indexed)
+                  _Event(e, latest: k == 0, last: k == detail.events.length - 1),
               ],
             ),
           ),
@@ -322,7 +388,10 @@ class _CardTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
-    child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _ink)),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _ink),
+    ),
   );
 }
 

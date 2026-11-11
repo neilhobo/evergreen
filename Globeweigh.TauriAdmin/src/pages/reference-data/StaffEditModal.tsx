@@ -287,7 +287,7 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
                   <span className="us-title-strut" />
                 </h3>
                 <div className={cx(styles.field, "ld-row")}>
-                  <span className={styles.fieldLabel}>In Annual Leave</span>
+                  <span className={styles.fieldLabel}>Annual Leave</span>
                   <label className="ld-check">
                     <input
                       type="checkbox"
@@ -295,10 +295,10 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
                       disabled={!leaveLoaded}
                       onChange={(e) => setL({ enrolled: e.target.checked })}
                     />
-                    <span>{leave.enrolled ? "Yes" : "No"}</span>
                   </label>
                 </div>
-                {leave.enrolled && (
+                {/* Always laid out, just hidden while unticked, so ticking it never grows the dialog. */}
+                <div className={cx("us-leave-fields", !leave.enrolled && "us-leave-off")} inert={!leave.enrolled}>
                   <>
                     <label className={cx(styles.field, "ld-row")}>
                       <span className={styles.fieldLabel}>Category *</span>
@@ -363,7 +363,7 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
                       />
                     </label>
                   </>
-                )}
+                </div>
               </section>
             )}
             </div>

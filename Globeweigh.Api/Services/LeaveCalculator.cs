@@ -8,7 +8,9 @@ namespace Globeweigh.Api.Services;
 // The client's rules (2026_Annual_Leave_Entitlement.pdf), and how their spreadsheet applies them:
 //   Total     = the category's AnnualDays (28), pro-rated for a starter/leaver by the share of the
 //               leave year they are employed for, rounded UP to the next half day.
-//   Set       = the company days their category gets that fall on a working day while employed.
+//   Set       = the company days their category gets that fall on a working day while employed,
+//               less any they have been approved to work (LeaveHolidayWorked) — the caller passes
+//               THEIR company days, so a worked day moves from Set to Floating, total unchanged.
 //   Floating  = Total - Set + manual adjustments. Can be negative: a late starter can earn less
 //               than the Christmas shutdown alone (Adam Cushnahan 2026: 7.5 - 11 = -3.5).
 //   Remaining = Floating - approved leave. Waiting requests are shown, not deducted.
@@ -60,7 +62,19 @@ public static class LeaveCalculator
         return n;
     }
 
-    public record Balance(decimal Total, int Set, decimal Adjustments, decimal Floating, decimal Used, decimal Waiting, decimal Remaining);
+    // Unpaid: the 2027 policy — "If a pro-rata paid allowance does not cover remaining fixed
+    // company holidays, any excess will be treated as unpaid leave ... Additional approved days
+    // off after paid leave is exhausted will also be unpaid." So a minus Remaining is unpaid days.
+    // Unbooked: floating days not yet approved or asked for (the 31 August check).
+    public record Balance(decimal Total, int Set, decimal Adjustments, decimal Floating, decimal Used, decimal Waiting, decimal Remaining)
+    {
+        public decimal Unpaid => Remaining < 0 ? -Remaining : 0;
+        public decimal Unbooked => Math.Max(0, Remaining - Waiting);
+    }
+
+    // How many of a request's days would be unpaid: the part of it past the paid allowance.
+    public static decimal UnpaidPart(decimal remainingBefore, decimal remainingAfter) =>
+        Math.Max(0, -remainingAfter) - Math.Max(0, -remainingBefore);
 
     public static Balance BalanceFor(
         LeaveEmployee e, decimal annualDays, int year, IReadOnlySet<DateOnly> categoryHolidays,

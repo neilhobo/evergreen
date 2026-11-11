@@ -137,28 +137,115 @@
   color: #0f172a;
 }
 
-/* Left column: the report groups with their reports nested under them. */
-.rp-nav-group {
-  padding: 8px 10px 4px;
-  font: 600 10.5px/1.2 var(--ui-font);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.rp-nav-child {
-  padding-left: 18px;
-}
-
-.rp-nav-note {
-  padding: 4px 10px 4px 18px;
-  font: 400 12px var(--ui-font);
+/* Left column: the Admin section rail (App.css .side-list), its reports in fold-away groups. */
+.side-list li.rp-nav-note,
+.side-list li.rp-nav-note:hover {
+  background: none;
+  font-weight: 400;
   color: #94a3b8;
+  cursor: default;
+}
+
+/* Fold-away groups (design 1 of the rail mock-ups): a heading with a chevron and a count that
+   opens and closes its list, a hairline between groups. */
+.rp-rail-groups {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.rp-group {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rp-group.is-open {
+  padding-bottom: 8px;
+}
+
+.rp-group-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  font: 600 11.5px/1.2 var(--ui-font);
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rp-group-head:hover {
+  background: #e2e8f0;
+}
+
+.rp-group-head:focus-visible {
+  outline: 2px solid #7cc0ff;
+  outline-offset: -2px;
+}
+
+.rp-group-chev {
+  width: 0;
+  height: 0;
+  border-left: 4px solid #64748b;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.rp-group.is-open .rp-group-chev {
+  transform: rotate(90deg);
+}
+
+.rp-group-count {
+  margin-left: auto;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: #e2e8f0;
+  font: 600 10px/16px var(--ui-font);
+  color: #64748b;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-group-head:hover .rp-group-count {
+  background: #cbd5e1;
+}
+
+.rp-group .side-list {
+  padding-top: 0;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-group-chev {
+    transition: none;
+  }
+}
+
+/* Small status tags after a customer's name (Active Customers). */
+.rp-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  font: 500 10px/15px var(--ui-font);
+  color: #475569;
+  vertical-align: 1px;
+}
+
+.rp-chip-warn {
+  background: #fff7e8;
+  color: #b45309;
 }
 
 .rp-nav-new {
   align-self: flex-start;
-  margin: 4px 0 0 8px;
+  margin: 2px 0 0 12px;
   padding: 5px 10px;
   border: 1px dashed #cbd5e1;
   border-radius: 6px;

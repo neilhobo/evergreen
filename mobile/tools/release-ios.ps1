@@ -1,5 +1,6 @@
 # Builds the iOS release on the Mac with Shorebird (so it can be patched later) and uploads
-# it with fastlane. (No store-version prompt yet: the Evergreen API has no /api/app/version.)
+# it with fastlane, then bumps the store-version manifest on evergreen (GET /api/mobile/version)
+# so installed apps prompt "Update available" ~15 minutes later, once TestFlight has processed it.
 #
 #   npm run mobile:release:ios                         # TestFlight
 #   npm run mobile:release:ios:prod                    # TestFlight, then App Store review (auto-release)
@@ -26,6 +27,9 @@ shorebird release ios --export-options-plist=ios/ExportOptions.plist --no-confir
 cd ios
 CHANGELOG="`$CHANGELOG" fastlane ios "`$TRACK"
 "@
+
+# Installed apps then show "Update available" with an Update button that opens TestFlight.
+Publish-StoreVersion -Platform ios -Version $next -Url "itms-beta://beta.itunes.apple.com/v1/app/6830162362"
 
 Write-Host ""
 Write-Host "================ DONE ================" -ForegroundColor Green

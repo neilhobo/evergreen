@@ -32,6 +32,12 @@ export interface LeaveEmployee {
   used: number;
   waiting: number;
   remaining: number;
+  /** Past the paid allowance — unpaid (2027 policy). 0 when Remaining is not below 0. */
+  unpaid: number;
+  /** Floating days neither approved nor asked for (the 31 August check). */
+  unbooked: number;
+  /** Company days this year they are working instead (each one a floating day back). */
+  worked: number;
 }
 
 /** One Admin > Staff user's leave profile. People are added and named in Admin > Staff;
@@ -53,6 +59,10 @@ export interface LeaveProfile {
 export interface LeaveCheck {
   level: "ok" | "info" | "warn" | "error";
   text: string;
+  /** Which policy: dates, overlap, employment, notice, allowance, peak, clash (the Requests columns). */
+  key?: string | null;
+  /** The cell text for that column, e.g. "9d", "6 left", "2 unpaid", "G. McCann". */
+  short?: string | null;
 }
 
 export interface LeaveRequestRow {
@@ -78,6 +88,8 @@ export interface LeaveRequestRow {
 }
 
 export interface RequestInput {
+  /** Preview only: the request being edited, left out of its own checks. */
+  requestId?: number;
   employeeId: number;
   startDate: string;
   endDate: string;
@@ -169,15 +181,54 @@ export const addAdjustment = (employeeId: number, year: number, days: number, re
   apiPost<void>(`${base}/employees/${employeeId}/adjustments`, { year, days, reason });
 export const deleteAdjustment = (id: number) => request<void>("DELETE", `${base}/adjustments/${id}`);
 
+/** A company day they work instead, getting a floating day for it (2027 policy). */
+export interface WorkedDay {
+  id: number;
+  holidayId: number;
+  date: string;
+  holidayName: string;
+  reason: string;
+  createdByName: string | null;
+  dateCreated: string;
+}
+export const getWorkedDays = (employeeId: number, year: number) =>
+  apiGet<WorkedDay[]>(`${base}/employees/${employeeId}/worked?year=${year}`);
+export const addWorkedDay = (employeeId: number, holidayId: number, reason: string) =>
+  apiPost<void>(`${base}/employees/${employeeId}/worked`, { holidayId, reason });
+export const deleteWorkedDay = (id: number) => request<void>("DELETE", `${base}/worked/${id}`);
+
+/** Someone with floating days still to book (Outstanding tab). */
+export interface OutstandingRow {
+  employeeId: number;
+  name: string;
+  categoryName: string;
+  floating: number;
+  used: number;
+  waiting: number;
+  unbooked: number;
+  emailTo: string | null;
+  lastReminded: string | null;
+  lastRemindedDays: number | null;
+}
+export const getOutstanding = (year: number) => apiGet<OutstandingRow[]>(`${base}/outstanding?year=${year}`);
+export const sendLeaveReminders = (year: number, employeeIds: number[]) =>
+  apiPost<{ sent: number; skipped: string[]; failed: string[] }>(`${base}/reminders`, { year, employeeIds });
+
 export const getLeaveRequests = (year: number) => apiGet<LeaveRequestRow[]>(`${base}/requests?year=${year}`);
 export const previewLeaveRequest = (input: RequestInput) => apiPost<RequestPreview>(`${base}/requests/preview`, input);
 export const createLeaveRequest = (input: RequestInput) => apiPost<{ id: number; emailed: boolean }>(`${base}/requests`, input);
 export const decideLeaveRequest = (id: number, approve: boolean, note: string | null, email: boolean) =>
   apiPost<{ emailed: boolean }>(`${base}/requests/${id}/decide`, { approve, note, email });
 export const cancelLeaveRequest = (id: number) => apiPost<void>(`${base}/requests/${id}/cancel`, {});
+/** One request with its balance effect and checks (the calendar popup). */
+export const getLeaveRequest = (id: number) => apiGet<LeaveRequestRow>(`${base}/requests/${id}`);
+/** Change a waiting / approved request's dates, length or note; it keeps its status. */
+export const updateLeaveRequest = (id: number, input: RequestInput) => apiPut<void>(`${base}/requests/${id}`, input);
+/** Remove a request entered by mistake (real leave no longer taken should be cancelled). */
+export const deleteLeaveRequest = (id: number) => request<void>("DELETE", `${base}/requests/${id}`);
 
 export const getLeaveCalendar = (year: number) =>
-  apiGet<{ holidays: Holiday[]; leave: CalendarLeave[] }>(`${base}/calendar?year=${year}`);
+  apiGet<{ holidays: Holiday[]; leave: CalendarLeave[]; worked: { employeeId: number; date: string }[] }>(`${base}/calendar?year=${year}`);
 
 export const getHolidays = (year: number) => apiGet<Holiday[]>(`${base}/holidays?year=${year}`);
 export const createHoliday = (input: HolidayInput) => apiPost<{ id: number }>(`${base}/holidays`, input);
@@ -201,6 +252,11 @@ export const deleteLeaveCategory = (id: number) => request<void>("DELETE", `${ba
 export function fmtDays(n: number): string {
   const s = String(Math.round(n * 100) / 100);
   return n < 0 ? "−" + s.slice(1) : s;
+}
+
+/** A balance in words: a minus balance is unpaid days (2027 policy) — "3", "2 unpaid". */
+export function fmtLeft(n: number): string {
+  return n < 0 ? `${fmtDays(-n)} unpaid` : fmtDays(n);
 }
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

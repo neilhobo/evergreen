@@ -1,0 +1,35 @@
+/* Super Admin > Login History. Row colours go on td, not tr (the ledger kit paints td). */
+.lh-panel tr.lh-failed td {
+  background: #fef2f2;
+}
+
+.lh-panel .lh-muted {
+  color: #64748b;
+}
+
+.lh-panel .lh-kind {
+  font-weight: 600;
+}
+
+.lh-panel .lh-kind-Failed {
+  color: #b91c1c;
+}
+
+.lh-panel .lh-kind-SwitchUser,
+.lh-panel .lh-kind-SwitchBack {
+  color: #1d4ed8;
+}
+
+.lh-panel .lh-error {
+  color: var(--error-text, #b91c1c);
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.lh-panel .lh-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}

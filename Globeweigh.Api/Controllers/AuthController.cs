@@ -1,5 +1,7 @@
 ﻿using Globeweigh.Api.Auth;
 using Globeweigh.Api.Data;
+using Globeweigh.Api.Data.Entities;
+using Globeweigh.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -45,20 +47,27 @@ public class AuthController : ControllerBase
                 && u.Username != null
                 && u.Username.ToLower() == username.ToLower(), ct);
 
+        // Every attempt goes in Super Admin > Login History (LoginLog), the wrong ones with why.
         if (user == null)
+        {
+            await LoginLog.WriteAsync(_db, HttpContext, LoginEvent.KindFailed, null, username, "Unknown username", ct: ct);
             return Unauthorized(new { message = "Invalid details entered" });
+        }
 
         var password = req.Password ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(user.Password))
+        var passwordOk = string.IsNullOrWhiteSpace(user.Password)
+            ? string.IsNullOrWhiteSpace(password)
+            : string.Equals(user.Password, password, StringComparison.OrdinalIgnoreCase);
+        if (!passwordOk)
         {
-            if (!string.IsNullOrWhiteSpace(password))
-                return Unauthorized(new { message = "Invalid details entered" });
-        }
-        else if (!string.Equals(user.Password, password, StringComparison.OrdinalIgnoreCase))
-        {
+            await LoginLog.WriteAsync(_db, HttpContext, LoginEvent.KindFailed, user.Id, user.Username, "Wrong password", ct: ct);
             return Unauthorized(new { message = "Invalid details entered" });
         }
 
+        // A disabled account still gets a session here (the apps refuse it themselves), so it is
+        // recorded as a sign-in, marked.
+        await LoginLog.WriteAsync(_db, HttpContext, LoginEvent.KindSignIn, user.Id, user.Username,
+            user.Disabled ? "Account disabled (the app refuses it)" : null, ct: ct);
         return await SessionForAsync(user, null, ct);
     }
 
@@ -115,6 +124,11 @@ public class AuthController : ControllerBase
         if (!MaySwitchInto(me.Value.IsGlobeweighAdmin, target.Username, targetRoles))
             return Forbid();
 
+        // The row is the TARGET's (whose session it now is); ByUserId is the admin who switched in.
+        var adminName = $"{me.Value.User.FirstName} {me.Value.User.Surname}".Trim() is { Length: > 0 } an
+            ? an : me.Value.User.Username;
+        await LoginLog.WriteAsync(_db, HttpContext, LoginEvent.KindSwitchUser, target.Id, target.Username,
+            $"Switch user by {adminName}", byUserId: me.Value.User.Id, ct: ct);
         return await SessionForAsync(target, me.Value.User, ct);
     }
 
@@ -130,11 +144,14 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == adminId && u.DateDeleted == null && !u.Disabled, ct);
         if (admin == null) return Unauthorized();
 
+        await LoginLog.WriteAsync(_db, HttpContext, LoginEvent.KindSwitchBack, admin.Id, admin.Username,
+            "Returned to own account", ct: ct);
         return await SessionForAsync(admin, null, ct);
     }
 
-    // The signed-in user if they may use Switch user: an admin (Globeweigh or Office), on
-    // their own session.
+    // The signed-in user if they may use Switch user: one of the named users
+    // (UserExtensions.SwitchUserUsernames — the super-admin and Colin), still an admin
+    // (Globeweigh or Office), on their own session.
     private async Task<(GlobeweighUser User, bool IsGlobeweighAdmin)?> SwitchingAdminAsync(CancellationToken ct)
     {
         if (User.GetImpersonatedBy() != null) return null;
@@ -142,6 +159,7 @@ public class AuthController : ControllerBase
         var me = await _db.GlobeweighUsers.AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == id && u.DateDeleted == null && !u.Disabled, ct);
         if (me == null) return null;
+        if (!UserExtensions.MaySwitchUser(me.Username)) return null;
         var roles = EffectiveRoles(me, await RoleIdsByUserAsync(new List<int> { me.Id }, ct));
         if (!roles.Contains(RoleGlobeweighAdmin) && !roles.Contains(RoleOfficeAdmin)) return null;
         return (me, roles.Contains(RoleGlobeweighAdmin));

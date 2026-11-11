@@ -32,6 +32,63 @@ class SalesApi {
   Future<void> recall(int id) => _client.dio.post<void>('/api/sales-orders/$id/recall', data: {});
   Future<void> delete(int id) => _client.dio.delete<void>('/api/sales-orders/$id');
 
+  // ---- The Sales overview (super-admin + Colin; the server checks) ----
+
+  /// Every rep's sent orders, newest first, each with the rep's name.
+  Future<List<SalesOrder>> overviewOrders() async {
+    final res = await _client.dio.get<List<dynamic>>('/api/sales-orders/overview');
+    return res.data!.map((e) => SalesOrder.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<SalesOrderDetail> overviewOrder(int id) async {
+    final res = await _client.dio.get<Map<String, dynamic>>('/api/sales-orders/overview/$id');
+    return SalesOrderDetail.fromJson(res.data!);
+  }
+
+  /// Approve an order as the rep sent it (TauriAdmin's order dialog saved
+  /// unchanged): no haulier, vehicle or trailer, which the office adds in Open
+  /// Orders. Returns the new order number.
+  Future<int> approve(SalesOrder o) => approveWith(
+    o.id,
+    SalesOrderInput(
+      customerId: o.customerId,
+      addressId: o.addressId,
+      deliveryDate: o.deliveryDate,
+      poNumber: o.poNumber,
+      comments: o.comments,
+      pickingComments: o.pickingComments,
+      hasPos: o.hasPos,
+      items: o.items,
+    ),
+  );
+
+  /// Approve with the office's changes (Edit before approving): the server
+  /// brings the sales order into line and lists the changes in its history.
+  Future<int> approveWith(int id, SalesOrderInput input) async {
+    final body = input.toJson()..addAll({'haulierId': 0});
+    final res = await _client.dio.post<Map<String, dynamic>>('/api/sales-orders/$id/approve', data: body);
+    return res.data!['orderNo'] as int;
+  }
+
+  /// A new open order straight away (TauriAdmin's Open Orders > New): the next
+  /// order number, no approval. [salesRepId] is the customer's rep, or null.
+  /// No haulier, which the office adds in Open Orders. Returns the order number.
+  Future<int> createOfficeOrder(SalesOrderInput input, {int? salesRepId}) async {
+    final body = input.toJson()..addAll({'haulierId': 0, 'salesRepId': salesRepId});
+    final res = await _client.dio.post<Map<String, dynamic>>('/api/dispatch/orders', data: body);
+    return res.data!['orderNo'] as int;
+  }
+
+  /// Send an order back to its rep with what to change.
+  Future<void> returnToRep(int id, String note) =>
+      _client.dio.post<void>('/api/sales-orders/$id/return', data: {'note': note});
+
+  /// Every customer, with its rep's name.
+  Future<List<Customer>> allCustomers() async {
+    final res = await _client.dio.get<List<dynamic>>('/api/customers-suppliers', queryParameters: {'typeId': 1});
+    return res.data!.map((e) => Customer.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   /// The rep's own customers (Sales Rep = them).
   Future<List<Customer>> myCustomers() async {
     final res = await _client.dio.get<List<dynamic>>(
@@ -58,7 +115,8 @@ class SalesApi {
   Future<void> updateAddress(int addressId, AddressInput input) =>
       _client.dio.put<void>('/api/customers-suppliers/addresses/$addressId', data: input.toJson());
 
-  Future<void> deleteAddress(int addressId) => _client.dio.delete<void>('/api/customers-suppliers/addresses/$addressId');
+  Future<void> deleteAddress(int addressId) =>
+      _client.dio.delete<void>('/api/customers-suppliers/addresses/$addressId');
 
   /// The address's Delivery Note Info (goes onto an order's Comments when the
   /// address is picked); empty clears it.

@@ -53,6 +53,11 @@ public class CustomersSuppliersController : ControllerBase
         var reps = await _db.Set<CustomerSupplier>().AsNoTracking()
             .Where(c => c.SalesRepId != null)
             .ToDictionaryAsync(c => c.Id, c => c.SalesRepId, ct);
+        // And the rep's name, for the mobile Sales overview's customer list.
+        var repIds = reps.Values.OfType<int>().Distinct().ToList();
+        var repNames = await _db.GlobeweighUsers.AsNoTracking()
+            .Where(u => repIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.Surname}".Trim(), ct);
 
         return Ok(rows.Select(r => new
         {
@@ -63,6 +68,7 @@ public class CustomersSuppliersController : ControllerBase
             r.CostingZoneId,
             r.CostingZone,
             SalesRepId = reps.GetValueOrDefault(r.Id),
+            SalesRepName = reps.GetValueOrDefault(r.Id) is { } rep ? repNames.GetValueOrDefault(rep) : null,
             AddressCount = counts.TryGetValue(r.Id, out var n) ? n : 0,
             Emails = emails.TryGetValue(r.Id, out var list) ? list : new List<string>(),
         }));

@@ -123,11 +123,86 @@
   white-space: nowrap;
 }
 
-/* The Open Orders search sits between the header and its grid, level with the grid edge. */
-.dsp-panel > .toolbar-search {
+/* The Open Orders search row, between the header and its grid: the search box and (Hatched
+   style only, Super Admin > Open Orders Styles) the On Pending filter. */
+.dsp-search-row {
   flex: none;
-  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 6px 6px 0;
+  min-width: 0;
+}
+/* The search box takes all the spare width; the On Pending filter sits at the right edge. */
+.dsp-search-row .toolbar-search {
+  flex: 1;
+  min-width: 80px;
+  width: auto;
+}
+.dsp-pending-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  height: 26px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 11.5px;
+  color: #115e59;
+  background: #fff;
+  border: 1px solid #0f766e;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dsp-pending-filter.on { background: #ccfbf1; }
+.dsp-pending-filter:disabled { opacity: 0.5; cursor: default; }
+.dsp-pending-filter .n {
+  background: #0f766e;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* Grouped design: the two bands DataTable inserts, in place of the default green category bar.
+   Both are the same sidebar navy so each reads as a header (option 3 of the band mock-ups,
+   2026-11-05); a teal dot marks the Pending-load band, a grey dot the rest. */
+.data-table-group-row td:has(.dsp-band),
+.data-table-group-row:hover td:has(.dsp-band) {
+  background: var(--sidebar-bg);
+  color: #fff;
+  padding: 5px 8px;
+}
+.dsp-band {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dsp-band::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.dsp-band-pending::before {
+  background: #2dd4bf;
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.3);
+}
+
+/* Hatched design: a faint teal hatch over the row (background-image only, so the zebra colour
+   underneath stays) and a teal edge; the orange selection drops the hatch but keeps the edge. */
+.data-table tbody tr.row-on-pending:not(.selected) td {
+  background-image: repeating-linear-gradient(135deg, rgba(15, 118, 110, 0.13) 0 6px, transparent 6px 12px);
+}
+.data-table tbody tr.row-on-pending td:first-child {
+  box-shadow: inset 3px 0 0 #0f766e;
 }
 
 .dsp-panel .data-table-wrap { flex: 1; min-height: 0; }
@@ -1198,6 +1273,15 @@ select.cl-delivery-order {
 
 .us-leave {
   margin-top: 14px;
+}
+
+/* The leave fields keep their space while unticked (the dialog stays one height). */
+.us-leave-fields {
+  display: contents;
+}
+
+.us-leave-off {
+  visibility: hidden;
 }
 
 .us-body .us-leave .ld-row {

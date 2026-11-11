@@ -42,13 +42,21 @@ namespace Globeweigh.SageSidecar
         // How far back the sales mirror reaches: from 1 January, this many years ago (1 = last
         // year and this year, so a year-to-date report can be compared with the last one).
         public int SalesHistoryYears { get; set; }
+        // ...but never later than this date, whatever the year: the Active Customers report
+        // looks back to 1 Jan 2025 by default, so that year must survive New Year 2027.
+        // Missing/empty in the config = 2025-01-01; "none" = no floor (the years window alone).
+        public DateTime? SalesEarliestFrom { get; set; }
         // Reading the audit trail newest-first, stop after this many consecutive entries older
         // than the window; 0 = read every entry. (The invoice file is always read whole.)
         public int SalesScanStopRun { get; set; }
 
         public DateTime SalesHistoryFrom
         {
-            get { return new DateTime(DateTime.Today.Year - Math.Max(0, SalesHistoryYears), 1, 1); }
+            get
+            {
+                var byYears = new DateTime(DateTime.Today.Year - Math.Max(0, SalesHistoryYears), 1, 1);
+                return SalesEarliestFrom.HasValue && SalesEarliestFrom.Value.Date < byYears ? SalesEarliestFrom.Value.Date : byYears;
+            }
         }
 
         public string BaseDir { get { return AppDomain.CurrentDomain.BaseDirectory; } }
@@ -84,6 +92,9 @@ namespace Globeweigh.SageSidecar
             c.SalesSyncMinutes = Math.Max(0, ReadInt("SalesSyncMinutes", 180));
             c.SalesHistoryYears = Math.Max(0, ReadInt("SalesHistoryYears", 1));
             c.SalesScanStopRun = Math.Max(0, ReadInt("SalesScanStopRun", 3000));
+            DateTime earliest;
+            c.SalesEarliestFrom = DateTime.TryParseExact(Read("SalesEarliestFrom", "2025-01-01"), "yyyy-MM-dd",
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out earliest) ? earliest : (DateTime?)null;
             return c;
         }
 

@@ -93,6 +93,9 @@ class SalesOrder {
   final String? loadHaulier;
   final DateTime? dateDispatched;
 
+  /// The rep who sent it: the Sales overview's rows only.
+  final String? salesRepName;
+
   /// Entered by the office with this rep as its Sales Rep: read-only here.
   final bool fromOffice;
   final List<OrderItem> items;
@@ -117,6 +120,7 @@ class SalesOrder {
     this.loadDate,
     this.loadHaulier,
     this.dateDispatched,
+    this.salesRepName,
     this.fromOffice = false,
     this.items = const [],
   });
@@ -147,6 +151,7 @@ class SalesOrder {
     loadDate: _date(j['loadDate']),
     loadHaulier: j['loadHaulier'] as String?,
     dateDispatched: _date(j['dateDispatched']),
+    salesRepName: j['salesRepName'] as String?,
     fromOffice: j['fromOffice'] as bool? ?? false,
     items: (j['items'] as List? ?? const []).map((e) => OrderItem.fromJson(e as Map<String, dynamic>)).toList(),
   );
@@ -225,6 +230,7 @@ class Customer {
   final int costingZoneId;
   final String? costingZone;
   final int? salesRepId;
+  final String? salesRepName;
   final int addressCount;
   final List<String> emails;
 
@@ -235,6 +241,7 @@ class Customer {
     this.costingZoneId = 0,
     this.costingZone,
     this.salesRepId,
+    this.salesRepName,
     this.addressCount = 0,
     this.emails = const [],
   });
@@ -248,6 +255,7 @@ class Customer {
     costingZoneId: j['costingZoneId'] as int? ?? 0,
     costingZone: j['costingZone'] as String?,
     salesRepId: j['salesRepId'] as int?,
+    salesRepName: j['salesRepName'] as String?,
     addressCount: j['addressCount'] as int? ?? 0,
     emails: (j['emails'] as List? ?? const []).cast<String>(),
   );
@@ -270,11 +278,8 @@ class CustomerAddress {
 
   String get oneLine => [addressName, ...lines].where((s) => s != null && s.trim().isNotEmpty).join(', ');
 
-  factory CustomerAddress.fromJson(Map<String, dynamic> j) => CustomerAddress(
-    id: j['id'] as int,
-    fields: AddressInput.fromJson(j),
-    deliveryNote: j['deliveryNote'] as String?,
-  );
+  factory CustomerAddress.fromJson(Map<String, dynamic> j) =>
+      CustomerAddress(id: j['id'] as int, fields: AddressInput.fromJson(j), deliveryNote: j['deliveryNote'] as String?);
 }
 
 /// An address's writable fields (AddressInput on the API), as TauriAdmin's
@@ -335,6 +340,7 @@ class Product {
   final String? description;
   final String? skuCode;
   final int upp;
+  final int? size; // litres
   final int productTypeId;
   final String soldBy; // Pallet | CubicMeter
   final bool deleted;
@@ -344,6 +350,7 @@ class Product {
     this.description,
     this.skuCode,
     this.upp = 1,
+    this.size,
     this.productTypeId = 0,
     this.soldBy = 'Pallet',
     this.deleted = false,
@@ -359,11 +366,17 @@ class Product {
 
   String get qtyUnit => soldBy == 'CubicMeter' ? 'm³' : 'pallets';
 
+  /// Size and UPP for an order line's second line ("50L · 60 UPP"); a m³
+  /// product has no UPP, so it reads "m³".
+  String get sizeUpp =>
+      [if (size != null && size! > 0) '${size}L', if (soldBy == 'CubicMeter') 'm³' else '$upp UPP'].join(' · ');
+
   factory Product.fromJson(Map<String, dynamic> j) => Product(
     id: j['id'] as int,
     description: j['description'] as String?,
     skuCode: j['skuCode'] as String?,
     upp: (j['upp'] as num?)?.toInt() ?? 1,
+    size: (j['size'] as num?)?.toInt(),
     productTypeId: j['productTypeId'] as int? ?? 0,
     soldBy: j['soldBy'] as String? ?? 'Pallet',
     deleted: j['dateDeleted'] != null,

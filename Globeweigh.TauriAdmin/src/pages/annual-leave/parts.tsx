@@ -29,8 +29,8 @@ export function flagLine(checks: LeaveCheck[]): { text: string; warn: boolean } 
   const bad = checks.filter((c) => c.level === "warn" || c.level === "error");
   if (bad.length === 0) return { text: "All checks pass", warn: false };
   const short = bad.map((c) =>
-    c.text.startsWith("Goes over")
-      ? "Over allowance"
+    c.text.startsWith("Unpaid") || c.text.startsWith("They are already")
+      ? "Unpaid"
       : c.text.startsWith("Only")
         ? "Short notice"
         : c.text.startsWith("Also off")

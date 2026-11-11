@@ -27,6 +27,27 @@ export default function StagingPanel() {
     }
   }
 
+  // The On/Off word and the switch, for a feature or one of its parts.
+  function switchFor(name: string, label: string) {
+    const on = isOn(name);
+    return (
+      <>
+        <span className={on ? styles.stateOn : styles.stateOff}>{on ? "On" : "Off"}</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label={`${label} — ${on ? "on" : "off"}`}
+          className={`${styles.switch} ${on ? styles.switchOn : ""}`}
+          disabled={!loaded || busy !== null}
+          onClick={() => void toggle(name, !on)}
+        >
+          <span className={styles.knob} />
+        </button>
+      </>
+    );
+  }
+
   return (
     <div className="po-main">
       <div className={styles.wrap}>
@@ -40,24 +61,15 @@ export default function StagingPanel() {
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.list}>
-          {STAGED_FEATURES.map((f) => {
+          {STAGED_FEATURES.filter((f) => !f.parent).map((f) => {
             const on = isOn(f.name);
+            // Its parts (one switch per tab), listed inside its card.
+            const parts = STAGED_FEATURES.filter((p) => p.parent === f.name);
             return (
               <section key={f.name} className={styles.item}>
                 <div className={styles.itemHead}>
                   <h3 className={styles.itemTitle}>{f.title}</h3>
-                  <span className={on ? styles.stateOn : styles.stateOff}>{on ? "On" : "Off"}</span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={on}
-                    aria-label={`${f.title} — ${on ? "on" : "off"}`}
-                    className={`${styles.switch} ${on ? styles.switchOn : ""}`}
-                    disabled={!loaded || busy !== null}
-                    onClick={() => void toggle(f.name, !on)}
-                  >
-                    <span className={styles.knob} />
-                  </button>
+                  {switchFor(f.name, f.title)}
                 </div>
                 <p className={styles.itemText}>{f.description}</p>
                 {/* What the client keeps seeing while it is off, so switching it back is a
@@ -65,6 +77,24 @@ export default function StagingPanel() {
                 <p className={styles.itemOff}>
                   <span className={styles.itemOffLabel}>While off:</span> {f.whenOff}
                 </p>
+                {parts.length > 0 && (
+                  <div className={styles.parts}>
+                    <p className={styles.partsNote}>
+                      Tabs — each shows only while {f.title} is on as well
+                      {on ? "" : " (it is off, so none show yet)"}. The super-admin always sees
+                      every tab, the switched-off ones in lavender.
+                    </p>
+                    {parts.map((p) => (
+                      <div key={p.name} className={styles.part}>
+                        <div className={styles.partText}>
+                          <span className={styles.partTitle}>{p.title}</span>
+                          <span className={styles.partDesc}>{p.description}</span>
+                        </div>
+                        {switchFor(p.name, `${f.title} ${p.title}`)}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             );
           })}

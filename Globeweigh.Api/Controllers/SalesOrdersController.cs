@@ -63,6 +63,79 @@ public class SalesOrdersController : ControllerBase
         return Ok(rows);
     }
 
+    // GET /api/sales-orders/overview — the mobile app's Sales overview, for the super-admin and
+    // Colin (UserExtensions.SalesOverviewUsernames): every rep's orders once sent (waiting,
+    // returned, approved and on), newest first, each with the rep's name. Drafts stay private.
+    [HttpGet("overview")]
+    public async Task<ActionResult<IEnumerable<SalesOrderRow>>> Overview(CancellationToken ct = default)
+    {
+        if (!await this.MaySeeSalesOverviewAsync(_db, ct)) return Forbid();
+        var orders = await _db.Set<SalesOrderEntity>().AsNoTracking()
+            .Where(o => o.DateDeleted == null && o.Status != SalesOrderEntity.StatusDraft)
+            .OrderByDescending(o => o.Id)
+            .ToListAsync(ct);
+        var rows = await ToRows(orders, ct);
+
+        // Plus the open orders entered directly (TauriAdmin, or New order here), read-only
+        // rows with a negative id like a rep's office orders.
+        var office = await OfficeRowsFrom(OverviewOfficeOrders(), ct);
+        var officeReps = await OverviewOfficeOrders()
+            .Select(d => new { d.Id, d.SalesRepId })
+            .ToDictionaryAsync(d => d.Id, d => d.SalesRepId, ct);
+
+        var reps = await RepNames(orders.Select(o => o.SalesUserId).Concat(officeReps.Values.OfType<int>()), ct);
+        for (var i = 0; i < rows.Count; i++)
+            rows[i].SalesRepName = reps.GetValueOrDefault(orders[i].SalesUserId);
+        foreach (var r in office)
+            r.SalesRepName = officeReps.GetValueOrDefault(-r.Id) is { } rep ? reps.GetValueOrDefault(rep) : null;
+        rows.AddRange(office);
+        return Ok(rows.OrderByDescending(r => r.DateCreated).ToList());
+    }
+
+    // GET /api/sales-orders/overview/{id} — one of those orders with its history (Get is the
+    // rep's own only).
+    [HttpGet("overview/{id:int}")]
+    public async Task<ActionResult<SalesOrderDetail>> OverviewGet(int id, CancellationToken ct = default)
+    {
+        if (!await this.MaySeeSalesOverviewAsync(_db, ct)) return Forbid();
+        if (id < 0)
+        {
+            var office = (await OfficeRowsFrom(OfficeOrders().Where(d => d.Id == -id), ct)).FirstOrDefault();
+            if (office == null) return NotFound();
+            var d = await _db.Set<DispatchOrderEntity>().AsNoTracking().FirstAsync(o => o.Id == -id, ct);
+            var names = await RepNames(new[] { d.CreatedById }.Concat(d.SalesRepId is { } r ? [r] : []), ct);
+            office.SalesRepName = d.SalesRepId is { } rep ? names.GetValueOrDefault(rep) : null;
+            var by = d.CreatedById == this.GetUserId() ? "You" : names.GetValueOrDefault(d.CreatedById) ?? "Office";
+            return Ok(new SalesOrderDetail
+            {
+                Order = office,
+                Events =
+                [
+                    new SalesOrderEventRow
+                    {
+                        Date = d.DateCreated ?? DateTime.MinValue,
+                        Who = by,
+                        Text = $"Entered order {d.OrderNo}",
+                    },
+                ],
+            });
+        }
+        var order = await _db.Set<SalesOrderEntity>().AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == id && o.DateDeleted == null && o.Status != SalesOrderEntity.StatusDraft, ct);
+        if (order == null) return NotFound();
+        var row = (await ToRows(new List<SalesOrderEntity> { order }, ct))[0];
+        row.SalesRepName = (await RepNames([order.SalesUserId], ct)).GetValueOrDefault(order.SalesUserId);
+        return Ok(new SalesOrderDetail { Order = row, Events = await EventRows(id, ct) });
+    }
+
+    private Task<Dictionary<int, string>> RepNames(IEnumerable<int> ids, CancellationToken ct)
+    {
+        var list = ids.Distinct().ToList();
+        return _db.GlobeweighUsers.AsNoTracking()
+            .Where(u => list.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.Surname}".Trim(), ct);
+    }
+
     // GET /api/sales-orders/{id} — one order with its history, for the detail side. A negative
     // id is an office-entered order (see List); its history is just who entered it.
     [HttpGet("{id:int}")]
@@ -93,30 +166,27 @@ public class SalesOrdersController : ControllerBase
         var order = await Mine(id, ct, tracking: false);
         if (order == null) return NotFound();
         var row = (await ToRows(new List<SalesOrderEntity> { order }, ct))[0];
+        return Ok(new SalesOrderDetail { Order = row, Events = await EventRows(id, ct) });
+    }
 
+    // An order's history, oldest first: "You" for the caller, else the person's name.
+    private async Task<List<SalesOrderEventRow>> EventRows(int id, CancellationToken ct)
+    {
         var events = await _db.Set<SalesOrderEventEntity>().AsNoTracking()
             .Where(e => e.SalesOrderId == id)
             .OrderBy(e => e.DateCreated).ThenBy(e => e.Id)
             .ToListAsync(ct);
-        var userIds = events.Select(e => e.UserId).Distinct().ToList();
-        var names = await _db.GlobeweighUsers.AsNoTracking()
-            .Where(u => userIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.Surname}".Trim(), ct);
+        var names = await RepNames(events.Select(e => e.UserId), ct);
         var me = this.GetUserId();
-
-        return Ok(new SalesOrderDetail
+        return events.Select(e => new SalesOrderEventRow
         {
-            Order = row,
-            Events = events.Select(e => new SalesOrderEventRow
-            {
-                Date = e.DateCreated,
-                Who = e.UserId == me ? "You" : names.GetValueOrDefault(e.UserId) ?? "Office",
-                Text = e.Text,
-                Changes = string.IsNullOrEmpty(e.Changes)
-                    ? null
-                    : System.Text.Json.JsonSerializer.Deserialize<List<string>>(e.Changes),
-            }).ToList(),
-        });
+            Date = e.DateCreated,
+            Who = e.UserId == me ? "You" : names.GetValueOrDefault(e.UserId) ?? "Office",
+            Text = e.Text,
+            Changes = string.IsNullOrEmpty(e.Changes)
+                ? null
+                : System.Text.Json.JsonSerializer.Deserialize<List<string>>(e.Changes),
+        }).ToList();
     }
 
     // POST /api/sales-orders — start a draft.
@@ -677,12 +747,35 @@ public class SalesOrdersController : ControllerBase
     // Office-entered orders crediting this rep (DispatchOrder.SalesRepId), not ones that came
     // from a SalesOrder (those are already in the list as the rep's own). Deleted ones are left
     // out: an office mistake removed is not the rep's business. onlyId: one order, for Get.
-    private async Task<List<SalesOrderRow>> OfficeRows(int rep, int? onlyId, CancellationToken ct)
+    private Task<List<SalesOrderRow>> OfficeRows(int rep, int? onlyId, CancellationToken ct)
+    {
+        var q = OfficeOrders().Where(d => d.SalesRepId == rep);
+        if (onlyId is { } one) q = q.Where(d => d.Id == one);
+        return OfficeRowsFrom(q, ct);
+    }
+
+    // Open orders entered outside My Orders (TauriAdmin's Open Orders, or the mobile Sales
+    // overview's New order): not deleted, and not one a sales order became.
+    private IQueryable<DispatchOrderEntity> OfficeOrders()
     {
         var fromSales = _db.Set<SalesOrderEntity>().Where(s => s.DispatchOrderId != null).Select(s => s.DispatchOrderId!.Value);
-        var q = _db.Set<DispatchOrderEntity>().AsNoTracking()
-            .Where(d => d.SalesRepId == rep && d.DateDeleted == null && !fromSales.Contains(d.Id));
-        if (onlyId is { } one) q = q.Where(d => d.Id == one);
+        return _db.Set<DispatchOrderEntity>().AsNoTracking()
+            .Where(d => d.DateDeleted == null && !fromSales.Contains(d.Id));
+    }
+
+    // The overview's office orders: the last 90 days' with a sales rep, plus the viewer's own
+    // (a New order from the phone for a customer with no rep). Not every office order ever.
+    private const int OverviewOfficeDays = 90;
+
+    private IQueryable<DispatchOrderEntity> OverviewOfficeOrders()
+    {
+        var me = this.GetUserId();
+        var since = DateTime.Now.AddDays(-OverviewOfficeDays);
+        return OfficeOrders().Where(d => d.DateCreated >= since && (d.SalesRepId != null || d.CreatedById == me));
+    }
+
+    private async Task<List<SalesOrderRow>> OfficeRowsFrom(IQueryable<DispatchOrderEntity> q, CancellationToken ct)
+    {
         var orders = await q.ToListAsync(ct);
         if (orders.Count == 0) return [];
 
@@ -794,7 +887,7 @@ public class SalesOrderRow
     public DateTime? LoadDate { get; set; }
     public string? LoadHaulier { get; set; }
     public DateTime? DateDispatched { get; set; }
-    public string? SalesRepName { get; set; } // the office list only (GET office)
+    public string? SalesRepName { get; set; } // the office and overview lists only
     // Entered by the office with this rep as its Sales Rep, not sent from My Orders: read-only,
     // Id is minus the DispatchOrder id.
     public bool FromOffice { get; set; }

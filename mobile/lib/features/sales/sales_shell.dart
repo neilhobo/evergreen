@@ -10,8 +10,13 @@ import 'sales_providers.dart';
 
 /// The Sales role's app: My Orders, Customers and Completed along the foot
 /// (design A, "Ledger list"), as TauriAdmin's SALES_NAV gives a rep.
+///
+/// With [overview], the same three tabs over every rep's orders and customers,
+/// for the super-admin and Colin: opened from their Home screen, so each tab's
+/// header has a back button to it.
 class SalesShell extends ConsumerStatefulWidget {
-  const SalesShell({super.key});
+  final bool overview;
+  const SalesShell({super.key, this.overview = false});
 
   @override
   ConsumerState<SalesShell> createState() => _SalesShellState();
@@ -27,12 +32,12 @@ class _SalesShellState extends ConsumerState<SalesShell> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     // The office moves orders on (approves, returns, loads, dispatches): keep
     // the list current, as TauriAdmin does every minute.
-    _poll = Timer.periodic(const Duration(seconds: 60), (_) => ref.invalidate(salesOrdersProvider));
+    _poll = Timer.periodic(const Duration(seconds: 60), (_) => ref.invalidate(ordersFor(overview: widget.overview)));
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) ref.invalidate(salesOrdersProvider);
+    if (state == AppLifecycleState.resumed) ref.invalidate(ordersFor(overview: widget.overview));
   }
 
   @override
@@ -48,7 +53,11 @@ class _SalesShellState extends ConsumerState<SalesShell> with WidgetsBindingObse
       backgroundColor: const Color(0xFFF4F6F9),
       body: IndexedStack(
         index: _tab,
-        children: const [MyOrdersScreen(), CustomersScreen(), MyOrdersScreen(completed: true)],
+        children: [
+          MyOrdersScreen(overview: widget.overview),
+          CustomersScreen(overview: widget.overview),
+          MyOrdersScreen(completed: true, overview: widget.overview),
+        ],
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
@@ -74,18 +83,18 @@ class _SalesShellState extends ConsumerState<SalesShell> with WidgetsBindingObse
             height: 66,
             selectedIndex: _tab,
             onDestinationSelected: (i) => setState(() => _tab = i),
-            destinations: const [
+            destinations: [
               NavigationDestination(
-                icon: Icon(Icons.description_outlined),
-                selectedIcon: Icon(Icons.description),
-                label: 'My Orders',
+                icon: const Icon(Icons.description_outlined),
+                selectedIcon: const Icon(Icons.description),
+                label: widget.overview ? 'Orders' : 'My Orders',
               ),
-              NavigationDestination(
+              const NavigationDestination(
                 icon: Icon(Icons.groups_outlined),
                 selectedIcon: Icon(Icons.groups),
                 label: 'Customers',
               ),
-              NavigationDestination(
+              const NavigationDestination(
                 icon: Icon(Icons.task_alt_outlined),
                 selectedIcon: Icon(Icons.task_alt),
                 label: 'Completed',

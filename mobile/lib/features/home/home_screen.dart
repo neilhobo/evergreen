@@ -5,6 +5,7 @@ import '../../theme/colors.dart';
 import '../account/account_sheet.dart';
 import '../auth/auth_controller.dart';
 import '../sales/sales_shell.dart';
+import 'today_screen.dart';
 
 /// UserRole.Sales in Globeweigh.TauriAdmin/src/types.ts.
 const salesRoleId = 6;
@@ -22,6 +23,8 @@ class HomeScreen extends ConsumerWidget {
     // Keyed by who is signed in (and on whose behalf), so a Switch user starts
     // the shell afresh: its tab belongs to the other session.
     if (user != null && user.roleIds.contains(salesRoleId)) return SalesShell(key: ValueKey(user.sessionKey));
+    // The super-admin and Colin: Home with every module they have (Sales today).
+    if (user != null && user.canSeeSalesOverview) return TodayScreen(key: ValueKey(user.sessionKey), user: user);
 
     return Scaffold(
       appBar: AppBar(

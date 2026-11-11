@@ -10,12 +10,14 @@ import 'sales_format.dart';
 import 'sales_providers.dart';
 
 /// One of the rep's own customers.
-Future<Customer?> pickCustomer(BuildContext context) => Navigator.of(
+/// [all]: every customer (the Sales overview), not just the rep's own.
+Future<Customer?> pickCustomer(BuildContext context, {bool all = false}) => Navigator.of(
   context,
-).push<Customer>(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const _CustomerPicker()));
+).push<Customer>(MaterialPageRoute(fullscreenDialog: true, builder: (_) => _CustomerPicker(all: all)));
 
 class _CustomerPicker extends ConsumerStatefulWidget {
-  const _CustomerPicker();
+  final bool all;
+  const _CustomerPicker({this.all = false});
   @override
   ConsumerState<_CustomerPicker> createState() => _CustomerPickerState();
 }
@@ -31,7 +33,8 @@ class _CustomerPickerState extends ConsumerState<_CustomerPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = ref.watch(myCustomersProvider);
+    final provider = widget.all ? allCustomersProvider : myCustomersProvider;
+    final customers = ref.watch(provider);
     final term = _search.text.trim().toLowerCase();
     return Scaffold(
       backgroundColor: Colors.white,
@@ -54,7 +57,7 @@ class _CustomerPickerState extends ConsumerState<_CustomerPicker> {
           Expanded(
             child: customers.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(myCustomersProvider)),
+              error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(provider)),
               data: (all) {
                 final rows = all
                     .where((c) => term.isEmpty || [c.name, c.code].any((v) => v?.toLowerCase().contains(term) ?? false))
@@ -235,9 +238,9 @@ class _ProductPickerState extends ConsumerState<_ProductPicker> {
                       title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                       subtitle: Text(
                         [
+                          p.sizeUpp,
                           if (zone != null) 'Zone ${gbp(zone)}',
                           if (own != null) 'Customer ${gbp(own)}',
-                          if (p.soldBy != 'CubicMeter') '${p.upp} per pallet' else 'per m³',
                         ].join(' · '),
                         style: TextStyle(fontSize: 12, color: own != null ? const Color(0xFF1D4ED8) : null),
                       ),
@@ -341,7 +344,7 @@ class _LineSheetState extends State<_LineSheet> {
           children: [
             Text(widget.product.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             Text(
-              _whole ? 'Price per unit · ${widget.product.upp} units per pallet' : 'Price per m³',
+              '${widget.product.sizeUpp} · ${_whole ? 'price per unit' : 'price per m³'}',
               style: const TextStyle(fontSize: 12, color: Color(0xFF556070)),
             ),
             const SizedBox(height: 16),

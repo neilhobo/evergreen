@@ -9,7 +9,7 @@ import 'order_screen.dart';
 import 'sales_format.dart';
 import 'sales_providers.dart';
 
-enum _Filter { all, drafts, office, live }
+enum _Filter { all, drafts, office, live, returned }
 
 extension on _Filter {
   String get label => switch (this) {
@@ -17,6 +17,7 @@ extension on _Filter {
     _Filter.drafts => 'Drafts',
     _Filter.office => 'With office',
     _Filter.live => 'Live',
+    _Filter.returned => 'Returned',
   };
 
   bool matches(SalesOrder o) => switch (this) {
@@ -24,23 +25,34 @@ extension on _Filter {
     _Filter.drafts => o.status.isDraft,
     _Filter.office => o.status == SalesOrderStatus.pending,
     _Filter.live => o.status == SalesOrderStatus.approved || o.status == SalesOrderStatus.planned,
+    _Filter.returned => o.status == SalesOrderStatus.returned,
   };
 }
+
+// A rep's chips, and the overview's (no drafts there; the office's own pile first).
+const _repFilters = [_Filter.all, _Filter.drafts, _Filter.office, _Filter.live];
+const _overviewFilters = [_Filter.office, _Filter.all, _Filter.live, _Filter.returned];
 
 bool _finished(SalesOrder o) => o.status == SalesOrderStatus.dispatched || o.status == SalesOrderStatus.cancelled;
 
 /// My Orders (or, with [completed], the finished ones): the TauriAdmin list
 /// shrunk to a phone — filter chips, a row per order with its pill.
+///
+/// With [overview]: every rep's orders (the super-admin and Colin), each row
+/// naming its rep, a rep filter, and no New order (an order made here would be
+/// the viewer's own).
 class MyOrdersScreen extends ConsumerStatefulWidget {
   final bool completed;
-  const MyOrdersScreen({super.key, this.completed = false});
+  final bool overview;
+  const MyOrdersScreen({super.key, this.completed = false, this.overview = false});
 
   @override
   ConsumerState<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
 class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
-  _Filter _filter = _Filter.all;
+  late _Filter _filter = widget.overview ? _Filter.office : _Filter.all;
+  String? _rep; // overview: one rep's orders only
   bool _searching = false;
   final _search = TextEditingController();
 
@@ -58,19 +70,61 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
       o.poNumber,
       o.ref,
       o.orderNo?.toString(),
+      o.salesRepName,
     ].any((v) => v?.toLowerCase().contains(term) ?? false);
+  }
+
+  Future<void> _pickRep(List<SalesOrder> all) async {
+    final reps = {for (final o in all) o.salesRepName ?? 'No rep'}.toList()..sort();
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: const Text('All reps'),
+              trailing: _rep == null ? const Icon(Icons.radio_button_checked) : null,
+              onTap: () => Navigator.of(context).pop(''),
+            ),
+            for (final r in reps)
+              ListTile(
+                title: Text(r),
+                trailing: _rep == r ? const Icon(Icons.radio_button_checked) : null,
+                onTap: () => Navigator.of(context).pop(r),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) setState(() => _rep = picked.isEmpty ? null : picked);
   }
 
   @override
   Widget build(BuildContext context) {
-    final orders = ref.watch(salesOrdersProvider);
+    final overview = widget.overview;
+    final provider = ordersFor(overview: overview);
+    final orders = ref.watch(provider);
     final products = ref.watch(productsProvider).valueOrNull ?? const {};
+    final filters = overview ? _overviewFilters : _repFilters;
 
     return Column(
       children: [
         SalesHeader(
-          overline: widget.completed ? 'Dispatched and cancelled' : 'Sales',
-          title: widget.completed ? 'Completed' : 'My Orders',
+          overline: widget.completed
+              ? 'Dispatched and cancelled'
+              : overview
+              ? 'Sales · every rep'
+              : 'Sales',
+          title: widget.completed
+              ? 'Completed'
+              : overview
+              ? 'All orders'
+              : 'My Orders',
+          leading: overview
+              ? HeaderIconButton(icon: Icons.arrow_back, tooltip: 'Home', onPressed: () => Navigator.of(context).pop())
+              : null,
           actions: [
             HeaderIconButton(
               icon: _searching ? Icons.close : Icons.search,
@@ -80,11 +134,14 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                 if (!_searching) _search.clear();
               }),
             ),
-            HeaderIconButton(
-              icon: Icons.account_circle_outlined,
-              tooltip: 'Account',
-              onPressed: () => showAccountSheet(context),
-            ),
+            // The overview's account menu is on Home: a Switch user from in here
+            // would leave this all-reps screen open under the other login.
+            if (!overview)
+              HeaderIconButton(
+                icon: Icons.account_circle_outlined,
+                tooltip: 'Account',
+                onPressed: () => showAccountSheet(context),
+              ),
           ],
           bottom: _searching
               ? SalesSearchField(
@@ -98,15 +155,33 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
         Expanded(
           child: orders.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(salesOrdersProvider)),
+            error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(provider)),
             data: (all) {
-              final scope = all.where((o) => widget.completed ? _finished(o) : true).where(_matchesSearch).toList();
+              final scope = all
+                  .where((o) => widget.completed ? _finished(o) : true)
+                  .where((o) => _rep == null || (o.salesRepName ?? 'No rep') == _rep)
+                  .where(_matchesSearch)
+                  .toList();
               final visible = widget.completed ? scope : scope.where(_filter.matches).toList();
+              // The office's pile reads oldest first: the longest waiting at the top.
+              if (overview && _filter == _Filter.office) {
+                visible.sort((a, b) => (a.dateSent ?? a.dateCreated).compareTo(b.dateSent ?? b.dateCreated));
+              }
+              final repChip = overview
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _Chip(
+                        label: '${_rep ?? 'All reps'} ▾',
+                        selected: _rep != null,
+                        onTap: () => _pickRep(all),
+                      ),
+                    )
+                  : null;
               return Stack(
                 children: [
                   Column(
                     children: [
-                      if (!widget.completed)
+                      if (!widget.completed || overview)
                         Container(
                           color: Colors.white,
                           height: 58,
@@ -114,22 +189,24 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                             children: [
-                              for (final f in _Filter.values)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: _Chip(
-                                    label: '${f.label} ${scope.where(f.matches).length}',
-                                    selected: _filter == f,
-                                    onTap: () => setState(() => _filter = f),
+                              ?repChip,
+                              if (!widget.completed)
+                                for (final f in filters)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: _Chip(
+                                      label: '${f.label} ${scope.where(f.matches).length}',
+                                      selected: _filter == f,
+                                      onTap: () => setState(() => _filter = f),
+                                    ),
                                   ),
-                                ),
                             ],
                           ),
                         ),
                       const Divider(height: 1, color: Color(0xFFE5E9EF)),
                       Expanded(
                         child: RefreshIndicator(
-                          onRefresh: () => ref.refresh(salesOrdersProvider.future),
+                          onRefresh: () => ref.refresh(provider.future),
                           child: visible.isEmpty
                               ? ListView(
                                   children: [
@@ -147,13 +224,17 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                                   padding: const EdgeInsets.only(bottom: 96),
                                   itemCount: visible.length,
                                   separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFE5E9EF)),
-                                  itemBuilder: (_, i) =>
-                                      _OrderRow(order: visible[i], total: orderTotal(visible[i].items, products)),
+                                  itemBuilder: (_, i) => _OrderRow(
+                                    order: visible[i],
+                                    total: orderTotal(visible[i].items, products),
+                                    overview: overview,
+                                  ),
                                 ),
                         ),
                       ),
                     ],
                   ),
+                  // The overview's New order is a real open order (with the customer's rep).
                   if (!widget.completed)
                     Positioned(
                       right: 18,
@@ -164,8 +245,12 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
                         backgroundColor: SalesHeader.navy,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                        onPressed: () =>
-                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EditOrderScreen())),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                EditOrderScreen(mode: overview ? OrderEditMode.officeNew : OrderEditMode.rep),
+                          ),
+                        ),
                         child: const Icon(Icons.add, size: 28),
                       ),
                     ),
@@ -182,7 +267,8 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> {
 class _OrderRow extends StatelessWidget {
   final SalesOrder order;
   final double total;
-  const _OrderRow({required this.order, required this.total});
+  final bool overview;
+  const _OrderRow({required this.order, required this.total, this.overview = false});
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +279,11 @@ class _OrderRow extends StatelessWidget {
     return Material(
       color: Colors.white,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrderScreen(orderId: o.id))),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OrderScreen(orderId: o.id, overview: overview),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           child: Column(
@@ -214,7 +304,12 @@ class _OrderRow extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                '${dayLabel(o.deliveryDate)} · ${qty(o.pallets)} pallets · ${gbp(total)}',
+                [
+                  if (overview) o.salesRepName ?? 'No rep',
+                  dayLabel(o.deliveryDate),
+                  '${qty(o.pallets)} pallets',
+                  gbp(total),
+                ].join(' · '),
                 style: const TextStyle(fontSize: 12, color: Color(0xFF556070)),
               ),
               const SizedBox(height: 6),

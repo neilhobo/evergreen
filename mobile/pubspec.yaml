@@ -4,7 +4,7 @@ publish_to: 'none'
 
 # Bumped by the release scripts (mobile/tools); the build number after "+" is
 # what the update prompt compares.
-version: 1.0.0+3
+version: 1.0.0+6
 
 environment:
   # The Mac that builds iOS (and Shorebird) runs an older Flutter than this PC.
@@ -18,7 +18,9 @@ dependencies:
   go_router: ^14.6.2
   flutter_secure_storage: ^9.2.2
   package_info_plus: ^8.1.2
+  url_launcher: ^6.3.1
   shorebird_code_push: ^2.0.7
+  video_player: ^2.14.1
 
 dev_dependencies:
   flutter_test:

@@ -158,3 +158,36 @@ export const getMemberGroups = (reportKey: string) =>
 export const requestSageSalesRefresh = () => apiPost<SageSyncState>("/sage/sync/sales/refresh", {});
 // Withdraws it: a pending request is dropped, a read in progress stops within seconds.
 export const cancelSageSalesRefresh = () => apiPost<SageSyncState>("/sage/sync/sales/cancel", {});
+
+// ---- Active Customers (Reports > Other) — Services/ActiveCustomersReport.cs ----
+// Every Sage customer with at least one sales invoice since a date, off the Sage sales mirror.
+export interface ActiveCustomer {
+  accountRef: string;
+  name: string;
+  address: string | null;
+  postcode: string | null;
+  contact: string | null;
+  telephone: string | null;
+  email: string | null;
+  firstInvoice: string;
+  lastInvoice: string;
+  invoices: number;
+  credits: number;
+  orders: number; // distinct Sage sales order numbers on the invoices
+  turnover: number; // net of VAT, invoices less credits
+  balance: number;
+  onHold: boolean;
+  inactive: boolean;
+  inCustomerMirror: boolean;
+}
+
+export interface ActiveCustomersReport {
+  from: string;
+  to: string;
+  sync: MemberSalesSync;
+  sageCustomers: number;
+  customers: ActiveCustomer[];
+}
+
+export const getActiveCustomersReport = (from: string, to: string) =>
+  apiGet<ActiveCustomersReport>(`/reports/active-customers?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);

@@ -124,6 +124,53 @@ public class LeaveEmployee
     }
 }
 
+// An employee works one of their company days and gets a floating day instead
+// (Data/Migrations/AddLeaveWorkedDaysAndReminders.sql): it is no longer one of THEIR company days.
+public class LeaveHolidayWorked
+{
+    public int Id { get; set; }
+    public int EmployeeId { get; set; }
+    public int HolidayId { get; set; }
+    public string Reason { get; set; } = "";
+    public int? CreatedById { get; set; }
+    public DateTime DateCreated { get; set; }
+
+    public class Config : IEntityTypeConfiguration<LeaveHolidayWorked>
+    {
+        public void Configure(EntityTypeBuilder<LeaveHolidayWorked> b)
+        {
+            b.ToTable("LeaveHolidayWorked");
+            b.Property(e => e.Id).HasColumnName("id");
+            b.Property(e => e.Reason).HasMaxLength(300);
+            b.Property(e => e.DateCreated).HasColumnType("datetime").HasDefaultValueSql("(getdate())");
+        }
+    }
+}
+
+// An "unbooked leave" reminder email (Annual Leave > Outstanding).
+public class LeaveReminder
+{
+    public int Id { get; set; }
+    public int EmployeeId { get; set; }
+    public int Year { get; set; }
+    public decimal Days { get; set; }
+    public string SentTo { get; set; } = "";
+    public int? SentById { get; set; }
+    public DateTime DateSent { get; set; }
+
+    public class Config : IEntityTypeConfiguration<LeaveReminder>
+    {
+        public void Configure(EntityTypeBuilder<LeaveReminder> b)
+        {
+            b.ToTable("LeaveReminder");
+            b.Property(e => e.Id).HasColumnName("id");
+            b.Property(e => e.Days).HasColumnType("decimal(6,2)");
+            b.Property(e => e.SentTo).HasMaxLength(200);
+            b.Property(e => e.DateSent).HasColumnType("datetime").HasDefaultValueSql("(getdate())");
+        }
+    }
+}
+
 // A manual + or - to one employee's floating days for one year.
 public class LeaveAdjustment
 {

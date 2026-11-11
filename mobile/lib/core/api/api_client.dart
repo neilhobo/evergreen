@@ -27,7 +27,9 @@ class ApiClient {
           baseUrl: ApiConfig.baseUrl,
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 30),
-          headers: {'Content-Type': 'application/json'},
+          // X-Client names the app (as TauriAdmin's "TauriAdmin"), so Login History and the
+          // audit trail can say where a sign-in or change came from.
+          headers: {'Content-Type': 'application/json', 'X-Client': 'Mobile'},
         ),
       ) {
     dio.interceptors.add(_interceptor());

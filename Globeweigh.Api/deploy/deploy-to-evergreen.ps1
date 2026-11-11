@@ -108,8 +108,9 @@ Set-Content -Path $offline -Value '<html><body>Updating Globeweigh.Api...</body>
 Start-Sleep -Seconds 2
 Write-Host "Copying to $Server ..." -ForegroundColor Cyan
 # /XF preserves server-only files: app_offline marker, the setup script, and the prod
-# config (appsettings*.json carry the prod SQL connection string — the repo copy is dev).
-robocopy $stage $Server /E /XF app_offline.htm setup-iis.ps1 appsettings.json appsettings.Development.json /NFL /NDL /NJH /R:2 /W:1 | Out-Null
+# config (appsettings*.json carry the prod SQL connection string — the repo copy is dev),
+# and mobile-version.json (the mobile release scripts write it; see MobileAppController).
+robocopy $stage $Server /E /XF app_offline.htm setup-iis.ps1 appsettings.json appsettings.Development.json mobile-version.json /NFL /NDL /NJH /R:2 /W:1 | Out-Null
 $rc = $LASTEXITCODE
 Remove-Item $offline -Force -ErrorAction SilentlyContinue
 if ($rc -ge 8) { throw "robocopy failed ($rc)." }

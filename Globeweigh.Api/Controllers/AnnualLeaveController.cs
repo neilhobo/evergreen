@@ -67,6 +67,25 @@ public class AnnualLeaveController : ControllerBase
     private static IReadOnlySet<DateOnly> For(Dictionary<int, HashSet<DateOnly>> map, int categoryId) =>
         map.TryGetValue(categoryId, out var s) ? s : new HashSet<DateOnly>();
 
+    // The company days each employee has been approved to work (LeaveHolidayWorked): employeeId -> dates.
+    private async Task<Dictionary<int, HashSet<DateOnly>>> WorkedByEmployeeAsync(CancellationToken ct)
+    {
+        var rows = await (from w in _db.Set<LeaveHolidayWorked>()
+                          join h in _db.Set<LeaveCompanyHoliday>() on w.HolidayId equals h.Id
+                          select new { w.EmployeeId, h.Date }).AsNoTracking().ToListAsync(ct);
+        return rows.GroupBy(r => r.EmployeeId).ToDictionary(g => g.Key, g => g.Select(r => r.Date).ToHashSet());
+    }
+
+    // THEIR company days: their category's, less any they are working. Everything per-person
+    // (set days, the days a request takes) is worked out from this, so a worked company day moves
+    // from Set to Floating with the total unchanged — the 2027 policy's "substitute a floating day".
+    private static IReadOnlySet<DateOnly> Mine(
+        Dictionary<int, HashSet<DateOnly>> hols, Dictionary<int, HashSet<DateOnly>> worked, LeaveEmployee e)
+    {
+        var cat = For(hols, e.CategoryId);
+        return worked.TryGetValue(e.Id, out var w) && w.Count > 0 ? cat.Where(d => !w.Contains(d)).ToHashSet() : cat;
+    }
+
     private async Task<Dictionary<int, string>> UserNamesAsync(IEnumerable<int> ids, CancellationToken ct)
     {
         var list = ids.Distinct().ToList();
@@ -112,12 +131,14 @@ public class AnnualLeaveController : ControllerBase
         int Id, int UserId, string Forename, string Surname, int CategoryId, string CategoryName,
         DateOnly? StartDate, DateOnly? EndDate, string? Email, string? EmailTo, string? Mobile,
         int? ApproverUserId, string? ApproverName, string? Notes,
-        decimal Total, int Set, decimal Adjustments, decimal Floating, decimal Used, decimal Waiting, decimal Remaining);
+        decimal Total, int Set, decimal Adjustments, decimal Floating, decimal Used, decimal Waiting, decimal Remaining,
+        decimal Unpaid, decimal Unbooked, int Worked);
 
     private async Task<List<EmployeeRow>> EmployeeRowsAsync(int year, CancellationToken ct)
     {
         var cats = await _db.Set<LeaveCategory>().AsNoTracking().ToDictionaryAsync(c => c.Id, ct);
         var hols = await HolidaysByCategoryAsync(ct);
+        var worked = await WorkedByEmployeeAsync(ct);
         var people = (await People().ToListAsync(ct))
             .OrderBy(p => p.Surname.Trim(), StringComparer.OrdinalIgnoreCase)
             .ThenBy(p => p.Forename.Trim(), StringComparer.OrdinalIgnoreCase).ToList();
@@ -134,11 +155,13 @@ public class AnnualLeaveController : ControllerBase
         {
             var e = p.E;
             var cat = cats.GetValueOrDefault(e.CategoryId);
-            var b = LeaveCalculator.BalanceFor(e, cat?.AnnualDays ?? 0, year, For(hols, e.CategoryId), reqs[e.Id], adjs[e.Id]);
+            var b = LeaveCalculator.BalanceFor(e, cat?.AnnualDays ?? 0, year, Mine(hols, worked, e), reqs[e.Id], adjs[e.Id]);
+            var workedN = worked.GetValueOrDefault(e.Id)?.Count(d => d.Year == year) ?? 0;
             return new EmployeeRow(e.Id, e.GlobeweighUserId, p.Forename.Trim(), p.Surname.Trim(), e.CategoryId, cat?.Name ?? "",
                 e.StartDate, e.EndDate, e.Email, p.EmailTo, e.Mobile, e.ApproverUserId,
                 e.ApproverUserId is { } a ? approvers.GetValueOrDefault(a) : null, e.Notes,
-                b.Total, b.Set, b.Adjustments, b.Floating, b.Used, b.Waiting, b.Remaining);
+                b.Total, b.Set, b.Adjustments, b.Floating, b.Used, b.Waiting, b.Remaining,
+                b.Unpaid, b.Unbooked, workedN);
         }).ToList();
     }
 
@@ -310,7 +333,9 @@ public class AnnualLeaveController : ControllerBase
 
     // ---- requests ---------------------------------------------------------------------------
 
-    public record Check(string Level, string Text);
+    // Key: which policy it is (dates, overlap, employment, notice, allowance, peak, clash), so the
+    // Requests grid can give each its own column; Short: the cell text for that column.
+    public record Check(string Level, string Text, string? Key = null, string? Short = null);
 
     public record RequestRow(
         int Id, int EmployeeId, string EmployeeName, string CategoryName,
@@ -326,13 +351,13 @@ public class AnnualLeaveController : ControllerBase
     {
         var checks = new List<Check>();
         var hols = await HolidaysByCategoryAsync(ct);
-        var mine = For(hols, emp.CategoryId);
+        var mine = Mine(hols, await WorkedByEmployeeAsync(ct), emp);
         var days = LeaveCalculator.RequestDays(start, end, dayLength, mine);
         var year = start.Year;
 
-        if (end < start) checks.Add(new("error", "The last day is before the first day."));
-        if (start.Year != end.Year) checks.Add(new("error", "Leave can't run into the next year — book it as two requests."));
-        if (days == 0 && end >= start) checks.Add(new("error", "There are no working days in those dates (weekends and company days don't count)."));
+        if (end < start) checks.Add(new("error", "The last day is before the first day.", "dates", "Bad dates"));
+        if (start.Year != end.Year) checks.Add(new("error", "Leave can't run into the next year — book it as two requests.", "dates", "Spans 2 years"));
+        if (days == 0 && end >= start) checks.Add(new("error", "There are no working days in those dates (weekends and company days don't count).", "dates", "No working days"));
 
         var cat = await _db.Set<LeaveCategory>().AsNoTracking().FirstOrDefaultAsync(c => c.Id == emp.CategoryId, ct);
         var reqs = await _db.Set<LeaveRequest>().AsNoTracking()
@@ -347,19 +372,26 @@ public class AnnualLeaveController : ControllerBase
         var overlap = others.FirstOrDefault(r =>
             (r.Status is LeaveRequest.StatusWaiting or LeaveRequest.StatusApproved) && r.StartDate <= end && r.EndDate >= start);
         if (overlap != null)
-            checks.Add(new("error", $"Already has leave {Range(overlap.StartDate, overlap.EndDate)} ({(overlap.Status == LeaveRequest.StatusApproved ? "approved" : "waiting")})."));
+            checks.Add(new("error", $"Already has leave {Range(overlap.StartDate, overlap.EndDate)} ({(overlap.Status == LeaveRequest.StatusApproved ? "approved" : "waiting")}).", "overlap", "Overlaps"));
 
-        if (emp.StartDate is { } s && start < s) checks.Add(new("warn", $"Starts before their start date ({s:d MMM yyyy})."));
-        if (emp.EndDate is { } f && end > f) checks.Add(new("warn", $"Runs past their leaving date ({f:d MMM yyyy})."));
+        if (emp.StartDate is { } s && start < s) checks.Add(new("warn", $"Starts before their start date ({s:d MMM yyyy}).", "employment", "Before start"));
+        if (emp.EndDate is { } f && end > f) checks.Add(new("warn", $"Runs past their leaving date ({f:d MMM yyyy}).", "employment", "After leaving"));
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         var notice = start.DayNumber - today.DayNumber;
-        if (notice < 0) checks.Add(new("info", "These dates are in the past — fine for entering a paper form."));
-        else if (notice < LeaveCalculator.NoticeDays) checks.Add(new("warn", $"Only {notice} day{(notice == 1 ? "" : "s")}' notice — floating days need 2 weeks."));
-        else checks.Add(new("ok", $"2 weeks' notice: {notice} days' notice given."));
+        if (notice < 0) checks.Add(new("info", "These dates are in the past.", "notice", "Past"));
+        else if (notice < LeaveCalculator.NoticeDays) checks.Add(new("warn", $"Only {notice} day{(notice == 1 ? "" : "s")}' notice — floating days need 2 weeks.", "notice", $"{notice}d"));
+        else checks.Add(new("ok", $"2 weeks' notice: {notice} days' notice given.", "notice", $"{notice}d"));
 
-        if (after < 0) checks.Add(new("warn", $"Goes over their allowance by {Fmt(-after)} day{(-after == 1 ? "" : "s")}. No carry-over, so it can't come out of next year."));
-        else checks.Add(new("ok", $"Within allowance: {Fmt(after)} floating day{(after == 1 ? "" : "s")} left after."));
+        // Past the paid allowance is unpaid (2027 policy), and there is no carry-over to borrow from.
+        var unpaid = LeaveCalculator.UnpaidPart(before, after);
+        if (unpaid > 0)
+            checks.Add(new("warn", unpaid == days
+                ? $"Unpaid: they have no paid leave left, so all {Fmt(days)} day{(days == 1 ? "" : "s")} would be unpaid ({Fmt(-after)} unpaid in {year} after this)."
+                : $"Unpaid: {Fmt(unpaid)} of these {Fmt(days)} days would be unpaid — past their paid allowance.", "allowance", $"{Fmt(-after)} unpaid"));
+        else if (after < 0)
+            checks.Add(new("warn", $"They are already {Fmt(-after)} day{(-after == 1 ? "" : "s")} past their paid allowance — those days are unpaid.", "allowance", $"{Fmt(-after)} unpaid"));
+        else checks.Add(new("ok", $"Within allowance: {Fmt(after)} floating day{(after == 1 ? "" : "s")} left after.", "allowance", $"{Fmt(after)} left"));
 
         var periods = await _db.Set<LeaveBlockedPeriod>().AsNoTracking()
             .Where(p => p.StartDate <= end && p.EndDate >= start && (p.CategoryId == null || p.CategoryId == emp.CategoryId))
@@ -367,11 +399,12 @@ public class AnnualLeaveController : ControllerBase
         foreach (var p in periods)
         {
             if (p.MaxDays is { } max && days <= max)
-                checks.Add(new("ok", $"{p.Name}: {Fmt(days)} day{(days == 1 ? "" : "s")} is within the {Fmt(max)}-day limit."));
+                checks.Add(new("ok", $"{p.Name}: {Fmt(days)} day{(days == 1 ? "" : "s")} is within the {Fmt(max)}-day limit.", "peak", $"{Fmt(days)} / {Fmt(max)}"));
             else
                 checks.Add(new("warn", p.MaxDays is { } m
                     ? $"{p.Name} ({Range(p.StartDate, p.EndDate)}): more than {Fmt(m)} days off is discouraged."
-                    : $"{p.Name} ({Range(p.StartDate, p.EndDate)}): leave isn't normally approved."));
+                    : $"{p.Name} ({Range(p.StartDate, p.EndDate)}): leave isn't normally approved.",
+                    "peak", p.MaxDays is { } m2 ? $"{Fmt(days)} / {Fmt(m2)}" : "Not normally"));
         }
 
         // Who else in the same category is off on any of those working days.
@@ -385,9 +418,12 @@ public class AnnualLeaveController : ControllerBase
         if (clash.Count > 0)
         {
             var names = string.Join(", ", clash.Select(c => $"{$"{c.Forename} {c.Surname}".Trim()}{(c.Status == LeaveRequest.StatusWaiting ? " (waiting)" : "")}").Distinct());
-            checks.Add(new("warn", $"Also off then ({cat?.Name}): {names}."));
+            // Short: "G. McCann", or "G. McCann +2" when more.
+            var shortNames = clash.Select(c => $"{(c.Forename.Trim().Length > 0 ? c.Forename.Trim()[0] + ". " : "")}{c.Surname.Trim()}").Distinct().ToList();
+            checks.Add(new("warn", $"Also off then ({cat?.Name}): {names}.", "clash",
+                shortNames.Count == 1 ? shortNames[0] : $"{shortNames[0]} +{shortNames.Count - 1}"));
         }
-        else checks.Add(new("ok", $"Nobody else in {cat?.Name} is off then."));
+        else checks.Add(new("ok", $"Nobody else in {cat?.Name} is off then.", "clash", "None"));
 
         return (days, before, after, checks);
     }
@@ -425,8 +461,80 @@ public class AnnualLeaveController : ControllerBase
         return list;
     }
 
+    // GET /api/annual-leave/requests/{id} — one request (the calendar's popup), with what it does
+    // to their balance and the policy checks for its dates (worked out without itself, so editing
+    // it never clashes with itself).
+    [HttpGet("requests/{id:int}")]
+    public async Task<ActionResult<RequestRow>> GetRequest(int id, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var r = await _db.Set<LeaveRequest>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.DateDeleted == null, ct);
+        if (r == null) return NotFound(new { message = "That request no longer exists." });
+        var p = await PersonAsync(r.EmployeeId, ct);
+        if (p == null) return NotFound(new { message = "They are no longer in Annual Leave (Admin > Staff)." });
+        var cat = await _db.Set<LeaveCategory>().AsNoTracking().Where(c => c.Id == p.E.CategoryId).Select(c => c.Name).FirstOrDefaultAsync(ct);
+        var requestedBy = r.RequestedById is { } q ? (await UserNamesAsync(new[] { q }, ct)).GetValueOrDefault(q) : null;
+        decimal before = 0, after = 0;
+        var checks = new List<Check>();
+        if (r.Status is LeaveRequest.StatusWaiting or LeaveRequest.StatusApproved)
+            (_, before, after, checks) = await AssessAsync(p.E, r.StartDate, r.EndDate, r.DayLength, r.Id, ct);
+        return new RequestRow(r.Id, p.E.Id, p.Name, cat ?? "", r.StartDate, r.EndDate, r.DayLength, r.Days, r.Status,
+            r.Note, r.DecisionNote, r.DecidedByName, r.DateDecided, r.DateCreated, requestedBy, before, after, checks);
+    }
+
+    // PUT /api/annual-leave/requests/{id} — change a waiting or approved request's dates, length
+    // or note. Its days are worked out again and the same checks apply (errors refuse the change);
+    // it keeps its status, and the change is noted on it with who made it.
+    [HttpPut("requests/{id:int}")]
+    public async Task<IActionResult> UpdateRequest(int id, [FromBody] RequestInput input, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var r = await _db.Set<LeaveRequest>().FirstOrDefaultAsync(x => x.Id == id && x.DateDeleted == null, ct);
+        if (r == null) return NotFound(new { message = "That request no longer exists." });
+        if (r.Status is not (LeaveRequest.StatusWaiting or LeaveRequest.StatusApproved))
+            return BadRequest(new { message = "Only waiting or approved leave can be changed." });
+        var p = await PersonAsync(r.EmployeeId, ct);
+        if (p == null) return BadRequest(new { message = "They are no longer in Annual Leave (Admin > Staff)." });
+        var length = NormaliseLength(input);
+        var (days, _, _, checks) = await AssessAsync(p.E, input.StartDate, input.EndDate, length, r.Id, ct);
+        if (checks.FirstOrDefault(c => c.Level == "error") is { } bad) return BadRequest(new { message = bad.Text });
+
+        var moved = r.StartDate != input.StartDate || r.EndDate != input.EndDate || r.DayLength != length;
+        var was = moved ? $"{Range(r.StartDate, r.EndDate)}{(r.DayLength < 1 ? $" ({Fmt(r.DayLength)} day)" : "")}" : null;
+        r.StartDate = input.StartDate;
+        r.EndDate = input.EndDate;
+        r.DayLength = length;
+        r.Days = days;
+        r.Note = string.IsNullOrWhiteSpace(input.Note) ? null : input.Note.Trim();
+        if (moved)
+        {
+            // Kept on the request, so an approved holiday that was moved says so.
+            var stamp = $"Changed from {was} by {await MyNameAsync(ct)} on {DateTime.Now:d MMM yyyy}.";
+            r.DecisionNote = string.IsNullOrWhiteSpace(r.DecisionNote) ? stamp : $"{r.DecisionNote} {stamp}";
+            if (r.DecisionNote.Length > 1000) r.DecisionNote = r.DecisionNote[^1000..];
+        }
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // DELETE /api/annual-leave/requests/{id} — removes a request entered by mistake, whatever its
+    // status (it leaves the balance and the calendar). Leave that was real but is no longer being
+    // taken should be CANCELLED instead, which keeps the record.
+    [HttpDelete("requests/{id:int}")]
+    public async Task<IActionResult> DeleteRequest(int id, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var r = await _db.Set<LeaveRequest>().FirstOrDefaultAsync(x => x.Id == id && x.DateDeleted == null, ct);
+        if (r == null) return NotFound(new { message = "That request no longer exists." });
+        r.DateDeleted = DateTime.Now;
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
     public class RequestInput
     {
+        // Preview only: the request being edited, left out of its own checks.
+        public int? RequestId { get; set; }
         public int EmployeeId { get; set; }
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
@@ -446,7 +554,7 @@ public class AnnualLeaveController : ControllerBase
         if (!await CanManageAsync(ct)) return Forbid();
         var emp = (await PersonAsync(input.EmployeeId, ct))?.E;
         if (emp == null) return NotFound(new { message = "Choose an employee." });
-        var (days, before, after, checks) = await AssessAsync(emp, input.StartDate, input.EndDate, NormaliseLength(input), null, ct);
+        var (days, before, after, checks) = await AssessAsync(emp, input.StartDate, input.EndDate, NormaliseLength(input), input.RequestId, ct);
         return Ok(new { days, remainingBefore = before, remainingAfter = after, checks });
     }
 
@@ -549,7 +657,9 @@ public class AnnualLeaveController : ControllerBase
             $"Your annual leave request for {what} ({Fmt(r.Days)} day{(r.Days == 1 ? "" : "s")}) has been {(approved ? "APPROVED" : "DECLINED")}" +
             $"{(string.IsNullOrWhiteSpace(r.DecidedByName) ? "" : $" by {r.DecidedByName}")}.\n\n" +
             (string.IsNullOrWhiteSpace(r.DecisionNote) ? "" : $"Note: {r.DecisionNote}\n\n") +
-            $"You have {Fmt(remaining)} floating day{(remaining == 1 ? "" : "s")} left for {r.StartDate.Year}.\n";
+            (remaining >= 0
+                ? $"You have {Fmt(remaining)} floating day{(remaining == 1 ? "" : "s")} left for {r.StartDate.Year}.\n"
+                : $"Your paid leave for {r.StartDate.Year} is used up: {Fmt(-remaining)} day{(remaining == -1 ? "" : "s")} will be unpaid.\n");
         try
         {
             await _email.SendAsync(to, $"Annual leave {(approved ? "approved" : "declined")}: {what}", body, ct);
@@ -577,7 +687,153 @@ public class AnnualLeaveController : ControllerBase
                         && (r.Status == LeaveRequest.StatusApproved || r.Status == LeaveRequest.StatusWaiting))
             .Select(r => new { r.Id, r.EmployeeId, r.StartDate, r.EndDate, r.DayLength, r.Days, r.Status })
             .ToListAsync(ct);
-        return Ok(new { holidays, leave });
+        // Company days people are working instead (shown as a working day on their row).
+        var yearStart = new DateOnly(y, 1, 1);
+        var yearEnd = new DateOnly(y, 12, 31);
+        var worked = await (from w in _db.Set<LeaveHolidayWorked>()
+                            join h in _db.Set<LeaveCompanyHoliday>() on w.HolidayId equals h.Id
+                            where h.Date >= yearStart && h.Date <= yearEnd
+                            select new { w.EmployeeId, h.Date }).AsNoTracking().ToListAsync(ct);
+        return Ok(new { holidays, leave, worked });
+    }
+
+    // ---- company days worked (2027 policy: work a fixed holiday, get a floating day) ---------
+
+    public record WorkedRow(int Id, int HolidayId, DateOnly Date, string HolidayName, string Reason, string? CreatedByName, DateTime DateCreated);
+
+    // GET /api/annual-leave/employees/{id}/worked?year= — the company days they are working.
+    [HttpGet("employees/{id:int}/worked")]
+    public async Task<ActionResult<List<WorkedRow>>> Worked(int id, [FromQuery] int year, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var rows = await (from w in _db.Set<LeaveHolidayWorked>()
+                          join h in _db.Set<LeaveCompanyHoliday>() on w.HolidayId equals h.Id
+                          where w.EmployeeId == id && h.Date.Year == year
+                          orderby h.Date
+                          select new { w.Id, w.HolidayId, h.Date, h.Name, w.Reason, w.CreatedById, w.DateCreated })
+            .AsNoTracking().ToListAsync(ct);
+        var names = await UserNamesAsync(rows.Where(r => r.CreatedById != null).Select(r => r.CreatedById!.Value), ct);
+        return rows.Select(r => new WorkedRow(r.Id, r.HolidayId, r.Date, r.Name, r.Reason,
+            r.CreatedById is { } c ? names.GetValueOrDefault(c) : null, r.DateCreated)).ToList();
+    }
+
+    public class WorkedInput
+    {
+        public int HolidayId { get; set; }
+        public string Reason { get; set; } = "";
+    }
+
+    // POST /api/annual-leave/employees/{id}/worked — they work this company day; it becomes a
+    // floating day for them instead. Refused when it is not one of their company days, when it
+    // falls outside their employment, or when they already have leave booked on it.
+    [HttpPost("employees/{id:int}/worked")]
+    public async Task<IActionResult> AddWorked(int id, [FromBody] WorkedInput input, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        if (string.IsNullOrWhiteSpace(input.Reason)) return BadRequest(new { message = "Give a reason." });
+        var emp = (await PersonAsync(id, ct))?.E;
+        if (emp == null) return NotFound(new { message = "That employee no longer exists." });
+        var h = await _db.Set<LeaveCompanyHoliday>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == input.HolidayId, ct);
+        if (h == null) return NotFound(new { message = "That company day no longer exists." });
+        if (!await _db.Set<LeaveCompanyHolidayCategory>().AnyAsync(l => l.HolidayId == h.Id && l.CategoryId == emp.CategoryId, ct))
+            return BadRequest(new { message = $"{h.Date:d MMM yyyy} isn't one of their company days." });
+        if (LeaveCalculator.EmployedSpan(emp, h.Date.Year) is not { } span || h.Date < span.From || h.Date > span.To)
+            return BadRequest(new { message = $"They aren't employed on {h.Date:d MMM yyyy}." });
+        if (await _db.Set<LeaveHolidayWorked>().AnyAsync(w => w.EmployeeId == id && w.HolidayId == h.Id, ct))
+            return BadRequest(new { message = $"They are already working {h.Date:d MMM yyyy}." });
+        _db.Add(new LeaveHolidayWorked
+        {
+            EmployeeId = id, HolidayId = h.Id, Reason = input.Reason.Trim(),
+            CreatedById = this.GetUserId(), DateCreated = DateTime.Now,
+        });
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // DELETE /api/annual-leave/worked/{id} — back to having the company day off.
+    [HttpDelete("worked/{id:int}")]
+    public async Task<IActionResult> DeleteWorked(int id, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var w = await _db.Set<LeaveHolidayWorked>().FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (w == null) return NotFound();
+        _db.Remove(w);
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // ---- outstanding leave (2027 policy: unallocated on 31 August, confirm by 15 September) --
+
+    public record OutstandingRow(
+        int EmployeeId, string Name, string CategoryName, decimal Floating, decimal Used, decimal Waiting,
+        decimal Unbooked, string? EmailTo, DateTime? LastReminded, decimal? LastRemindedDays);
+
+    // GET /api/annual-leave/outstanding?year= — everyone with floating days neither approved nor
+    // asked for, most unbooked first, with the last reminder they were sent.
+    [HttpGet("outstanding")]
+    public async Task<ActionResult<List<OutstandingRow>>> Outstanding([FromQuery] int? year, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var y = year ?? DateTime.Today.Year;
+        var rows = (await EmployeeRowsAsync(y, ct)).Where(r => r.Unbooked > 0).ToList();
+        var ids = rows.Select(r => r.Id).ToList();
+        var last = (await _db.Set<LeaveReminder>().AsNoTracking()
+                .Where(r => r.Year == y && ids.Contains(r.EmployeeId)).ToListAsync(ct))
+            .GroupBy(r => r.EmployeeId).ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.DateSent).First());
+        return rows.OrderByDescending(r => r.Unbooked).ThenBy(r => r.Surname).Select(r =>
+        {
+            var l = last.GetValueOrDefault(r.Id);
+            return new OutstandingRow(r.Id, $"{r.Forename} {r.Surname}".Trim(), r.CategoryName, r.Floating, r.Used, r.Waiting,
+                r.Unbooked, r.EmailTo, l?.DateSent, l?.Days);
+        }).ToList();
+    }
+
+    public class ReminderInput
+    {
+        public int Year { get; set; }
+        public List<int> EmployeeIds { get; set; } = new();
+    }
+
+    // POST /api/annual-leave/reminders — email each chosen employee their unbooked floating days
+    // and the policy's 15 September deadline. Those with no email address are skipped and named.
+    [HttpPost("reminders")]
+    public async Task<ActionResult<object>> SendReminders([FromBody] ReminderInput input, CancellationToken ct = default)
+    {
+        if (!await CanManageAsync(ct)) return Forbid();
+        var rows = (await EmployeeRowsAsync(input.Year, ct)).Where(r => input.EmployeeIds.Contains(r.Id)).ToList();
+        var deadline = new DateOnly(input.Year, 9, 15);
+        int sent = 0;
+        var skipped = new List<string>();
+        var failed = new List<string>();
+        foreach (var r in rows)
+        {
+            var name = $"{r.Forename} {r.Surname}".Trim();
+            if (r.Unbooked <= 0) continue;
+            if (r.EmailTo is not { } to) { skipped.Add(name); continue; }
+            var body =
+                $"Hello {r.Forename},\n\n" +
+                $"You have {Fmt(r.Unbooked)} floating day{(r.Unbooked == 1 ? "" : "s")} of {input.Year} annual leave not yet booked.\n\n" +
+                $"Under the annual leave policy, please confirm by {deadline:dddd d MMMM yyyy} when you intend to take " +
+                $"{(r.Unbooked == 1 ? "it" : "them")}. Otherwise the company may allocate outstanding leave with one month's notice.\n\n" +
+                "Leave is not normally carried forward into the next year.\n";
+            try
+            {
+                await _email.SendAsync(to, $"Annual leave: {Fmt(r.Unbooked)} day{(r.Unbooked == 1 ? "" : "s")} of {input.Year} still to book", body, ct);
+                _db.Add(new LeaveReminder
+                {
+                    EmployeeId = r.Id, Year = input.Year, Days = r.Unbooked, SentTo = to,
+                    SentById = this.GetUserId(), DateSent = DateTime.Now,
+                });
+                sent++;
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "Annual leave reminder to {Email} failed", to);
+                failed.Add(name);
+            }
+        }
+        await _db.SaveChangesAsync(ct);
+        return Ok(new { sent, skipped, failed });
     }
 
     // ---- company days -----------------------------------------------------------------------

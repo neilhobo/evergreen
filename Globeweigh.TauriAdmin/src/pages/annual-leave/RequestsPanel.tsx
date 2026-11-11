@@ -1,35 +1,45 @@
 import { useEffect, useMemo, useState } from "react";
+import DataTable, { Column } from "../../components/DataTable";
+import Highlight from "../../components/Highlight";
+import Modal from "../../components/Modal";
 import { confirmDialog, messageDialog } from "../../components/confirmDialog";
 import {
+  LeaveCheck,
   LeaveEmployee,
   LeaveRequestRow,
   LeaveStatus,
-  cancelLeaveRequest,
   decideLeaveRequest,
+  fmtDate,
   fmtDays,
   fmtRange,
   getLeaveEmployees,
   getLeaveRequests,
 } from "../../api/annualLeave";
-import { fmtDateTime } from "../../format";
 import type { PanelProps } from "./AnnualLeavePage";
 import AddLeaveModal from "./AddLeaveModal";
-import { CheckList, StatusChip, flagLine } from "./parts";
+import LeaveRequestModal from "./LeaveRequestModal";
+import { StatusChip } from "./parts";
 
-type Filter = "waiting" | "approved" | "declined" | "all";
+type History = "all" | "approved" | "declined" | "cancelled";
 
-// Requests: the list down the left (waiting first), the chosen one on the right with what it
-// costs, the policy checks, a note for the employee and Approve / Decline. Approved leave can be
-// cancelled from here too.
+// Requests (design B, https://claude.ai/artifact/Ck5iCcMTNcvEzmWDqdJXmL): an approval queue and a
+// history, each a full-width grid with one request to a line.
+//  - Waiting: every policy check in its own column (Notice, Allowance, Peak, Clash, and Other
+//    for anything that stops it), so one look down a column shows every short-notice request or
+//    clash. Approve and Decline are at the end of the line; ⋯ or a double-click opens the request
+//    (details, edit, cancel, delete).
+//  - Decided: approved, declined and cancelled leave, latest first.
+// The checks are the API's own (AnnualLeaveController.AssessAsync); each carries a Key naming its
+// column and a Short text for the cell.
 export default function RequestsPanel({ year, version, onChanged, onMeta }: PanelProps) {
   const [requests, setRequests] = useState<LeaveRequestRow[] | null>(null);
   const [employees, setEmployees] = useState<LeaveEmployee[]>([]);
-  const [filter, setFilter] = useState<Filter>("waiting");
+  const [history, setHistory] = useState<History>("all");
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<LeaveRequestRow | null>(null);
+  const [opened, setOpened] = useState<LeaveRequestRow | null>(null);
+  const [declining, setDeclining] = useState<LeaveRequestRow | null>(null);
   const [adding, setAdding] = useState(false);
-  const [note, setNote] = useState("");
-  const [sendEmail, setSendEmail] = useState(true);
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -48,277 +58,337 @@ export default function RequestsPanel({ year, version, onChanged, onMeta }: Pane
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, version]);
 
-  const waitingCount = requests?.filter((r) => r.status === LeaveStatus.Waiting).length ?? 0;
-  useEffect(() => {
-    onMeta(requests ? `${waitingCount} waiting` : "");
-  }, [requests, waitingCount, onMeta]);
-
   const term = search.trim().toLowerCase();
-  const shown = useMemo(() => {
-    const list = (requests ?? []).filter(
-      (r) =>
-        (filter === "all" ||
-          (filter === "waiting" && r.status === LeaveStatus.Waiting) ||
-          (filter === "approved" && r.status === LeaveStatus.Approved) ||
-          (filter === "declined" && (r.status === LeaveStatus.Declined || r.status === LeaveStatus.Cancelled))) &&
-        (!term || r.employeeName.toLowerCase().includes(term)),
-    );
-    // Waiting: soonest leave first (what needs deciding first). Otherwise latest leave first.
-    return filter === "waiting"
-      ? list.sort((a, b) => a.startDate.localeCompare(b.startDate))
-      : list.sort((a, b) => b.startDate.localeCompare(a.startDate));
-  }, [requests, filter, term]);
+  const match = (r: LeaveRequestRow) => !term || r.employeeName.toLowerCase().includes(term);
 
-  // Keep a selection that is still on show, else the first one.
-  const selected = shown.find((r) => r.id === selectedId) ?? shown[0] ?? null;
-  const emp = selected ? employees.find((e) => e.id === selected.employeeId) : undefined;
+  // Waiting: soonest leave first, the order it needs deciding in.
+  const waiting = useMemo(
+    () => (requests ?? []).filter((r) => r.status === LeaveStatus.Waiting && match(r)).sort((a, b) => a.startDate.localeCompare(b.startDate)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [requests, term],
+  );
+  const decided = useMemo(
+    () =>
+      (requests ?? [])
+        .filter(
+          (r) =>
+            r.status !== LeaveStatus.Waiting &&
+            match(r) &&
+            (history === "all" ||
+              (history === "approved" && r.status === LeaveStatus.Approved) ||
+              (history === "declined" && r.status === LeaveStatus.Declined) ||
+              (history === "cancelled" && r.status === LeaveStatus.Cancelled)),
+        )
+        .sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [requests, term, history],
+  );
 
+  const warned = waiting.filter((r) => r.checks.some((c) => c.level === "warn" || c.level === "error")).length;
   useEffect(() => {
-    setNote("");
-    setSendEmail(true);
-  }, [selected?.id]);
+    onMeta(requests ? `${waiting.length} waiting${warned ? ` · ${warned} with warnings` : ""}` : "");
+  }, [requests, waiting.length, warned, onMeta]);
 
-  async function decide(approve: boolean) {
-    if (!selected || busy) return;
+  const emailOf = (r: LeaveRequestRow) => employees.find((e) => e.id === r.employeeId)?.emailTo ?? null;
+  const counts = useMemo(() => {
+    const all = requests ?? [];
+    return {
+      approved: all.filter((r) => r.status === LeaveStatus.Approved).length,
+      declined: all.filter((r) => r.status === LeaveStatus.Declined).length,
+      cancelled: all.filter((r) => r.status === LeaveStatus.Cancelled).length,
+    };
+  }, [requests]);
+
+  function refresh() {
+    onChanged();
+    void load();
+  }
+
+  async function approve(r: LeaveRequestRow) {
+    if (busy) return;
+    const to = emailOf(r);
+    const warns = r.checks.filter((c) => c.level === "warn").map((c) => `• ${c.text}`);
+    const text =
+      `Approve ${r.employeeName}'s leave on ${fmtRange(r.startDate, r.endDate, r.dayLength)} (${fmtDays(r.days)} day${r.days === 1 ? "" : "s"})?` +
+      (warns.length ? `\n\nThink twice:\n${warns.join("\n")}` : "") +
+      (to ? `\n\n${to} will be emailed.` : "\n\nThey have no email address, so they won't be told by email.");
+    if (!(await confirmDialog(text))) return;
     setBusy(true);
     try {
-      const res = await decideLeaveRequest(selected.id, approve, note.trim() || null, sendEmail && !!emp?.email);
-      if (sendEmail && emp?.email && !res.emailed)
-        void messageDialog(
-          `The request was ${approve ? "approved" : "declined"}, but the email to ${emp.email} didn't go. ` +
-            "Check Super Admin > Email Setup.",
+      const res = await decideLeaveRequest(r.id, true, null, !!to);
+      if (to && !res.emailed) void messageDialog(`Approved, but the email to ${to} didn't go. Check Super Admin > Email Setup.`);
+      refresh();
+    } catch (err) {
+      void messageDialog((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // The worst check of one kind, for its column: an error over a warning over a pass.
+  const RANK: Record<string, number> = { error: 0, warn: 1, info: 2, ok: 3 };
+  function worst(r: LeaveRequestRow, keys: string[]): LeaveCheck | null {
+    return r.checks.filter((c) => c.key && keys.includes(c.key)).sort((a, b) => RANK[a.level] - RANK[b.level])[0] ?? null;
+  }
+  const cell = (c: LeaveCheck | null, empty = "—") =>
+    c ? (
+      <span className={`al-pc al-pc-${c.level}`} title={c.text}>
+        {c.short ?? c.text}
+      </span>
+    ) : (
+      <span className="al-muted">{empty}</span>
+    );
+
+  const name = (r: LeaveRequestRow) => (
+    <b>
+      <Highlight text={r.employeeName} term={term} />
+    </b>
+  );
+  const entered = (r: LeaveRequestRow) => `${r.requestedByName ? r.requestedByName.split(" ")[0] + " · " : ""}${fmtDate(r.dateCreated)}`;
+  const more = (r: LeaveRequestRow) => (
+    <button className="al-ib" title="Open: details, edit, cancel, delete" onClick={() => setOpened(r)}>
+      ⋯
+    </button>
+  );
+
+  const waitingCols: Column<LeaveRequestRow>[] = [
+    { key: "employeeName", header: "Employee", width: 150, render: name, footer: (l) => `${l.length} waiting` },
+    { key: "categoryName", header: "Category", width: 105 },
+    {
+      key: "startDate",
+      header: "Dates",
+      width: 175,
+      render: (r) => fmtRange(r.startDate, r.endDate, r.dayLength),
+      sortValue: (r) => r.startDate,
+    },
+    {
+      key: "days",
+      header: "Days",
+      width: 50,
+      align: "right",
+      render: (r) => fmtDays(r.days),
+      footer: (l) => fmtDays(l.reduce((n, r) => n + r.days, 0)),
+    },
+    { key: "notice", header: "Notice (14d)", width: 90, render: (r) => cell(worst(r, ["notice"])) },
+    { key: "allowance", header: "Allowance", width: 100, render: (r) => cell(worst(r, ["allowance"])) },
+    { key: "peak", header: "Peak (5d max)", width: 100, render: (r) => cell(worst(r, ["peak"])) },
+    { key: "clash", header: "Clash", width: 120, render: (r) => cell(worst(r, ["clash"])) },
+    { key: "other", header: "Other", width: 110, render: (r) => cell(worst(r, ["dates", "overlap", "employment"]), "") },
+    { key: "note", header: "Note", render: (r) => <span className="al-muted">{r.note ?? ""}</span> },
+    { key: "dateCreated", header: "Entered", width: 120, render: entered, sortValue: (r) => r.dateCreated },
+    {
+      key: "actions",
+      header: "",
+      width: 172,
+      render: (r) => {
+        const blocked = r.checks.some((c) => c.level === "error");
+        return (
+          <span className="al-row-acts">
+            <button className="al-btn-sm al-btn-sm-red" onClick={() => setDeclining(r)} disabled={busy}>
+              Decline
+            </button>
+            <button
+              className="al-btn-sm al-btn-sm-green"
+              onClick={() => void approve(r)}
+              disabled={busy || blocked}
+              title={blocked ? "Something stops this being approved — see Other" : undefined}
+            >
+              Approve
+            </button>
+            {more(r)}
+          </span>
         );
-      onChanged();
-      await load();
-    } catch (err) {
-      void messageDialog((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
+      },
+    },
+  ];
 
-  async function cancel() {
-    if (!selected || busy) return;
-    if (!(await confirmDialog(`Cancel ${selected.employeeName}'s leave on ${fmtRange(selected.startDate, selected.endDate, selected.dayLength)}? The days go back on their balance.`)))
-      return;
-    setBusy(true);
-    try {
-      await cancelLeaveRequest(selected.id);
-      onChanged();
-      await load();
-    } catch (err) {
-      void messageDialog((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const decidedCols: Column<LeaveRequestRow>[] = [
+    { key: "status", header: "Status", width: 90, render: (r) => <StatusChip status={r.status} />, sortValue: (r) => r.status },
+    { key: "employeeName", header: "Employee", width: 150, render: name, footer: (l) => `${l.length} request${l.length === 1 ? "" : "s"}` },
+    { key: "categoryName", header: "Category", width: 105 },
+    {
+      key: "startDate",
+      header: "Dates",
+      width: 175,
+      render: (r) => fmtRange(r.startDate, r.endDate, r.dayLength),
+      sortValue: (r) => r.startDate,
+    },
+    {
+      key: "days",
+      header: "Days",
+      width: 50,
+      align: "right",
+      render: (r) => fmtDays(r.days),
+      footer: (l) => fmtDays(l.reduce((n, r) => n + r.days, 0)),
+    },
+    { key: "dateCreated", header: "Entered", width: 120, render: entered, sortValue: (r) => r.dateCreated },
+    {
+      key: "dateDecided",
+      header: "Decided",
+      width: 140,
+      render: (r) => `${r.decidedByName ? r.decidedByName + " · " : ""}${r.dateDecided ? fmtDate(r.dateDecided) : ""}`,
+      sortValue: (r) => r.dateDecided ?? "",
+    },
+    { key: "decisionNote", header: "Decision note", render: (r) => <span className="al-muted">{r.decisionNote ?? ""}</span> },
+    { key: "note", header: "Note", width: 180, render: (r) => <span className="al-muted">{r.note ?? ""}</span> },
+    { key: "actions", header: "", width: 44, render: more },
+  ];
 
-  const FILTERS: [Filter, string][] = [
-    ["waiting", `Waiting ${waitingCount}`],
-    ["approved", "Approved"],
-    ["declined", "Declined"],
-    ["all", "All"],
+  const HISTORY: [History, string, number | null][] = [
+    ["all", "All", null],
+    ["approved", "Approved", counts.approved],
+    ["declined", "Declined", counts.declined],
+    ["cancelled", "Cancelled", counts.cancelled],
   ];
 
   return (
-    <div className="al-panel">
-      <div className="al-split">
-        <aside className="al-req-list">
-          <div className="al-req-filters">
-            {FILTERS.map(([k, label]) => (
-              <button key={k} type="button" className={`al-seg${filter === k ? " on" : ""}`} onClick={() => setFilter(k)}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="al-req-filters">
-            <input
-              className="form-input"
-              style={{ flex: 1 }}
-              placeholder="Search name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button className="btn-blue" onClick={() => setAdding(true)} disabled={!requests}>
-              + Add leave
-            </button>
-          </div>
-          <div className="al-req-scroll">
-            {requests === null && <div className="al-empty" style={{ padding: 20 }}>Loading…</div>}
-            {requests && shown.length === 0 && (
-              <div className="al-empty" style={{ padding: 20 }}>
-                {filter === "waiting" ? "Nothing waiting for approval." : "No requests."}
-              </div>
-            )}
-            {shown.map((r) => {
-              const flag = r.status === LeaveStatus.Waiting ? flagLine(r.checks) : null;
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={`al-req-item${selected?.id === r.id ? " on" : ""}`}
-                  onClick={() => setSelectedId(r.id)}
-                >
-                  <div className="al-req-item-top">
-                    <span className="al-req-item-name">{r.employeeName}</span>
-                    {filter === "all" || filter === "declined" ? <StatusChip status={r.status} /> : <span className="al-muted">{r.categoryName}</span>}
-                  </div>
-                  <div>
-                    {fmtRange(r.startDate, r.endDate, r.dayLength)} · {fmtDays(r.days)} day{r.days === 1 ? "" : "s"}
-                  </div>
-                  {flag && <div className={`al-req-item-flag ${flag.warn ? "al-flag-warn" : "al-flag-ok"}`}>{flag.text}</div>}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-
-        <section className="al-detail">
-          {!selected ? (
-            requests && (
-              <div className="al-empty">
-                <strong>No request chosen</strong>
-                Pick one on the left, or press <b>+ Add leave</b> to enter a Leave Request Form.
-              </div>
-            )
-          ) : (
-            <>
-              <div className="al-detail-head">
-                <div>
-                  <div className="al-detail-name">{selected.employeeName}</div>
-                  <div className="al-detail-sub">
-                    {selected.categoryName}
-                    {emp?.approverName ? ` · approver ${emp.approverName}` : ""}
-                    {` · entered ${fmtDateTime(selected.dateCreated)}`}
-                    {selected.requestedByName ? ` by ${selected.requestedByName}` : ""}
-                  </div>
-                </div>
-                <div className="al-detail-when">
-                  {fmtRange(selected.startDate, selected.endDate, selected.dayLength)}
-                  <div className="al-detail-sub">
-                    {fmtDays(selected.days)} day{selected.days === 1 ? "" : "s"} · <StatusChip status={selected.status} />
-                  </div>
-                </div>
-              </div>
-
-              {emp && (
-                <div className="al-tiles">
-                  <div className="al-tile">
-                    <div className="al-tile-label">Floating days</div>
-                    <div className="al-tile-value">{fmtDays(emp.floating)}</div>
-                  </div>
-                  <div className="al-tile">
-                    <div className="al-tile-label">Used</div>
-                    <div className="al-tile-value">{fmtDays(emp.used)}</div>
-                  </div>
-                  <div className={`al-tile${emp.remaining < 0 ? " bad" : ""}`}>
-                    <div className="al-tile-label">Left now</div>
-                    <div className="al-tile-value">{fmtDays(emp.remaining)}</div>
-                  </div>
-                  {selected.status === LeaveStatus.Waiting ? (
-                    <div className={`al-tile${selected.remainingAfter < 0 ? " bad" : ""}`}>
-                      <div className="al-tile-label">Left if approved</div>
-                      <div className="al-tile-value">{fmtDays(selected.remainingAfter)}</div>
-                    </div>
-                  ) : (
-                    <div className="al-tile">
-                      <div className="al-tile-label">Waiting</div>
-                      <div className="al-tile-value">{fmtDays(emp.waiting)}</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {selected.note && (
-                <dl className="al-facts">
-                  <dt>Note</dt>
-                  <dd>{selected.note}</dd>
-                </dl>
-              )}
-
-              {selected.status === LeaveStatus.Waiting ? (
-                <>
-                  <div className="al-checks">
-                    <div className="al-checks-title">Policy checks</div>
-                    <CheckList checks={selected.checks} />
-                  </div>
-                  <div className="form-field">
-                    <label className="form-label" htmlFor="al-note">
-                      Note to {selected.employeeName.split(" ")[0]} (optional)
-                    </label>
-                    <textarea
-                      id="al-note"
-                      className="form-input form-textarea"
-                      rows={3}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                    />
-                  </div>
-                  <div className="al-actions">
-                    <label className="al-check-label" title={emp?.email ? emp.email : "No email address on their Staff record"}>
-                      <input
-                        type="checkbox"
-                        checked={sendEmail && !!emp?.email}
-                        disabled={!emp?.email}
-                        onChange={(e) => setSendEmail(e.target.checked)}
-                      />
-                      {emp?.email ? `Email ${emp.email}` : "No email address on file"}
-                    </label>
-                    <span className="spacer" />
-                    <button className="al-btn-danger" onClick={() => void decide(false)} disabled={busy}>
-                      Decline
-                    </button>
-                    <button
-                      className="btn-blue"
-                      onClick={() => void decide(true)}
-                      disabled={busy || selected.checks.some((c) => c.level === "error")}
-                    >
-                      Approve
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <dl className="al-facts">
-                    <dt>{selected.status === LeaveStatus.Approved ? "Approved by" : selected.status === LeaveStatus.Declined ? "Declined by" : "Cancelled by"}</dt>
-                    <dd>
-                      {selected.decidedByName || "—"}
-                      {selected.dateDecided ? `, ${fmtDateTime(selected.dateDecided)}` : ""}
-                    </dd>
-                    {selected.decisionNote && (
-                      <>
-                        <dt>Note</dt>
-                        <dd>{selected.decisionNote}</dd>
-                      </>
-                    )}
-                  </dl>
-                  {selected.status === LeaveStatus.Approved && (
-                    <div className="al-actions">
-                      <span className="spacer" />
-                      <button className="al-btn-danger" onClick={() => void cancel()} disabled={busy}>
-                        Cancel this leave
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </section>
+    <div className="al-panel po-main">
+      <div className="toolbar">
+        <input className="form-input toolbar-search" placeholder="Search staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <span className="toolbar-note">
+          <span className="al-pc al-pc-ok">passes</span> <span className="al-pc al-pc-warn">think twice</span>{" "}
+          <span className="al-pc al-pc-error">cannot be approved</span> · hover a cell for the full check
+        </span>
+        <div className="toolbar-right">
+          <button className="btn-blue" onClick={() => setAdding(true)} disabled={!requests}>
+            + Add leave
+          </button>
+        </div>
       </div>
 
+      <div className="al-rq-sec al-rq-queue">
+        <div className="al-rq-title">
+          Waiting for approval <span className="al-chip al-chip-0">{waiting.length}</span>
+        </div>
+        <DataTable
+          columns={waitingCols}
+          rows={waiting}
+          rowKey={(r) => r.id}
+          selectedKey={selected?.id ?? null}
+          onSelect={setSelected}
+          onDoubleClick={(r) => setOpened(r)}
+          rowClass={(r) => (r.checks.some((c) => c.level === "error") ? "al-row-blocked" : undefined)}
+          emptyText={requests === null ? "Loading…" : "Nothing waiting for approval."}
+          sortable
+        />
+      </div>
+
+      <div className="al-rq-sec al-rq-history">
+        <div className="al-rq-title">
+          Decided
+          {HISTORY.map(([k, label, n]) => (
+            <button key={k} type="button" className={`al-seg${history === k ? " on" : ""}`} onClick={() => setHistory(k)}>
+              {label}
+              {n != null ? ` ${n}` : ""}
+            </button>
+          ))}
+        </div>
+        <DataTable
+          columns={decidedCols}
+          rows={decided}
+          rowKey={(r) => r.id}
+          selectedKey={selected?.id ?? null}
+          onSelect={setSelected}
+          onDoubleClick={(r) => setOpened(r)}
+          emptyText={requests === null ? "Loading…" : "No decided leave."}
+          sortable
+        />
+      </div>
+
+      {opened && (
+        <LeaveRequestModal
+          requestId={opened.id}
+          employee={employees.find((e) => e.id === opened.employeeId)}
+          onClose={(changed) => {
+            setOpened(null);
+            if (changed) refresh();
+          }}
+        />
+      )}
+      {declining && (
+        <DeclineModal
+          request={declining}
+          emailTo={emailOf(declining)}
+          onClose={(done) => {
+            setDeclining(null);
+            if (done) refresh();
+          }}
+        />
+      )}
       {adding && (
         <AddLeaveModal
           employees={employees}
           onClose={(saved) => {
             setAdding(false);
-            if (saved) {
-              onChanged();
-              void load();
-            }
+            if (saved) refresh();
           }}
         />
       )}
     </div>
+  );
+}
+
+// Decline from the queue: an optional note for the employee, and whether to email them.
+function DeclineModal({
+  request,
+  emailTo,
+  onClose,
+}: {
+  request: LeaveRequestRow;
+  emailTo: string | null;
+  onClose: (done: boolean) => void;
+}) {
+  const [note, setNote] = useState("");
+  const [email, setEmail] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const first = request.employeeName.split(" ")[0];
+
+  async function go() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await decideLeaveRequest(request.id, false, note.trim() || null, email && !!emailTo);
+      if (email && emailTo && !res.emailed) void messageDialog(`Declined, but the email to ${emailTo} didn't go. Check Super Admin > Email Setup.`);
+      onClose(true);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={`Decline ${request.employeeName}'s Leave`}
+      width={480}
+      onClose={() => onClose(false)}
+      footer={
+        <>
+          <button className="toolbar-btn" onClick={() => onClose(false)} disabled={busy}>
+            Back
+          </button>
+          <button className="al-btn-danger" onClick={() => void go()} disabled={busy}>
+            {busy ? "Declining…" : "Decline"}
+          </button>
+        </>
+      }
+    >
+      <p style={{ margin: "0 0 10px" }}>
+        {fmtRange(request.startDate, request.endDate, request.dayLength)} · {fmtDays(request.days)} day{request.days === 1 ? "" : "s"}
+      </p>
+      <div className="form-grid">
+        <div className="form-field form-field-wide">
+          <label className="form-label">Note to {first} (optional)</label>
+          <input className="form-input" value={note} autoFocus onChange={(e) => setNote(e.target.value)} placeholder="e.g. Needed for peak cover" />
+        </div>
+        <div className="form-field form-field-wide">
+          <label className="al-check-label" title={emailTo ?? "No email address on their Staff record"}>
+            <input type="checkbox" checked={email && !!emailTo} disabled={!emailTo} onChange={(e) => setEmail(e.target.checked)} />
+            {emailTo ? `Email ${emailTo}` : "No email address on file"}
+          </label>
+        </div>
+      </div>
+      {error && <p className="al-error">{error}</p>}
+    </Modal>
   );
 }

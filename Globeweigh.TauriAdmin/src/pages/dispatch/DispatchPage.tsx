@@ -34,6 +34,8 @@ import { AdminUserDto } from "../../types";
 import DispatchOrderEditModal from "./DispatchOrderEditModal";
 import SalesOrdersSection from "./SalesOrdersSection";
 import { useRowMenu } from "./useRowMenu";
+import { STYLE } from "../../api/features";
+import { useFeature } from "../../features";
 import CreateLoadModal from "./CreateLoadModal";
 import SendLoadEmailModal from "./SendLoadEmailModal";
 import EmailedMark from "../../components/EmailedMark";
@@ -90,6 +92,7 @@ function isLoadOverdue(collectionDate: string | null): boolean {
 // make room for Orders (from sales); set back to import.meta.env.DEV to show it again.
 const SHOW_DEV_ADD_ORDER = false;
 
+
 // Mirrors the WPF DispatchOrderListView: Open Orders (col 1), Loads (col 2),
 // Pending over Completed Weighbridge Records (col 3). A second tab shows the
 // Completed Orders master/detail.
@@ -103,6 +106,12 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
   const [orders, setOrders] = useState<DispatchOrder[]>([]);
   const [selected, setSelected] = useState<DispatchOrder | null>(null);
   const [search, setSearch] = useState("");
+  // How the orders whose load is already on the Pending list are marked: "grouped" (the default)
+  // = their own navy band at the top; "hatched" = a teal hatch + edge, plus an "On Pending (n)"
+  // filter. Chosen for every PC on Super Admin > Open Orders Styles.
+  const pendingMark = useFeature(STYLE.openOrdersPendingHatched) ? "hatched" : "grouped";
+  // Hatched design only: show just the orders on a Pending load.
+  const [onlyOnPending, setOnlyOnPending] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [editing, setEditing] = useState<DispatchOrder | null>(null);
   const [adding, setAdding] = useState(false);
@@ -503,6 +512,26 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
     );
   }, [orders, term]);
 
+  // Orders whose load is on the Pending list (order.weighbridgeRecordId is the load's id, the
+  // same record the Pending grid lists). Pending polls every 3s, so this follows a weigh-in or
+  // weigh-out without a refresh. A Pending load is no longer in the Loads grid, so these rows are
+  // never also blue (on the selected load) or red (overdue).
+  const pendingLoadIds = useMemo(() => new Set(pending.map((p) => p.id)), [pending]);
+  const isOnPending = (r: DispatchOrder) => pendingLoadIds.has(r.weighbridgeRecordId);
+  const onPendingCount = useMemo(
+    () => filteredOrders.filter((r) => pendingLoadIds.has(r.weighbridgeRecordId)).length,
+    [filteredOrders, pendingLoadIds],
+  );
+  // What the grid shows: grouped puts the Pending-load orders first (DataTable keeps the bands
+  // together under a header sort); hatched can filter down to just them.
+  const displayedOrders = useMemo(() => {
+    const on = (r: DispatchOrder) => pendingLoadIds.has(r.weighbridgeRecordId);
+    if (pendingMark === "hatched") return onlyOnPending ? filteredOrders.filter(on) : filteredOrders;
+    if (onPendingCount === 0) return filteredOrders;
+    return [...filteredOrders.filter(on), ...filteredOrders.filter((r) => !on(r))];
+  }, [filteredOrders, pendingLoadIds, pendingMark, onlyOnPending, onPendingCount]);
+  const groupOrders = pendingMark === "grouped" && onPendingCount > 0;
+
   // Best-fit fixed columns; the flexible Customer column absorbs the slack and
   // truncates with an ellipsis, so the grid never scrolls horizontally.
   const orderColumns: Column<DispatchOrder>[] = [
@@ -781,16 +810,40 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
             Refresh
           </button>
         </div>
-        <input
-          className="form-input toolbar-search"
-          placeholder="Search orders…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="dsp-search-row">
+          <input
+            className="form-input toolbar-search"
+            placeholder="Search orders…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {pendingMark === "hatched" && (
+            <button
+              type="button"
+              className={`dsp-pending-filter${onlyOnPending ? " on" : ""}`}
+              aria-pressed={onlyOnPending}
+              disabled={onPendingCount === 0 && !onlyOnPending}
+              title={onlyOnPending ? "Show all open orders" : "Show only the orders on a Pending load"}
+              onClick={() => setOnlyOnPending((v) => !v)}
+            >
+              On Pending <span className="n">{onPendingCount}</span>
+            </button>
+          )}
+        </div>
         <DataTable
           columns={orderColumns}
-          rows={filteredOrders}
+          rows={displayedOrders}
           sortable
+          groupKey={groupOrders ? (r) => (isOnPending(r) ? "pending" : "open") : undefined}
+          groupLabel={(r) =>
+            isOnPending(r) ? (
+              <span className="dsp-band dsp-band-pending">On Pending loads · {onPendingCount}</span>
+            ) : (
+              <span className="dsp-band dsp-band-rest">
+                Other open orders · {filteredOrders.length - onPendingCount}
+              </span>
+            )
+          }
           rowKey={(r) => r.id}
           // The orders on the load selected in the Loads grid (order.weighbridgeRecordId is the
           // load's id) — a blue tint, distinct from the orange of the selected order. Orders on
@@ -799,6 +852,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
             [
               overdueLoadIds.has(r.weighbridgeRecordId) ? "row-overdue" : "",
               selectedLoad && r.weighbridgeRecordId === selectedLoad.id ? "row-on-load" : "",
+              pendingMark === "hatched" && isOnPending(r) ? "row-on-pending" : "",
             ]
               .filter(Boolean)
               .join(" ") || undefined
@@ -806,7 +860,13 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
           selectedKey={selected?.id ?? null}
           onSelect={(r) => setSelected(r)}
           onDoubleClick={(r) => setEditing(r)}
-          emptyText={ordersLoading ? "Loading…" : "No orders"}
+          emptyText={
+            ordersLoading
+              ? "Loading…"
+              : pendingMark === "hatched" && onlyOnPending
+                ? "No open orders on a Pending load"
+                : "No orders"
+          }
         />
         {/* DEV ONLY, and a section of the column rather than a button loose at the foot of it:
             ruled off and given its own padding so it reads as scaffolding and is not pressed

@@ -266,7 +266,7 @@ function MainWindowBody({ user }: { user: AdminUserDto }) {
       case "oil-tanks":
         return <OilTanksPage user={user} />;
       case "annual-leave":
-        return <AnnualLeavePage />;
+        return <AnnualLeavePage user={user} />;
       case "customers-suppliers":
         return <CustomersSuppliersPage user={user} />;
       case "products":

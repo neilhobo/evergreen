@@ -1,18 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DataTable, { Column } from "../../components/DataTable";
 import ToolbarDate from "../../components/ToolbarDate";
 import { messageDialog } from "../../components/confirmDialog";
 import SageRefreshOverlay from "../../components/SageRefreshOverlay";
 import {
   getMemberSalesReport,
-  requestSageSalesRefresh,
-  cancelSageSalesRefresh,
   MemberSalesMember,
   MemberSalesMonth,
   MemberSalesProduct,
   MemberSalesReport,
 } from "../../api/reports";
-import { getSageSync } from "../../api/sage";
+import { useSageSalesRefresh } from "./useSageSalesRefresh";
 import { fmtDate, fmtDateTime } from "../../format";
 import cc from "../../styles/ContentCard.module.css";
 import { buildMemberSalesWorkbook } from "./exportMemberSales";
@@ -68,11 +66,7 @@ export default function MemberSalesReportPanel({ reportKey, title, initialTab = 
   const [tab, setTab] = useState<Tab>(initialTab);
   const [selected, setSelected] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  // A refresh has been asked for and the sidecar has not answered yet.
-  const [waiting, setWaiting] = useState(false);
-  // When the refresh was asked for (the cover's clock).
-  const [waitStart, setWaitStart] = useState(0);
-  const pollRef = useRef<number | null>(null);
+  const { waiting, waitStart, refresh: refreshFromSage, cancel: cancelRefresh } = useSageSalesRefresh(() => load());
 
   async function load(f = from, t = to) {
     if (!f || !t) return;
@@ -88,16 +82,8 @@ export default function MemberSalesReportPanel({ reportKey, title, initialTab = 
     }
   }
 
-  function stopPolling() {
-    if (pollRef.current != null) {
-      window.clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }
-
   useEffect(() => {
     void load();
-    return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportKey, from, to, reloadToken]);
 
@@ -115,57 +101,6 @@ export default function MemberSalesReportPanel({ reportKey, title, initialTab = 
       start.setDate(start.getDate() + 1);
       setFrom(ymd(start));
       setTo(ymd(today));
-    }
-  }
-
-  // Ask the sidecar for a fresh read of the sales mirror, then watch the sync row until it
-  // moves. A full read is a few minutes (the audit trail and the invoice file, newest first).
-  async function refreshFromSage() {
-    if (waiting) return;
-    let before: string | null;
-    try {
-      const s = await requestSageSalesRefresh();
-      before = s.lastRunUtc;
-    } catch (err) {
-      void messageDialog("Could not request a refresh.\n" + (err as Error).message);
-      return;
-    }
-    const startedAt = Date.now();
-    setWaitStart(startedAt);
-    setWaiting(true);
-    stopPolling();
-    pollRef.current = window.setInterval(async () => {
-      try {
-        const s = (await getSageSync()).find((x) => x.entity === "Sales");
-        if (!s) return;
-        if (s.lastRunUtc !== before) {
-          stopPolling();
-          // The cover stays up through the reload, so the new figures are there when it lifts.
-          await load();
-          setWaiting(false);
-          if (s.lastError) void messageDialog("The Sage sidecar could not refresh the sales figures.\n" + s.lastError);
-        } else if (Date.now() - startedAt > 20 * 60_000) {
-          stopPolling();
-          setWaiting(false);
-          void messageDialog(
-            "No answer from the Sage sidecar after 20 minutes.\nIs the GlobeweighSageSidecar service running on the server?",
-          );
-        }
-      } catch {
-        // keep polling
-      }
-    }, 5000);
-  }
-
-  // Cancel from the cover: the API drops a request the sidecar has not picked up and stops a
-  // read in progress within seconds. The figures on the page stay as they were.
-  async function cancelRefresh() {
-    try {
-      await cancelSageSalesRefresh();
-      stopPolling();
-      setWaiting(false);
-    } catch (err) {
-      void messageDialog("Could not cancel the refresh.\n" + (err as Error).message);
     }
   }
 

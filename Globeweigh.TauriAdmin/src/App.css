@@ -2718,6 +2718,25 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit {
   color: #5c1fc0;
 }
 
+/* Admin > Staff: the user type as a pill. No login (kept for Annual Leave only, cannot sign in
+   to anything) is red so it stands out from the people who can. */
+/* Kept to 14px tall — inside the grid's text line — so it never makes the row taller. */
+.type-badge {
+  display: inline-block;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.type-badge.ut-1 { background: #dbeafe; color: #1e40af; }   /* Office */
+.type-badge.ut-2 { background: #fef3c7; color: #92400e; }   /* Touch */
+.type-badge.ut-3 { background: #ede9fe; color: #5b21b6; }   /* Both */
+.type-badge.ut-4 { background: #fee2e2; color: #b91c1c; }   /* No login */
+
 /* Inline editable grid cell (e.g. costing supplier price) */
 .cell-input {
   height: 22px;

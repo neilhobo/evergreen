@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import styles from "./PageHeader.module.css";
 import { useSession } from "../session";
-import { UserRole, fullName, hasRole, initials, isSwitchedUser } from "../types";
+import { canSwitchUser, fullName, initials, isSwitchedUser } from "../types";
 import ProfileModal from "../components/ProfileModal";
 import SwitchUserDialog from "../components/SwitchUserDialog";
 import { switchBack } from "../api/auth";
@@ -108,9 +108,9 @@ export default function PageHeader({ title, meta, center, centerAlign = "right" 
                 My Account
               </button>
             )}
-            {/* Admins only (the API re-checks). No switching from inside a switch —
-                return to your own account first, from here or the orange bar. */}
-            {!switched && hasRole(user, UserRole.GlobeweighAdmin, UserRole.OfficeAdmin) && (
+            {/* The super-admin and Colin only (the API re-checks). No switching from inside a
+                switch — return to your own account first, from here or the orange bar. */}
+            {!switched && canSwitchUser(user) && (
               <button
                 type="button"
                 role="menuitem"

@@ -11,3 +11,6 @@ appsettings.Local.json
 # Device packages / companion APKs staged on the API (binaries, not source)
 Globeweigh.Api/_packages/
 Globeweigh.Api/_companions/
+
+# Store-version manifest for the mobile app: lives on the server only (MobileAppController)
+Globeweigh.Api/mobile-version.json

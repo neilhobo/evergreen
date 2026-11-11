@@ -7,6 +7,7 @@ import '../../core/api/api_config.dart';
 import '../../theme/colors.dart';
 import '../app_version/patch_controller.dart';
 import '../app_version/patch_gate.dart';
+import '../app_version/store_version_controller.dart';
 import '../auth/auth_controller.dart';
 import 'switch_user_sheet.dart';
 
@@ -39,8 +40,14 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
     });
     try {
       final patches = ref.read(patchControllerProvider.notifier);
-      await patches.check();
+      await Future.wait([patches.check(), ref.read(storeVersionControllerProvider.notifier).check()]);
       if (!mounted) return;
+      final store = ref.read(storeVersionControllerProvider);
+      if (store.updateAvailable) {
+        // Not yet dismissed: PatchGate is already putting the dialog up.
+        if (store.promptDismissed) await showStoreUpdateDialog(context, ref, required: store.updateRequired);
+        return;
+      }
       if (ref.read(patchControllerProvider).phase == PatchPhase.readyToRestart) {
         // Over the sheet: its ref drives the dialog's buttons.
         await showPatchReadyDialog(context, ref);

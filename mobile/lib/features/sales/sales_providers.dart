@@ -22,6 +22,29 @@ final myCustomersProvider = FutureProvider<List<Customer>>((ref) async {
   return rows;
 });
 
+/// The Sales overview: every rep's sent orders (newest first).
+final overviewOrdersProvider = FutureProvider<List<SalesOrder>>((ref) async {
+  ref.watch(signedInUserIdProvider);
+  final rows = await ref.watch(salesApiProvider).overviewOrders();
+  rows.sort((a, b) => b.dateCreated.compareTo(a.dateCreated));
+  return rows;
+});
+
+final overviewDetailProvider = FutureProvider.autoDispose.family<SalesOrderDetail, int>((ref, id) async {
+  return ref.watch(salesApiProvider).overviewOrder(id);
+});
+
+final allCustomersProvider = FutureProvider<List<Customer>>((ref) async {
+  ref.watch(signedInUserIdProvider);
+  final rows = await ref.watch(salesApiProvider).allCustomers();
+  rows.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+  return rows;
+});
+
+/// The orders a screen lists: the rep's own, or every rep's in the overview.
+FutureProvider<List<SalesOrder>> ordersFor({required bool overview}) =>
+    overview ? overviewOrdersProvider : salesOrdersProvider;
+
 /// Every product, by id (names and UPP for order lines).
 final productsProvider = FutureProvider<Map<int, Product>>((ref) async {
   ref.watch(signedInUserIdProvider);

@@ -96,7 +96,13 @@ export default function StaffPanel() {
       header: "Username",
       render: (r) => <Highlight text={r.username} term={term} />,
     },
-    { key: "userTypeId", header: "Type", width: 90, render: (r) => userTypeLabel(r.userTypeId) },
+    {
+      key: "userTypeId",
+      header: "Type",
+      width: 100,
+      render: (r) => <span className={`type-badge ut-${r.userTypeId}`}>{userTypeLabel(r.userTypeId)}</span>,
+      sortValue: (r) => userTypeLabel(r.userTypeId),
+    },
     {
       key: "roleIds",
       header: "Roles",

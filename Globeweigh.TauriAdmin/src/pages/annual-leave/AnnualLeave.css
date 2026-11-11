@@ -406,6 +406,9 @@ tr.al-row-neg td.al-remaining {
 .al-cell-weekend:hover { outline: none; }
 .al-cell-company { background: var(--primary); cursor: default; }
 .al-cell-company:hover { outline: none; }
+/* A company day this person works instead (a floating day for it): a working day, ringed in the
+   company-day colour so it is not mistaken for an ordinary one. */
+.al-cell-worked { box-shadow: inset 0 0 0 2px var(--primary); background: #fff; }
 .al-cell-leave { background: #2563eb; }
 .al-cell-waiting { background: repeating-linear-gradient(45deg, #93c5fd 0 3px, #dbeafe 3px 6px); }
 /* Half / quarter day: only that share of the cell is filled. */
@@ -442,6 +445,53 @@ tr.al-row-neg td.al-remaining {
   height: 20px;
 }
 
+/* Whole year: the table is as wide as its days (set inline) and scrolls sideways; the month
+   names sit above a row of day letters + numbers, both stuck to the top. */
+.al-cal.al-cal-year {
+  min-width: 100%;
+}
+
+/* Exactly 20px, so the day row can stick just under it (top: 20px). */
+.al-cal-year thead tr:first-child th {
+  height: 20px;
+  padding: 0;
+  line-height: 20px;
+  box-sizing: border-box;
+}
+
+.al-cal-year thead tr:first-child th.al-cal-name {
+  padding: 0 8px;
+}
+
+.al-cal-year thead tr.al-cal-daynums th {
+  top: 20px;
+  font: 600 10px/1.15 var(--ui-font);
+  padding: 2px 0;
+}
+
+.al-cal-year thead tr.al-cal-daynums th.al-cal-we {
+  background: #dde3eb;
+  color: #64748b;
+}
+
+/* Calendar request popup (LeaveRequestModal): the dates large, the status chip on the right. */
+.al-lr-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.al-lr-dates {
+  font: 600 16px var(--ui-font);
+  color: #0f172a;
+}
+
+/* Outstanding: the hand-built grid fills the panel and scrolls inside it. */
+.al-out-wrap { flex: 1; min-height: 0; overflow: auto; }
+.al-out-wrap .al-grid tfoot td { font-weight: 600; border-top: 1px solid #e2e8f0; }
+
 .al-legend {
   display: inline-flex;
   align-items: center;
@@ -465,6 +515,7 @@ tr.al-row-neg td.al-remaining {
 }
 
 .al-sw-company { background: var(--primary); }
+.al-sw-worked { box-shadow: inset 0 0 0 2px var(--primary); background: #fff; }
 .al-sw-leave { background: #2563eb; }
 .al-sw-waiting { background: repeating-linear-gradient(45deg, #93c5fd 0 3px, #dbeafe 3px 6px); }
 .al-sw-weekend { background: #e2e8f0; }
@@ -678,3 +729,71 @@ tr.al-row-neg td.al-remaining {
   gap: 6px;
   margin-top: 6px;
 }
+
+/* ---- Requests (design B): approval queue over the decided history ---- */
+.al-rq-sec { display: flex; flex-direction: column; min-height: 0; }
+.al-rq-sec .data-table-wrap { flex: 1; min-height: 0; }
+/* The queue takes what it needs, up to half the panel; the history has the rest. */
+.al-rq-queue { flex: 0 1 auto; max-height: 50%; }
+.al-rq-history { flex: 1; margin-top: 4px; }
+.al-rq-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Lined up with the toolbar's controls above (its 14px side padding); the grid below keeps
+     its own 6px inset. */
+  padding: 10px 14px 2px;
+  font: 600 11px var(--ui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.al-rq-title .al-seg { text-transform: none; letter-spacing: 0; }
+
+/* One policy check in its column: a tick, a "!" or a cross before the short text. */
+.al-pc { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.al-pc::before { font-weight: 700; }
+.al-pc-ok::before { content: "✓"; color: #16a34a; }
+.al-pc-info { color: #64748b; }
+.al-pc-info::before { content: "i"; color: #64748b; font-style: italic; }
+.al-pc-warn { color: #92400e; font-weight: 600; }
+.al-pc-warn::before { content: "!"; color: #d97706; }
+.al-pc-error { color: #b91c1c; font-weight: 600; }
+.al-pc-error::before { content: "✕"; }
+.toolbar-note .al-pc { margin-right: 6px; }
+
+/* Something stops it being approved: a faint red wash on the line. */
+.data-table tbody tr.al-row-blocked td { background: #fef2f2; }
+
+/* Approve / Decline / more at the end of a queue line. */
+.al-row-acts { display: inline-flex; gap: 4px; align-items: center; }
+.al-btn-sm {
+  border: 1px solid;
+  border-radius: 4px;
+  background: #fff;
+  font: 600 11px/14px var(--ui-font);
+  padding: 0 8px;
+  cursor: pointer;
+}
+.al-btn-sm:disabled { opacity: 0.45; cursor: default; }
+.al-btn-sm-green { background: var(--primary); border-color: var(--primary); color: #fff; }
+.al-btn-sm-green:hover:not(:disabled) { background: var(--primary-hover); }
+.al-btn-sm-red { color: #b91c1c; border-color: #fca5a5; }
+.al-btn-sm-red:hover:not(:disabled) { background: #fef2f2; }
+.al-ib {
+  width: 22px;
+  height: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  color: #475569;
+  font: 700 12px/14px var(--ui-font);
+  cursor: pointer;
+  padding: 0;
+}
+.al-ib:hover { background: #f1f5f9; }
+
+/* Inside a grid the status chip and buttons stay within the text line, so the rows keep the
+   grid's normal height. */
+.data-table .al-chip { font-size: 10px; line-height: 14px; vertical-align: middle; }
+.data-table .al-row-acts { vertical-align: middle; }

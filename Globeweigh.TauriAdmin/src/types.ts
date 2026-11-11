@@ -61,3 +61,12 @@ export const SUPER_ADMIN_USERNAME = "neil.hobson@globeweigh.com";
 export function isSuperAdmin(user: AdminUserDto): boolean {
   return (user.username ?? "").trim().toLowerCase() === SUPER_ADMIN_USERNAME;
 }
+
+// Switch user is for the super-admin and Colin McCuskey only (the user's decision 2026-11-05),
+// not every Office Admin. The same list as the API's UserExtensions.SwitchUserUsernames, which
+// enforces it; this only decides whether the menu item shows.
+export const SWITCH_USER_USERNAMES = [SUPER_ADMIN_USERNAME, "colin@evergreenhorticulture.co.uk"];
+
+export function canSwitchUser(user: AdminUserDto): boolean {
+  return SWITCH_USER_USERNAMES.includes((user.username ?? "").trim().toLowerCase());
+}

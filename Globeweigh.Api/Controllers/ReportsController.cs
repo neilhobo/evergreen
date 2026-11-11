@@ -100,6 +100,19 @@ public class ReportsController : ControllerBase
         return await MemberSalesReport.BuildAsync(_db, reportKey, start, finish, ct);
     }
 
+    // GET /api/reports/active-customers?from=2025-01-01&to=2026-11-10 — every Sage customer with
+    // at least one sales invoice in the window (dates inclusive; from defaults to 1 Jan 2025, to
+    // to today). Services/ActiveCustomersReport.cs.
+    [HttpGet("active-customers")]
+    public async Task<ActionResult<ActiveCustomersReport.Report>> ActiveCustomers(
+        [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, CancellationToken ct = default)
+    {
+        var start = from?.Date ?? new DateTime(2025, 1, 1);
+        var finish = to?.Date ?? DateTime.Today;
+        if (finish < start) return BadRequest(new { message = "The 'to' date is before the 'from' date." });
+        return await ActiveCustomersReport.BuildAsync(_db, start, finish, ct);
+    }
+
     // GET /api/reports/member-sales/{reportKey}/groups — the account groups, in order.
     [HttpGet("member-sales/{reportKey}/groups")]
     public async Task<ActionResult<IEnumerable<MemberGroupDto>>> Groups(string reportKey, CancellationToken ct = default) =>

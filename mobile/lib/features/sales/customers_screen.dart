@@ -27,8 +27,12 @@ String _initials(String name) {
 }
 
 /// The rep's own customers (Sales Rep = them), searchable, with Add new.
+///
+/// With [overview]: every customer, each naming its rep, read-only (the
+/// super-admin and Colin).
 class CustomersScreen extends ConsumerStatefulWidget {
-  const CustomersScreen({super.key});
+  final bool overview;
+  const CustomersScreen({super.key, this.overview = false});
   @override
   ConsumerState<CustomersScreen> createState() => _CustomersScreenState();
 }
@@ -44,8 +48,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = ref.watch(myCustomersProvider);
-    final orders = ref.watch(salesOrdersProvider).valueOrNull ?? const [];
+    final overview = widget.overview;
+    final customersProvider = overview ? allCustomersProvider : myCustomersProvider;
+    final customers = ref.watch(customersProvider);
+    final orders = ref.watch(ordersFor(overview: overview)).valueOrNull ?? const [];
     final term = _search.text.trim().toLowerCase();
 
     // The last order each customer had from this rep.
@@ -58,46 +64,62 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     return Column(
       children: [
         SalesHeader(
-          title: 'Customers',
+          overline: overview ? 'Sales · every rep' : null,
+          title: overview ? 'All customers' : 'Customers',
+          leading: overview
+              ? HeaderIconButton(icon: Icons.arrow_back, tooltip: 'Home', onPressed: () => Navigator.of(context).pop())
+              : null,
           actions: [
-            HeaderIconButton(
-              icon: Icons.account_circle_outlined,
-              tooltip: 'Account',
-              onPressed: () => showAccountSheet(context),
-            ),
+            if (!overview)
+              HeaderIconButton(
+                icon: Icons.account_circle_outlined,
+                tooltip: 'Account',
+                onPressed: () => showAccountSheet(context),
+              ),
           ],
           bottom: SalesSearchField(controller: _search, hint: 'Search name or code', onChanged: (_) => setState(() {})),
         ),
         Expanded(
           child: customers.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(myCustomersProvider)),
+            error: (e, _) => ErrorRetry(message: apiMessage(e), onRetry: () => ref.invalidate(customersProvider)),
             data: (all) {
               final rows = all
-                  .where((c) => term.isEmpty || [c.name, c.code].any((v) => v?.toLowerCase().contains(term) ?? false))
+                  .where(
+                    (c) =>
+                        term.isEmpty ||
+                        [c.name, c.code, c.salesRepName].any((v) => v?.toLowerCase().contains(term) ?? false),
+                  )
                   .toList();
               return Stack(
                 children: [
                   RefreshIndicator(
-                    onRefresh: () => ref.refresh(myCustomersProvider.future),
+                    onRefresh: () => ref.refresh(customersProvider.future),
                     child: ListView(
                       // Room under the last row for the New customer button.
                       padding: const EdgeInsets.only(bottom: 96),
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
-                          child: SectionLabel('Your customers · ${all.length}'),
+                          child: SectionLabel('${overview ? 'All customers' : 'Your customers'} · ${all.length}'),
                         ),
                         for (final (k, c) in rows.indexed) ...[
                           if (k > 0) const Divider(height: 1, color: Color(0xFFE5E9EF)),
-                          _CustomerRow(customer: c, tint: _tints[c.id % _tints.length], lastOrder: lastOrder[c.id]),
+                          _CustomerRow(
+                            customer: c,
+                            tint: _tints[c.id % _tints.length],
+                            lastOrder: lastOrder[c.id],
+                            overview: overview,
+                          ),
                         ],
                         if (rows.isEmpty)
                           Padding(
                             padding: const EdgeInsets.all(32),
                             child: Text(
                               all.isEmpty
-                                  ? 'No customers yet. Add your first with the + button.'
+                                  ? (overview
+                                        ? 'No customers yet.'
+                                        : 'No customers yet. Add your first with the + button.')
                                   : 'No customers match.',
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: Color(0xFF556070)),
@@ -107,20 +129,21 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     ),
                   ),
                   // Always on screen, however long the list (it used to sit under the last row).
-                  Positioned(
-                    right: 18,
-                    bottom: 18,
-                    // The same button as My Orders' new order.
-                    child: FloatingActionButton(
-                      heroTag: 'new-customer',
-                      tooltip: 'New customer',
-                      backgroundColor: SalesHeader.navy,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                      onPressed: () => _addCustomer(context, ref),
-                      child: const Icon(Icons.add, size: 28),
+                  if (!overview)
+                    Positioned(
+                      right: 18,
+                      bottom: 18,
+                      // The same button as My Orders' new order.
+                      child: FloatingActionButton(
+                        heroTag: 'new-customer',
+                        tooltip: 'New customer',
+                        backgroundColor: SalesHeader.navy,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        onPressed: () => _addCustomer(context, ref),
+                        child: const Icon(Icons.add, size: 28),
+                      ),
                     ),
-                  ),
                 ],
               );
             },
@@ -135,12 +158,14 @@ class _CustomerRow extends StatelessWidget {
   final Customer customer;
   final (Color, Color) tint;
   final DateTime? lastOrder;
-  const _CustomerRow({required this.customer, required this.tint, this.lastOrder});
+  final bool overview;
+  const _CustomerRow({required this.customer, required this.tint, this.lastOrder, this.overview = false});
 
   @override
   Widget build(BuildContext context) {
     final c = customer;
     final sub = [
+      if (overview) c.salesRepName ?? 'No rep',
       if (c.code?.isNotEmpty ?? false) c.code!,
       if (c.costingZone?.isNotEmpty ?? false) c.costingZone!,
       if (lastOrder != null) 'last order ${dayLabel(lastOrder)}',
@@ -148,7 +173,11 @@ class _CustomerRow extends StatelessWidget {
     return Material(
       color: Colors.white,
       child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CustomerScreen(customer: c))),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CustomerScreen(customer: c, overview: overview),
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           child: Row(
@@ -184,9 +213,12 @@ class _CustomerRow extends StatelessWidget {
 
 /// One customer: their addresses (add, change, delete) and contacts, their
 /// orders from this rep, and New order.
+///
+/// With [overview]: read-only, every rep's orders for them, no New order.
 class CustomerScreen extends ConsumerWidget {
   final Customer customer;
-  const CustomerScreen({super.key, required this.customer});
+  final bool overview;
+  const CustomerScreen({super.key, required this.customer, this.overview = false});
 
   Future<void> _addAddress(BuildContext context, WidgetRef ref) async {
     final api = ref.read(salesApiProvider);
@@ -219,7 +251,7 @@ class CustomerScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final addresses = ref.watch(addressesProvider(customer.id));
-    final orders = (ref.watch(salesOrdersProvider).valueOrNull ?? const <SalesOrder>[])
+    final orders = (ref.watch(ordersFor(overview: overview)).valueOrNull ?? const <SalesOrder>[])
         .where((o) => o.customerId == customer.id)
         .toList();
     final products = ref.watch(productsProvider).valueOrNull ?? const {};
@@ -229,7 +261,11 @@ class CustomerScreen extends ConsumerWidget {
       body: Column(
         children: [
           SalesHeader(
-            overline: [customer.code, customer.costingZone].where((s) => s != null && s.isNotEmpty).join(' · '),
+            overline: [
+              customer.code,
+              customer.costingZone,
+              if (overview) customer.salesRepName,
+            ].where((s) => s != null && s.isNotEmpty).join(' · '),
             title: customer.displayName,
             leading: HeaderIconButton(
               icon: Icons.arrow_back,
@@ -273,19 +309,19 @@ class CustomerScreen extends ConsumerWidget {
                           lines: a.lines,
                           contact: [a.contactName, a.telephone, a.email],
                           note: a.deliveryNote,
-                          onTap: () => _editAddress(context, ref, a),
+                          onTap: overview ? null : () => _editAddress(context, ref, a),
                         ),
                     ],
                   ),
                 ),
-                _AddButton(label: 'Add address', onPressed: () => _addAddress(context, ref)),
+                if (!overview) _AddButton(label: 'Add address', onPressed: () => _addAddress(context, ref)),
                 if (customer.emails.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   const SectionLabel('Emails'),
                   for (final e in customer.emails) SelectableText(e, style: const TextStyle(fontSize: 14)),
                 ],
                 const SizedBox(height: 16),
-                SectionLabel('Your orders · ${orders.length}'),
+                SectionLabel('${overview ? 'Orders' : 'Your orders'} · ${orders.length}'),
                 if (orders.isEmpty) const Text('None yet.', style: TextStyle(color: Color(0xFF556070))),
                 for (final o in orders.take(10))
                   Card(
@@ -305,8 +341,11 @@ class CustomerScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      onTap: () =>
-                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrderScreen(orderId: o.id))),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => OrderScreen(orderId: o.id, overview: overview),
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -317,8 +356,12 @@ class CustomerScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(18, 12, 18, 12 + MediaQuery.of(context).padding.bottom),
             child: SalesButton(
               label: 'New order for ${customer.displayName}',
-              onPressed: () =>
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditOrderScreen(customer: customer))),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      EditOrderScreen(customer: customer, mode: overview ? OrderEditMode.officeNew : OrderEditMode.rep),
+                ),
+              ),
             ),
           ),
         ],

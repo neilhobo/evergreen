@@ -194,3 +194,87 @@
   background: #22c55e;
   transition: width 0.1s linear;
 }
+
+/* ---- Call views: Full screen / Split with terminal / Minimise ---- */
+.icd-head-text { min-width: 0; }
+.icd-views {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 999px;
+  flex: none;
+}
+.icd-chip {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.icd-chip:hover:not(:disabled) { background: #1f2937; }
+.icd-chip.on { background: #2563eb; color: #fff; }
+.icd-chip:disabled { opacity: 0.4; cursor: default; }
+.icd-chip:focus-visible { outline: 2px solid #93c5fd; outline-offset: 1px; }
+
+/* Split: the caller's touch terminal fills the left, the call is a column on the right. */
+.icd-view-split { gap: 12px; padding: 12px; background: rgba(3, 7, 18, 0.92); }
+.icd-view-split .icd { margin: 0; flex: 0 0 440px; }
+.icd-view-split .icd-head { flex-wrap: wrap; }
+.icd-view-split .icd-mic { align-items: stretch; flex: 1 1 100%; }
+.icd-view-split .icd-mic select { max-width: none; }
+.icd-view-split .icd-meter { width: auto; }
+.icd-view-split .icd-btn { min-width: 0; flex: 1; }
+.icd-terminal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0b1220;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.icd-terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #1f2937;
+  color: #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+.icd-terminal-head .icd-chip { background: #1f2937; }
+.icd-terminal > .rs-stage { flex: 1; height: auto; }
+
+/* Minimise: a card top right where the ring card was; the rest of the app stays usable. */
+.icd-view-mini {
+  inset: 16px 16px auto auto;
+  width: 340px;
+  background: none;
+  animation: ic-call-in 0.18s ease-out;
+}
+.icd-view-mini .icd {
+  margin: 0;
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+}
+.icd-view-mini .icd-head { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+.icd-view-mini .icd-title { font-size: 15px; }
+.icd-view-mini .icd-mic,
+.icd-view-mini .icd-warn { display: none; }
+.icd-view-mini .icd-views { flex: 1 1 100%; justify-content: space-between; }
+.icd-view-mini .icd-chip { padding: 5px 8px; font-size: 11.5px; }
+.icd-view-mini .icd-video { flex: none; height: 190px; cursor: pointer; }
+.icd-view-mini .icd-actions { gap: 8px; padding: 10px; }
+.icd-view-mini .icd-btn { min-width: 0; flex: 1; padding: 8px 12px; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) {
+  .icd-view-mini { animation: none; }
+}
+/* A second intercom ringing while a call is minimised: its card drops below the mini call. */
+body:has(.icd-view-mini) .ic-call { top: 380px; }

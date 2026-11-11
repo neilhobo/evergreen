@@ -18,6 +18,34 @@ function Get-AppVersion {
     [pscustomobject]@{ Semver = $Matches[1]; Build = [int]$Matches[2]; Full = "$($Matches[1])+$($Matches[2])" }
 }
 
+# The store-version manifest on evergreen that GET /api/mobile/version serves (see
+# Globeweigh.Api/Controllers/MobileAppController.cs). Read per request: no API deploy needed.
+$VersionManifest = "\\evergreen\Globeweigh\EvergreenApi\mobile-version.json"
+
+# Tell installed apps a new store build exists: they show "Update available" with an
+# Update button. "minimum" (force-update) is kept as is: it's set by hand on the server.
+# $DelayMinutes holds the prompt back while the store processes the upload.
+function Publish-StoreVersion([string]$Platform, [string]$Version, [string]$Url, [int]$DelayMinutes = 15) {
+    Write-Host "==> telling installed apps about $Version ($Platform) ..." -ForegroundColor Cyan
+    try {
+        $manifest = if (Test-Path $VersionManifest) { Get-Content $VersionManifest -Raw | ConvertFrom-Json } else { [pscustomobject]@{} }
+        $old = $manifest.$Platform
+        $entry = [ordered]@{
+            latest           = $Version
+            previous         = if ($old -and $old.latest -ne $Version) { $old.latest } elseif ($old) { $old.previous } else { "" }
+            availableFromUtc = (Get-Date).ToUniversalTime().AddMinutes($DelayMinutes).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            minimum          = if ($old -and $old.minimum) { $old.minimum } else { "" }
+            url              = $Url
+        }
+        $manifest | Add-Member -NotePropertyName $Platform -NotePropertyValue ([pscustomobject]$entry) -Force
+        [IO.File]::WriteAllText($VersionManifest, ($manifest | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
+        Write-Host "    $Platform latest -> $Version (prompt from $($entry.availableFromUtc))" -ForegroundColor Green
+    } catch {
+        # The build is uploaded either way; only the in-app prompt is missing.
+        Write-Warning "Could not update $VersionManifest ($_). Installed apps won't be prompted until it's set."
+    }
+}
+
 # Next build number (and a new semver if given), written back to pubspec.yaml.
 function Step-AppVersion([string]$NewSemver) {
     $v = Get-AppVersion

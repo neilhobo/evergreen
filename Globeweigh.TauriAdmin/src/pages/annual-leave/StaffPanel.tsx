@@ -50,7 +50,7 @@ export default function StaffPanel({ year, version, onChanged, onMeta }: PanelPr
 
   const overdrawn = shown.filter((e) => e.remaining < 0).length;
   useEffect(() => {
-    onMeta(rows ? `${shown.length} staff${overdrawn ? ` · ${overdrawn} over their allowance` : ""}` : "");
+    onMeta(rows ? `${shown.length} staff${overdrawn ? ` · ${overdrawn} with unpaid days` : ""}` : "");
   }, [rows, shown.length, overdrawn, onMeta]);
 
   const num = (key: keyof LeaveEmployee, header: string, width = 70): Column<LeaveEmployee> => ({
@@ -79,9 +79,18 @@ export default function StaffPanel({ year, version, onChanged, onMeta }: PanelPr
     {
       ...num("floating", "Float"),
       render: (e) => (
-        <span title={e.adjustments ? `Includes ${fmtDays(e.adjustments)} adjustment` : undefined}>
+        <span
+          title={
+            [
+              e.adjustments ? `Includes ${fmtDays(e.adjustments)} adjustment` : "",
+              e.worked ? `Includes ${e.worked} company day${e.worked === 1 ? "" : "s"} worked` : "",
+            ]
+              .filter(Boolean)
+              .join("; ") || undefined
+          }
+        >
           {fmtDays(e.floating)}
-          {e.adjustments ? "*" : ""}
+          {e.adjustments || e.worked ? "*" : ""}
         </span>
       ),
     },
@@ -93,8 +102,20 @@ export default function StaffPanel({ year, version, onChanged, onMeta }: PanelPr
       width: 85,
       align: "right",
       className: "al-remaining",
-      render: (e) => <span className={e.remaining < 0 ? "al-neg" : undefined}>{fmtDays(e.remaining)}</span>,
-      footer: (list) => fmtDays(list.reduce((n, e) => n + e.remaining, 0)),
+      render: (e) => <span className={e.remaining < 0 ? "al-neg" : undefined}>{fmtDays(Math.max(0, e.remaining))}</span>,
+      sortValue: (e) => e.remaining,
+      footer: (list) => fmtDays(list.reduce((n, e) => n + Math.max(0, e.remaining), 0)),
+    },
+    {
+      key: "unpaid",
+      header: "Unpaid",
+      width: 70,
+      align: "right",
+      render: (e) => (e.unpaid ? <span className="al-neg" title="Past their paid allowance — unpaid (leave policy)">{fmtDays(e.unpaid)}</span> : ""),
+      footer: (list) => {
+        const n = list.reduce((t, e) => t + e.unpaid, 0);
+        return n ? fmtDays(n) : "";
+      },
     },
     { key: "approverName", header: "Approver", width: 120 },
     {
@@ -116,7 +137,7 @@ export default function StaffPanel({ year, version, onChanged, onMeta }: PanelPr
           ))}
         </select>
         <input className="form-input toolbar-search" placeholder="Search staff…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <span className="toolbar-note">Float * = includes a manual adjustment</span>
+        <span className="toolbar-note">Float * = includes a manual adjustment or a company day worked · Unpaid = days past the paid allowance</span>
         <div className="toolbar-right">
           <button className="toolbar-btn" disabled={!selected} onClick={() => selected && setEditing(selected)}>
             Edit

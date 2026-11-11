@@ -53,11 +53,28 @@ class User {
   /// An admin acting as this user.
   bool get isSwitched => impersonatedByUserId != null;
 
-  /// May open Switch user: a Globeweigh or Office Admin on their own session,
-  /// as TauriAdmin's account menu (the API re-checks). No switching from
-  /// inside a switch.
-  bool get canSwitchUser =>
-      !isSwitched && (roleIds.contains(UserRole.globeweighAdmin) || roleIds.contains(UserRole.officeAdmin));
+  /// Switch user is for the super-admin and Colin McCuskey only (the user's
+  /// decision 2026-11-05), not every Office Admin. The same list as the API's
+  /// UserExtensions.SwitchUserUsernames, which enforces it, and TauriAdmin's
+  /// types.ts SWITCH_USER_USERNAMES.
+  static const switchUserUsernames = ['neil.hobson@globeweigh.com', 'colin@evergreenhorticulture.co.uk'];
+
+  /// May open Switch user: one of those, on their own session. No switching
+  /// from inside a switch.
+  bool get canSwitchUser => !isSwitched && switchUserUsernames.contains(username.trim().toLowerCase());
+
+  /// The Home screen's Sales overview (every rep's orders, approve / return):
+  /// the same two people, decided 2026-11-05. The API's
+  /// UserExtensions.SalesOverviewUsernames enforces it.
+  static const salesOverviewUsernames = ['neil.hobson@globeweigh.com', 'colin@evergreenhorticulture.co.uk'];
+
+  bool get canSeeSalesOverview => salesOverviewUsernames.contains(username.trim().toLowerCase());
+
+  /// The Home screen's Gate & Barrier: the same two (2026-11-05). The API's
+  /// UserExtensions.GateBarrierUsernames enforces it.
+  static const gateBarrierUsernames = ['neil.hobson@globeweigh.com', 'colin@evergreenhorticulture.co.uk'];
+
+  bool get canUseGateBarrier => gateBarrierUsernames.contains(username.trim().toLowerCase());
 
   /// Who is signed in and on whose behalf: changes on every switch.
   String get sessionKey => '$id:${impersonatedByUserId ?? ''}';

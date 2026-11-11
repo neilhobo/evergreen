@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { messageDialog } from "../../components/confirmDialog";
 import {
   CalendarLeave,
@@ -12,9 +12,14 @@ import {
 } from "../../api/annualLeave";
 import type { PanelProps } from "./AnnualLeavePage";
 import AddLeaveModal from "./AddLeaveModal";
+import LeaveRequestModal from "./LeaveRequestModal";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DOW1 = ["S", "M", "T", "W", "T", "F", "S"];
+// Whole year: every day keeps this width and the grid scrolls sideways (365 days squeezed into
+// the screen were unreadable). The names column stays put on the left.
+const YEAR_DAY_PX = 24;
+const NAME_PX = 190;
 
 interface Day {
   iso: string;
@@ -23,6 +28,7 @@ interface Day {
 }
 
 interface Booked {
+  requestId: number;
   status: number;
   dayLength: number;
 }
@@ -31,7 +37,7 @@ interface Booked {
 // approved leave in blue, waiting leave hatched, weekends grey — and a count along the bottom of
 // how many are off each day, so a clash shows before it is approved. Month view to work in; Whole
 // year to see the shape of it. Click an empty day to book leave for that person on that day.
-export default function CalendarPanel({ year, version, onChanged, onMeta }: PanelProps) {
+export default function CalendarPanel({ year, version, onChanged, onMeta, onYear }: PanelProps) {
   const now = new Date();
   const [month, setMonth] = useState(year === now.getFullYear() ? now.getMonth() : 0);
   const [mode, setMode] = useState<"month" | "year">("month");
@@ -39,8 +45,12 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
   const [employees, setEmployees] = useState<LeaveEmployee[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [leave, setLeave] = useState<CalendarLeave[]>([]);
+  // employeeId -> company days they are working instead.
+  const [worked, setWorked] = useState<Map<number, Set<string>>>(new Map());
   const [loaded, setLoaded] = useState(false);
   const [adding, setAdding] = useState<{ employeeId: number; date: string } | null>(null);
+  // A booked day clicked: that request in its popup (details, approve, edit, cancel, delete).
+  const [opened, setOpened] = useState<{ requestId: number; employeeId: number } | null>(null);
 
   async function load() {
     try {
@@ -48,6 +58,12 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
       setEmployees(e);
       setHolidays(c.holidays);
       setLeave(c.leave);
+      const w = new Map<number, Set<string>>();
+      for (const x of c.worked ?? []) {
+        if (!w.has(x.employeeId)) w.set(x.employeeId, new Set());
+        w.get(x.employeeId)!.add(x.date);
+      }
+      setWorked(w);
     } catch (err) {
       void messageDialog("Failed to load the calendar.\n" + (err as Error).message);
     } finally {
@@ -93,7 +109,7 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
       if (!m.has(l.employeeId)) m.set(l.employeeId, new Map());
       const days = m.get(l.employeeId)!;
       for (let d = parseIso(l.startDate); toIso(d) <= l.endDate; d.setDate(d.getDate() + 1))
-        days.set(toIso(d), { status: l.status, dayLength: l.dayLength });
+        days.set(toIso(d), { requestId: l.id, status: l.status, dayLength: l.dayLength });
     }
     return m;
   }, [leave]);
@@ -111,18 +127,32 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
 
   const todayIso = toIso(now);
 
-  type Kind = "weekend" | "company" | "leave" | "waiting" | "none";
+  // Whole year opens scrolled to this month (or January for another year).
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (mode !== "year" || !wrapRef.current) return;
+    const start = year === now.getFullYear() ? new Date(year, now.getMonth(), 1) : new Date(year, 0, 1);
+    const dayIndex = Math.round((start.getTime() - new Date(year, 0, 1).getTime()) / 86400000);
+    wrapRef.current.scrollLeft = dayIndex * YEAR_DAY_PX;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, year, loaded]);
+
+  type Kind = "weekend" | "company" | "worked" | "leave" | "waiting" | "none";
+  const isCompany = (e: LeaveEmployee, iso: string) =>
+    !!companyByCat.get(e.categoryId)?.has(iso) && !worked.get(e.id)?.has(iso);
   function classify(e: LeaveEmployee, day: Day): { kind: Kind; part: number; title: string } {
     if (day.weekend) return { kind: "weekend", part: 1, title: "" };
-    if (companyByCat.get(e.categoryId)?.has(day.iso)) return { kind: "company", part: 1, title: holidayName.get(day.iso) ?? "Company day" };
+    if (isCompany(e, day.iso)) return { kind: "company", part: 1, title: holidayName.get(day.iso) ?? "Company day" };
     const b = booked.get(e.id)?.get(day.iso);
+    if (!b && worked.get(e.id)?.has(day.iso))
+      return { kind: "worked", part: 1, title: `${e.forename} ${e.surname} works ${holidayName.get(day.iso) ?? "this company day"} (a floating day instead)` };
     if (b) {
       const waiting = b.status === LeaveStatus.Waiting;
       const part = b.dayLength;
       return {
         kind: waiting ? "waiting" : "leave",
         part,
-        title: `${e.forename} ${e.surname}: ${waiting ? "waiting" : "approved"}${part < 1 ? (part === 0.5 ? " (half day)" : " (quarter day)") : ""}`,
+        title: `${e.forename} ${e.surname}: ${waiting ? "waiting" : "approved"}${part < 1 ? (part === 0.5 ? " (half day)" : " (quarter day)") : ""} — click for details`,
       };
     }
     return { kind: "none", part: 1, title: `Book leave for ${e.forename} ${e.surname} on ${day.date.toDateString()}` };
@@ -130,7 +160,7 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
 
   // How many of the rows on show are off each day (approved or waiting).
   const counts = days.map((day) =>
-    day.weekend ? 0 : rows.reduce((n, e) => (booked.get(e.id)?.has(day.iso) && !companyByCat.get(e.categoryId)?.has(day.iso) ? n + 1 : n), 0),
+    day.weekend ? 0 : rows.reduce((n, e) => (booked.get(e.id)?.has(day.iso) && !isCompany(e, day.iso) ? n + 1 : n), 0),
   );
 
   function cellProps(e: LeaveEmployee, day: Day, monthStart: boolean) {
@@ -160,13 +190,27 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
       <div className="toolbar">
         {!isYear && (
           <>
-            <button className="toolbar-btn toolbar-btn-icon" aria-label="Previous month" onClick={() => setMonth((m) => Math.max(0, m - 1))} disabled={month === 0}>
+            <button className="toolbar-btn toolbar-btn-icon" aria-label="Previous month" onClick={() => {
+                // January back runs into the previous leave year's December.
+                if (month === 0) {
+                  setMonth(11);
+                  onYear(year - 1);
+                } else setMonth(month - 1);
+              }}
+            >
               ‹
             </button>
             <span className="al-month-title">
               {MONTHS[month]} {year}
             </span>
-            <button className="toolbar-btn toolbar-btn-icon" aria-label="Next month" onClick={() => setMonth((m) => Math.min(11, m + 1))} disabled={month === 11}>
+            <button className="toolbar-btn toolbar-btn-icon" aria-label="Next month" onClick={() => {
+                // December on runs into the next leave year's January.
+                if (month === 11) {
+                  setMonth(0);
+                  onYear(year + 1);
+                } else setMonth(month + 1);
+              }}
+            >
               ›
             </button>
           </>
@@ -191,6 +235,10 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
             Company day
           </span>
           <span>
+            <i className="al-sw al-sw-worked" />
+            Company day worked
+          </span>
+          <span>
             <i className="al-sw al-sw-leave" />
             Approved
           </span>
@@ -205,17 +253,22 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
         </div>
       </div>
 
-      <div className="al-cal-wrap">
-        <table className={`al-cal${isYear ? " al-cal-year" : ""}`}>
+      <div className="al-cal-wrap" ref={wrapRef}>
+        <table
+          className={`al-cal${isYear ? " al-cal-year" : ""}`}
+          style={isYear ? { width: NAME_PX + days.length * YEAR_DAY_PX } : undefined}
+        >
           <colgroup>
-            <col style={{ width: 190 }} />
+            <col style={{ width: NAME_PX }} />
             {days.map((d) => (
-              <col key={d.iso} />
+              <col key={d.iso} style={isYear ? { width: YEAR_DAY_PX } : undefined} />
             ))}
           </colgroup>
           <thead>
             <tr>
-              <th className="al-cal-name">Staff</th>
+              <th className="al-cal-name" rowSpan={isYear ? 2 : 1}>
+                Staff
+              </th>
               {isYear
                 ? monthSpans.map((m, i) => (
                     <th key={m.label} colSpan={m.span} className={i > 0 ? "al-cal-month-sep" : undefined}>
@@ -230,6 +283,27 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
                     </th>
                   ))}
             </tr>
+            {isYear && (
+              <tr className="al-cal-daynums">
+                {days.map((d) => (
+                  <th
+                    key={d.iso}
+                    className={[
+                      d.iso === todayIso ? "al-cal-today" : "",
+                      d.weekend ? "al-cal-we" : "",
+                      d.date.getDate() === 1 && d.date.getMonth() > 0 ? "al-cal-month-sep" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined}
+                    title={`${d.date.toDateString()}${holidayName.get(d.iso) ? " — " + holidayName.get(d.iso) : ""}`}
+                  >
+                    {DOW1[d.date.getDay()]}
+                    <br />
+                    {d.date.getDate()}
+                  </th>
+                ))}
+              </tr>
+            )}
           </thead>
           <tbody>
             {rows.map((e) => (
@@ -246,7 +320,13 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
                       className={p.className}
                       style={p.style}
                       title={p.title}
-                      onClick={() => p.kind === "none" && setAdding({ employeeId: e.id, date: d.iso })}
+                      onClick={() => {
+                        if (p.kind === "none" || p.kind === "worked") setAdding({ employeeId: e.id, date: d.iso });
+                        else if (p.kind === "leave" || p.kind === "waiting") {
+                          const b = booked.get(e.id)?.get(d.iso);
+                          if (b) setOpened({ requestId: b.requestId, employeeId: e.id });
+                        }
+                      }}
                     />
                   );
                 })}
@@ -275,6 +355,20 @@ export default function CalendarPanel({ year, version, onChanged, onMeta }: Pane
           </tbody>
         </table>
       </div>
+
+      {opened && (
+        <LeaveRequestModal
+          requestId={opened.requestId}
+          employee={employees.find((x) => x.id === opened.employeeId)}
+          onClose={(changed) => {
+            setOpened(null);
+            if (changed) {
+              onChanged();
+              void load();
+            }
+          }}
+        />
+      )}
 
       {adding && (
         <AddLeaveModal
