@@ -35,6 +35,9 @@ public class Device
     public bool SampleWeight { get; set; }
     public bool Camera { get; set; }
     public bool ManualStock { get; set; } // see Migrations/AddDeviceManualStockColumn.sql
+    // Home button for the Production Planner ledger; also what lets this device read the
+    // planner without a login (see Migrations/AddDeviceProductionPlannerColumn.sql).
+    public bool ProductionPlanner { get; set; }
     public bool Weighscale { get; set; } // Factory: COM weighscale attached to this PC (see Migrations/AddDeviceWeighscaleColumn.sql)
     public bool Printer { get; set; } // Factory: label printer attached to this PC (see Migrations/AddDevicePrinterColumn.sql)
     public bool LoginEnabled { get; set; } = true; // Factory: show the sign-in screen on startup; off = straight to Home (see Migrations/AddDeviceLoginRelayColumns.sql)

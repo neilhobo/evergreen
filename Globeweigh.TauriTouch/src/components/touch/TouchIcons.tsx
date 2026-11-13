@@ -63,6 +63,17 @@ export const IconFactory = () => (
   </Svg>
 );
 
+// Clipboard with ruled lines — Production Planner
+export const IconPlanner = () => (
+  <Svg>
+    <rect x="5" y="4.5" width="14" height="16.5" rx="1.5" />
+    <path d="M9 4.5V3h6v1.5" />
+    <path d="M8.5 10h7" />
+    <path d="M8.5 13.5h7" />
+    <path d="M8.5 17h4" />
+  </Svg>
+);
+
 // Camera
 export const IconCamera = () => (
   <Svg>

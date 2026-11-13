@@ -30,7 +30,25 @@ public class PlanningController : ControllerBase
     // anyway. Picked pallets are still on the floor until the load is dispatched, so
     // InStock includes them and Ordered is compared against it as-is.
     [HttpGet]
-    public async Task<ActionResult<PlanningDto>> Get(CancellationToken ct = default)
+    public async Task<ActionResult<PlanningDto>> Get(CancellationToken ct = default) => await Load(ct);
+
+    // GET /api/production/planning/touch/{deviceName} — the same data for a factory touch
+    // screen, which may run with Login off and so has no token. Anonymous, but not open:
+    // it answers only for a Factory device whose Production Planner button a Super Admin
+    // has switched on in Screen Settings; anything else gets a 403.
+    [AllowAnonymous]
+    [HttpGet("touch/{deviceName}")]
+    public async Task<ActionResult<PlanningDto>> GetForTouch(string deviceName, CancellationToken ct = default)
+    {
+        var name = (deviceName ?? "").Trim();
+        var allowed = name.Length > 0 && await _db.Set<Device>().AsNoTracking()
+            .AnyAsync(d => d.DeviceName == name && d.Factory && d.ProductionPlanner, ct);
+        if (!allowed)
+            return StatusCode(403, new { message = "Production Planner is not switched on for this screen." });
+        return await Load(ct);
+    }
+
+    private async Task<PlanningDto> Load(CancellationToken ct)
     {
         // Every line on an open order, with the order's header. Both are views
         // (vwDispatchOrderItem carries the line's picked count).

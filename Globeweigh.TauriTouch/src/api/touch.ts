@@ -15,6 +15,8 @@ export interface DeviceConfig {
   productionSummary: boolean;
   camera: boolean;
   manualStock: boolean;
+  // Also what lets this screen read the planner without a login (the API checks it).
+  productionPlanner: boolean;
   // Factory: a COM weighscale indicator is attached to this PC (shows the bottom-bar status).
   weighscale: boolean;
   // Factory: a label printer is attached to this PC (shows the bottom-bar status).
@@ -45,6 +47,7 @@ export interface DeviceConfigInput {
   productionSummary: boolean;
   camera: boolean;
   manualStock: boolean;
+  productionPlanner: boolean;
   weighscale: boolean;
   printer: boolean;
   loginEnabled: boolean;
@@ -79,6 +82,34 @@ export const getDevices = () => apiGet<DeviceConfig[]>("/device");
 
 export const setDeviceConfig = (id: number, config: DeviceConfigInput) =>
   apiPut<DeviceConfig>(`/device/${id}/config`, config);
+
+// ---- Production Planner (open orders per product against stock) ----
+
+export interface PlanningLine {
+  orderId: number;
+  orderNo: number;
+  customerName: string | null;
+  deliveryDate: string | null; // null = ASAP
+  dateCreated: string | null;
+  quantity: number;
+  picked: number;
+}
+
+export interface PlanningProduct {
+  productId: number;
+  description: string | null;
+  gtin: string | null;
+  size: number | null;
+  upp: number;
+  inStock: number;
+  // ASAP first, then by delivery date — the order the stock is consumed in.
+  lines: PlanningLine[];
+}
+
+// Keyed by device name: the API answers only for a Factory screen with the Production
+// Planner button switched on, so a screen with Login off can still read it.
+export const getProductionPlanning = (deviceName: string) =>
+  apiGet<{ products: PlanningProduct[] }>(`/production/planning/touch/${encodeURIComponent(deviceName)}`);
 
 // ---- Delivery lookups (Haulier -> Product -> Supplier -> Bog) ----
 

@@ -10,7 +10,7 @@ interface Props {
 }
 
 type Mode = "isWeighIn" | "isWeighOut" | "factory";
-type Button = "sampleWeight" | "production" | "productionSummary" | "camera" | "manualStock";
+type Button = "sampleWeight" | "production" | "productionPlanner" | "productionSummary" | "camera" | "manualStock";
 
 const MODES: { key: Mode; label: string; desc: string }[] = [
   { key: "isWeighIn", label: "Weigh In", desc: "Vehicles weighing in (Delivery / Collection). No login." },
@@ -21,6 +21,7 @@ const MODES: { key: Mode; label: string; desc: string }[] = [
 const BUTTONS: { key: Button; label: string }[] = [
   { key: "sampleWeight", label: "Sample Weight" },
   { key: "production", label: "Production" },
+  { key: "productionPlanner", label: "Production Planner" },
   { key: "productionSummary", label: "Prod. Summary" },
   { key: "camera", label: "Camera" },
   { key: "manualStock", label: "Manual Stock" },
@@ -37,6 +38,7 @@ export default function DeviceConfigScreen({ device, onClose }: Props) {
   const [buttons, setButtons] = useState<Record<Button, boolean>>({
     sampleWeight: device.sampleWeight,
     production: device.production,
+    productionPlanner: device.productionPlanner,
     productionSummary: device.productionSummary,
     camera: device.camera,
     manualStock: device.manualStock,
@@ -70,6 +72,7 @@ export default function DeviceConfigScreen({ device, onClose }: Props) {
         // Button toggles only apply in Factory mode.
         sampleWeight: mode === "factory" && buttons.sampleWeight,
         production: mode === "factory" && buttons.production,
+        productionPlanner: mode === "factory" && buttons.productionPlanner,
         productionSummary: mode === "factory" && buttons.productionSummary,
         camera: mode === "factory" && buttons.camera,
         manualStock: mode === "factory" && buttons.manualStock,

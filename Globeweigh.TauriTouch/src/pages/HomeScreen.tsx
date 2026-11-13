@@ -5,11 +5,12 @@ import { DeviceConfig } from "../api/touch";
 import TopBar from "../components/touch/TopBar";
 import BigButton from "../components/touch/BigButton";
 import SuperAdminGear from "../components/touch/SuperAdminGear";
-import { IconBoxes, IconCamera, IconChart, IconFactory, IconScale } from "../components/touch/TouchIcons";
+import { IconBoxes, IconCamera, IconChart, IconFactory, IconPlanner, IconScale } from "../components/touch/TouchIcons";
 import DbSwitcher from "../components/DbSwitcher";
 import SyncDataButton from "../components/SyncDataButton";
 import SampleWeightScreen from "./SampleWeightScreen";
 import ProductionScreen from "./ProductionScreen";
+import ProductionPlannerScreen from "./ProductionPlannerScreen";
 import ProductionSummaryScreen from "./ProductionSummaryScreen";
 import CameraScreen from "./CameraScreen";
 import ManualStockScreen from "./ManualStockScreen";
@@ -36,6 +37,7 @@ interface Props {
 type Module =
   | "sampleWeight"
   | "production"
+  | "productionPlanner"
   | "productionSummary"
   | "camera"
   | "manualStock"
@@ -51,6 +53,7 @@ function resumeModule(device: DeviceConfig): Module | null {
   const enabled: Record<string, boolean> = {
     sampleWeight: device.sampleWeight,
     production: device.production,
+    productionPlanner: device.productionPlanner,
     productionSummary: device.productionSummary,
     camera: device.camera,
     manualStock: device.manualStock,
@@ -87,6 +90,9 @@ export default function HomeScreen({ user, device, onSignOut, onOpenSettings }: 
       />
     );
   }
+  if (active === "productionPlanner") {
+    return <ProductionPlannerScreen deviceName={device.deviceName ?? ""} onHome={() => setActive(null)} />;
+  }
   if (active === "productionSummary") {
     return <ProductionSummaryScreen onHome={() => setActive(null)} />;
   }
@@ -113,6 +119,7 @@ export default function HomeScreen({ user, device, onSignOut, onOpenSettings }: 
   const buttons: { label: string; icon: ReactNode; onClick: () => void; show: boolean }[] = [
     { label: "Sample Weight", icon: <IconScale />, onClick: () => setActive("sampleWeight"), show: device.sampleWeight },
     { label: "Production", icon: <IconFactory />, onClick: () => setActive("production"), show: device.production },
+    { label: "Prod. Planner", icon: <IconPlanner />, onClick: () => setActive("productionPlanner"), show: device.productionPlanner },
     { label: "Prod. Summary", icon: <IconChart />, onClick: () => setActive("productionSummary"), show: device.productionSummary },
     { label: "Camera", icon: <IconCamera />, onClick: () => setActive("camera"), show: device.camera },
     { label: "Manual Stock", icon: <IconBoxes />, onClick: () => setActive("manualStock"), show: device.manualStock },

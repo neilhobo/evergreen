@@ -995,3 +995,48 @@
     minmax(0, calc((100% - 44px) / 3 + 200px))
     minmax(0, calc((100% - 44px) / 3 - 100px));
 }
+
+/* ---- Production Planner (ledger of open orders per product against stock) ---- */
+.tt-pp-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.tt-pp-seg { display: inline-flex; border: 1px solid var(--tt-line); border-radius: 10px; overflow: hidden; }
+.tt-pp-seg button {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-right: 1px solid var(--tt-line);
+  background: transparent;
+  color: var(--tt-text-dim);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+.tt-pp-seg button:last-child { border-right: 0; }
+.tt-pp-seg button[aria-pressed="true"] { background: var(--tt-green); color: #fff; font-weight: 600; }
+.tt-grid th.tt-r, .tt-grid td.tt-r { text-align: right; }
+.tt-pp-grid tbody td { font-size: 16px; padding-block: 15px; }
+.tt-pp-grid tbody tr.tt-pp-open { background: rgba(var(--tt-blue-rgb), 0.22); }
+.tt-pp-grid tbody tr.tt-pp-sub td {
+  padding-block: 10px;
+  font-size: 14px;
+  color: var(--tt-text-dim);
+  background: rgba(0, 0, 0, 0.28);
+}
+.tt-pp-grid tbody tr.tt-pp-sub td:first-child { padding-left: 40px; color: var(--tt-text); }
+.tt-pp-grid tfoot td {
+  position: sticky;
+  bottom: 0;
+  padding: 13px 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--tt-panel);
+  border-top: 1px solid var(--tt-line);
+}
+.tt-pp-caret { display: inline-block; width: 22px; color: var(--tt-text-dim); }
+.tt-pp-dim { color: var(--tt-text-dim); }
+.tt-pp-grid .tt-pp-neg, .tt-pp-neg { color: #ff8aa3; font-weight: 700; }
+.tt-pp-grid .tt-pp-pos { color: #3ddc84; }
+.tt-pp-pill { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.tt-pp-pill.bad { background: #3d1822; color: #ff8aa3; }
+.tt-pp-pill.warn { background: #3d3210; color: #facc15; }
+.tt-pp-pill.later { background: #1e2f4d; color: #93c5fd; }
+.tt-pp-pill.good { background: #123d22; color: #3ddc84; }

@@ -82,6 +82,7 @@ public class DeviceController : ControllerBase
         device.ProductionSummary = input.ProductionSummary;
         device.Camera = input.Camera;
         device.ManualStock = input.ManualStock;
+        device.ProductionPlanner = input.ProductionPlanner;
         device.Weighscale = input.Weighscale;
         device.Printer = input.Printer;
         device.LoginEnabled = input.LoginEnabled;
@@ -123,6 +124,7 @@ public class DeviceController : ControllerBase
         ProductionSummary = d.ProductionSummary,
         Camera = d.Camera,
         ManualStock = d.ManualStock,
+        ProductionPlanner = d.ProductionPlanner,
         Weighscale = d.Weighscale,
         Printer = d.Printer,
         LoginEnabled = d.LoginEnabled,
@@ -148,6 +150,7 @@ public class DeviceDto
     public bool ProductionSummary { get; set; }
     public bool Camera { get; set; }
     public bool ManualStock { get; set; }
+    public bool ProductionPlanner { get; set; }
     public bool Weighscale { get; set; }
     public bool Printer { get; set; }
     public bool LoginEnabled { get; set; }
@@ -170,6 +173,7 @@ public class DeviceConfigInput
     public bool ProductionSummary { get; set; }
     public bool Camera { get; set; }
     public bool ManualStock { get; set; }
+    public bool ProductionPlanner { get; set; }
     public bool Weighscale { get; set; }
     public bool Printer { get; set; }
     public bool LoginEnabled { get; set; } = true;
