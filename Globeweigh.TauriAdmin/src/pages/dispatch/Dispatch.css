@@ -205,6 +205,38 @@
   box-shadow: inset 3px 0 0 #0f766e;
 }
 
+/* Open Orders: an order on hold (⋮ > Put on hold) — it cannot be put on a load. Set back in grey
+   italics with a slate edge and an amber "On hold" tag where the Assigned tick would be; grey
+   rather than a tint so it is not mistaken for the orange selection, the blue of a selected
+   load's orders or the red of an overdue one (an order on hold is never on a load, so it is
+   never any of those). The selection keeps the edge and the tag. */
+.data-table tbody tr.row-on-hold:not(.selected) td {
+  background: #f1f5f9;
+  color: #64748b;
+  font-style: italic;
+}
+.data-table tbody tr.row-on-hold td:first-child {
+  box-shadow: inset 3px 0 0 #94a3b8;
+}
+.dsp-hold-tag {
+  display: inline-block;
+  padding: 0 3px;
+  border: 1px solid #f59e0b;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  /* keeps the tag from making the row taller than a text-only row */
+  margin: -2px 0;
+}
+
 .dsp-panel .data-table-wrap { flex: 1; min-height: 0; }
 
 /* Create/Edit Load dialog — fill the modal body as a flex column: the load's header panel at
@@ -1273,6 +1305,82 @@ select.cl-delivery-order {
 
 .us-leave {
   margin-top: 14px;
+}
+
+/* Tags, beside Access on the same row (role left, tags right): one short tick per tag, one
+   under another, each with an "i" that pops up what the tag switches on. */
+.us-access-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+  align-items: start;
+}
+
+.us-tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.us-tag {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  white-space: nowrap;
+}
+
+.us-tag-info {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid #94a3b8;
+  border-radius: 50%;
+  background: #fff;
+  color: #475569;
+  /* Centred by flex, not line-height, and upright: an italic serif "i" leans off-centre. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font: 700 10px/1 Arial, Helvetica, sans-serif;
+  cursor: pointer;
+}
+
+.us-tag-info:hover,
+.us-tag-info[aria-expanded="true"] {
+  border-color: #0284c7;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.us-tag-pop {
+  /* Drawn on <body> and placed against the window by StaffEditModal, above the dialog. */
+  position: fixed;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+  font-size: 12px;
+  line-height: 1.45;
+  color: #334155;
+  white-space: normal;
+}
+
+.us-tag-pop strong {
+  color: #075985;
+}
+
+.us-tag-pop-note {
+  color: #64748b;
 }
 
 /* The leave fields keep their space while unticked (the dialog stays one height). */

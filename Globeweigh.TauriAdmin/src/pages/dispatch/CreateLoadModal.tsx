@@ -145,9 +145,10 @@ export default function CreateLoadModal({ loadId, onClose }: Props) {
   }
 
   // Only unassigned orders are offered — plus, when editing, the ones already on
-  // THIS load (so they can be unticked).
+  // THIS load (so they can be unticked). An order on hold is never on a load and cannot be put
+  // on one, so it is not offered.
   const visibleOrders = orders.filter(
-    (o) => o.weighbridgeRecordId <= 0 || o.weighbridgeRecordId === loadId,
+    (o) => (o.weighbridgeRecordId <= 0 && !o.onHold) || o.weighbridgeRecordId === loadId,
   );
 
   const columns: Column<DispatchOrder>[] = [

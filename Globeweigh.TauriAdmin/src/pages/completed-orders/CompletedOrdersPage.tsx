@@ -19,6 +19,9 @@ import { fmtDate, fmtDateTime, fmtQty, todayInput } from "../../format";
 import { AdminUserDto } from "../../types";
 import DeliveryNoteModal from "./DeliveryNoteModal";
 import DispatchOrderEditModal from "../dispatch/DispatchOrderEditModal";
+import SageExportModal from "../sage-link/SageExportModal";
+import { useFeature } from "../../features";
+import { FEATURE } from "../../api/features";
 
 interface Props {
   user: AdminUserDto;
@@ -30,8 +33,35 @@ interface Props {
   mine?: boolean;
 }
 
+// Whether the Selected Order column is folded away, remembered per signed-in user in this
+// browser's storage (so two people sharing a PC each keep their own choice). The storage may be
+// unreadable (a locked-down profile) — the column then simply opens.
+const sideCollapsedKey = (userId: number) => `completedOrders.sideCollapsed.${userId}`;
+
+function readSideCollapsed(userId: number): boolean {
+  try {
+    return localStorage.getItem(sideCollapsedKey(userId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeSideCollapsed(userId: number, collapsed: boolean) {
+  try {
+    localStorage.setItem(sideCollapsedKey(userId), collapsed ? "1" : "0");
+  } catch {
+    // The choice just will not survive the session.
+  }
+}
+
 // Completed (dispatched) orders master/detail — mirrors the WPF CompletedOrderListView (read-only).
-export default function CompletedOrdersPage({ onViewOrder, mine = false }: Props) {
+export default function CompletedOrdersPage({ user, onViewOrder, mine = false }: Props) {
+  const [sideCollapsed, setSideCollapsed] = useState(() => readSideCollapsed(user.id));
+  function toggleSide() {
+    const next = !sideCollapsed;
+    setSideCollapsed(next);
+    writeSideCollapsed(user.id, next);
+  }
   const [rows, setRows] = useState<DispatchOrder[]>([]);
   const [selected, setSelected] = useState<DispatchOrder | null>(null);
   const [items, setItems] = useState<DispatchOrderItem[]>([]);
@@ -47,6 +77,13 @@ export default function CompletedOrdersPage({ onViewOrder, mine = false }: Props
   // ctrl-click toggles a row. A plain click clears it back to one row.
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [anchorId, setAnchorId] = useState<number | null>(null);
+  // Export to Sage (staged: Super Admin > Staging) — the orders handed to the pre-test dialog.
+  // Acts on the same rows as Delete: the Ctrl/Shift-picked ones, else the highlighted one.
+  const sageExportOn = useFeature(FEATURE.sageExport);
+  const [exportIds, setExportIds] = useState<number[] | null>(null);
+  // In grid order, so the dialog lists them as the grid does.
+  const actionIds =
+    checked.size > 0 ? rows.filter((r) => checked.has(r.id)).map((r) => r.id) : selected ? [selected.id] : [];
 
   async function refresh() {
     setLoading(true);
@@ -250,6 +287,20 @@ export default function CompletedOrdersPage({ onViewOrder, mine = false }: Props
             {loading && <span className="toolbar-note">Loading…</span>}
             <div className="toolbar-right">
               {checked.size > 0 && <span className="toolbar-note">{checked.size} selected</span>}
+              {!mine && sageExportOn && (
+                <button
+                  className="toolbar-btn"
+                  disabled={actionIds.length === 0}
+                  title={
+                    actionIds.length === 0
+                      ? "Select an order first (Ctrl/Shift+click for several)"
+                      : "Check these orders against Sage, then post them as sales orders"
+                  }
+                  onClick={() => setExportIds(actionIds)}
+                >
+                  {actionIds.length > 1 ? `Export to Sage (${actionIds.length})` : "Export to Sage"}
+                </button>
+              )}
               {!mine && (
                 <>
                   <button
@@ -286,10 +337,40 @@ export default function CompletedOrdersPage({ onViewOrder, mine = false }: Props
             emptyText={loading ? "Loading…" : "No orders"}
           />
         </div>
-        {/* +200px over the default 360 — narrows the orders column by the same amount. */}
+        {/* Folded away: a narrow rail that only carries the button to bring the column back, so
+            the orders grid takes the width. */}
+        {sideCollapsed ? (
+          <div className="po-side co-side-collapsed">
+            <button
+              type="button"
+              className="co-side-toggle"
+              title="Show the selected order"
+              aria-label="Show the selected order"
+              aria-expanded={false}
+              onClick={toggleSide}
+            >
+              «
+            </button>
+            <span className="co-side-rail-label">
+              {selected ? `Order ${selected.orderNo}` : "Selected Order"}
+            </span>
+          </div>
+        ) : (
+        /* +200px over the default 360 — narrows the orders column by the same amount. */
         <div className="po-side" style={{ width: 560 }}>
           <h3 className="po-side-title">
             {selected ? `Order ${selected.orderNo}` : "Selected Order"}
+            <span style={{ flex: 1 }} />
+            <button
+              type="button"
+              className="co-side-toggle"
+              title="Hide the selected order"
+              aria-label="Hide the selected order"
+              aria-expanded
+              onClick={toggleSide}
+            >
+              »
+            </button>
           </h3>
           {/* The order's header, laid out as the Order Details page lays out its left panel — the
               same section titles and label/value rows — so the two read alike. */}
@@ -334,11 +415,14 @@ export default function CompletedOrdersPage({ onViewOrder, mine = false }: Props
             emptyText={selected ? "No items" : "Select an order"}
           />
         </div>
+        )}
       </div>
 
       {noteOrderId != null && (
         <DeliveryNoteModal orderId={noteOrderId} onClose={() => setNoteOrderId(null)} />
       )}
+
+      {exportIds && <SageExportModal orderIds={exportIds} onClose={() => setExportIds(null)} />}
 
       {editing && (
         <DispatchOrderEditModal

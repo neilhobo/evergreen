@@ -7,6 +7,7 @@ import {
   deleteStaff,
   getStaff,
   roleLabel,
+  tagLabel,
   userTypeLabel,
 } from "../../api/staff";
 import { getAnnualLeaveAccessMe, getStaffLeave } from "../../api/annualLeave";
@@ -107,6 +108,18 @@ export default function StaffPanel() {
       key: "roleIds",
       header: "Roles",
       render: (r) => r.roleIds.map(roleLabel).join(", "),
+    },
+    {
+      // Not roles: extra features switched on for the person (Edit > Tags).
+      key: "tags",
+      header: "Tags",
+      render: (r) =>
+        (r.tags ?? []).map((t) => (
+          <span key={t} className="staff-tag">
+            {tagLabel(t)}
+          </span>
+        )),
+      sortValue: (r) => (r.tags ?? []).map(tagLabel).join(", "),
     },
     {
       key: "disabled",

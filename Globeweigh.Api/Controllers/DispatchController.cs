@@ -48,8 +48,14 @@ public class DispatchController : ControllerBase
             .Where(s => s.DispatchOrderId != null && ids.Contains(s.DispatchOrderId.Value)
                 && s.Status == SalesOrderEntity.StatusApproved && s.DateDeleted == null)
             .ToDictionaryAsync(s => s.DispatchOrderId!.Value, s => s.Id, ct);
+        var onHold = (await _db.Set<DispatchOrderEntity>().AsNoTracking()
+                .Where(o => o.OnHold && o.DateDeleted == null && o.DateDispatched == null)
+                .Select(o => o.Id)
+                .ToListAsync(ct))
+            .ToHashSet();
         foreach (var r in rows)
         {
+            r.OnHold = onHold.Contains(r.Id);
             if (latest.TryGetValue(r.Id, out var e))
             {
                 r.ConfirmationSentAt = e.DateSent;
@@ -1607,6 +1613,26 @@ public class DispatchController : ControllerBase
         return NoContent();
     }
 
+    // POST /api/dispatch/orders/{id}/hold { onHold } — put an open order on hold, or take it off.
+    // An order on hold cannot be put on a load (see OnHoldError), and one already on a load
+    // cannot be put on hold: take it off the load first.
+    [HttpPost("orders/{id:int}/hold")]
+    public async Task<ActionResult> SetOrderHold(int id, [FromBody] OrderHoldInput input, CancellationToken ct = default)
+    {
+        var order = await _db.Set<DispatchOrderEntity>().FirstOrDefaultAsync(o => o.Id == id, ct);
+        if (order == null || order.DateDeleted != null) return NotFound();
+        if (input.OnHold)
+        {
+            if (order.DateDispatched != null)
+                return BadRequest(new { message = "This order has already been dispatched." });
+            if (order.WeighbridgeRecordId > 0)
+                return BadRequest(new { message = "This order is on a load. Take it off the load before putting it on hold." });
+        }
+        order.OnHold = input.OnHold;
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
     // ---- Loads / picking / weigh-out (WeighbridgeRecord) ----
 
     // GET /api/dispatch/loads/{id} — load detail: the record + its orders + items.
@@ -1780,6 +1806,7 @@ public class DispatchController : ControllerBase
         if (input.HaulierId <= 0) return BadRequest(new { message = "Haulier is required." });
         var orders = input.OrdersWithDeliveryOrder();
         if (DeliveryOrderError(orders) is { } bad) return BadRequest(new { message = bad });
+        if (await OnHoldError(orders, ct) is { } held) return BadRequest(new { message = held });
 
         var rec = new WeighbridgeRecord
         {
@@ -1806,6 +1833,7 @@ public class DispatchController : ControllerBase
         if (input.HaulierId <= 0) return BadRequest(new { message = "Haulier is required." });
         var orders = input.OrdersWithDeliveryOrder();
         if (DeliveryOrderError(orders) is { } bad) return BadRequest(new { message = bad });
+        if (await OnHoldError(orders, ct) is { } held) return BadRequest(new { message = held });
         var rec = await _db.Set<WeighbridgeRecord>().FirstOrDefaultAsync(r => r.Id == id, ct);
         if (rec == null) return NotFound();
 
@@ -1926,7 +1954,7 @@ public class DispatchController : ControllerBase
         if (SageExport.AutoExportEnabled(_config))
             await SageExport.EnqueueAsync(_db,
                 orders.Where(o => o.DateDeleted == null).Select(o => o.Id),
-                SageExportJob.Dispatch, now, ct);
+                SageExportJob.Dispatch, now, SageExport.ExportTarget(_config), null, ct);
 
         await _db.SaveChangesAsync(ct);
         return NoContent();
@@ -2094,6 +2122,25 @@ public class DispatchController : ControllerBase
         return null;
     }
 
+    // An order on hold cannot go on a load. The Create/Edit Load dialog does not offer them, but
+    // one may have been put on hold while the dialog was open — never trust the client.
+    private async Task<string?> OnHoldError(List<LoadOrderInput> orders, CancellationToken ct)
+    {
+        if (orders.Count == 0) return null;
+        var ids = orders.Select(o => o.OrderId).ToList();
+        var held = await _db.Set<DispatchOrderEntity>().AsNoTracking()
+            .Where(o => ids.Contains(o.Id) && o.OnHold)
+            .OrderBy(o => o.OrderNo)
+            .Select(o => o.OrderNo)
+            .ToListAsync(ct);
+        return held.Count switch
+        {
+            0 => null,
+            1 => $"Order {held[0]} is on hold and cannot be put on a load.",
+            _ => $"Orders {string.Join(", ", held)} are on hold and cannot be put on a load.",
+        };
+    }
+
     private async Task LinkOrders(int recordId, List<LoadOrderInput> orders, CancellationToken ct)
     {
         if (orders.Count == 0) return;
@@ -2107,6 +2154,11 @@ public class DispatchController : ControllerBase
         }
         await _db.SaveChangesAsync(ct);
     }
+}
+
+public class OrderHoldInput
+{
+    public bool OnHold { get; set; }
 }
 
 public class LoadInput

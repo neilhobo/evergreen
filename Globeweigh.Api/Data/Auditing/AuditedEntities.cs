@@ -175,6 +175,7 @@ public static class AuditedEntities
                 [nameof(DispatchOrderEntity.Comments)] = "Delivery Note Comments",
                 [nameof(DispatchOrderEntity.PickingComments)] = "Picking Comments",
                 [nameof(DispatchOrderEntity.HasPos)] = "POS Board",
+                [nameof(DispatchOrderEntity.OnHold)] = "On Hold",
                 [nameof(DispatchOrderEntity.SalesRepId)] = "Sales Rep",
                 [nameof(DispatchOrderEntity.DeliveryDate)] = "Delivery Date",
                 [nameof(DispatchOrderEntity.WeighbridgeRecordId)] = "Load",

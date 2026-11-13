@@ -40,7 +40,8 @@ namespace Globeweigh.SageSidecar
         public int PalletsOrdered { get; set; }
         public int PalletsPicked { get; set; }
         public int Pallets { get; set; }                   // what actually left
-        public int Units { get; set; }                     // Pallets × Upp
+        public decimal Units { get; set; }                 // Pallets × Upp, or m³ for a CubicMeter product
+        public string SoldBy { get; set; }                 // Pallet | CubicMeter
         public decimal WeightKg { get; set; }
         public decimal? UnitPrice { get; set; }            // per pallet; null = unknown
         public string PriceSource { get; set; }

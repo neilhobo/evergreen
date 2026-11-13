@@ -4,7 +4,9 @@ export interface DispatchOrder { id:number; orderNo:number; customerId:number; h
   // Open Orders only: the latest order confirmation emailed to the customer (the Emailed column).
   confirmationSentAt?:string|null; confirmationSentTo?:string|null;
   // Open Orders only: the sales order (My Orders) it was approved from — the ⋮ menu's Un-approve order.
-  salesOrderId?:number|null; }
+  salesOrderId?:number|null;
+  // Open Orders only: on hold (the ⋮ menu's Put on hold) — it cannot be put on a load.
+  onHold?:boolean; }
 // isUnordered: picked, then the order line was removed by an edit - the pallets were
 // never shipped. The API lists them so the picked pallets and the item totals agree.
 export interface DispatchOrderItem { id:number; orderId:number; productId:number; productDescription:string|null; size:number|null; upp:number; quantity:number|null; totalUnits:number|null; pickedQuantity:number|null; pickedWeight:number; gtin:string|null; unitDisplay:string|null; orderNo:number|null; soldBy?:SoldBy|"Pos"; density?:number|null; pickedAt?:string|null; isUnordered?:boolean; }
@@ -42,6 +44,9 @@ export const getDispatchCompleted = (from?:string,to?:string) => apiGet<WbComple
 export const createOrder = (i:OrderInput) => apiPost<{id:number;orderNo:number}>("/dispatch/orders", i);
 export const updateOrder = (id:number,i:OrderInput) => apiPut<{id:number;orderNo:number}>(`/dispatch/orders/${id}`, i);
 export const deleteOrder = (id:number) => request<void>("DELETE", `/dispatch/orders/${id}`);
+// Put an open order on hold (it cannot then be put on a load), or take it off. The API refuses
+// to hold an order that is already on a load.
+export const setOrderHold = (id:number, onHold:boolean) => apiPost<void>(`/dispatch/orders/${id}/hold`, { onHold });
 
 export interface WeighbridgeRecordDetail { id:number; collectionDate:string|null; isOutgoing:boolean; haulierId:number; haulierName:string|null; trailerNo:string|null; weightIn:number; dateWeightIn:string|null; weightOut:number; dateWeightOut:string|null; datePickingComplete:string|null; comments:string|null; }
 // isWeightEstimated: the weight is the API's estimate from the product's other pallets (a

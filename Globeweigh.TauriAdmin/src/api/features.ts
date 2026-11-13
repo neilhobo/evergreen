@@ -11,6 +11,7 @@ import { apiGet, apiPut } from "./client";
 export const FEATURE = {
   productionPlanning: "ProductionPlanning",
   sageLink: "SageLink",
+  sageExport: "SageExport",
   reports: "Reports",
   annualLeave: "AnnualLeave",
   // Annual Leave's tabs, each staged on its own under the AnnualLeave switch (which still
@@ -74,6 +75,17 @@ export const STAGED_FEATURES: StagedFeature[] = [
       "account's Sage address book — kept fresh by the Sage sidecar on the server, with a Refresh " +
       "from Sage button. The first piece of the Sage integration; shown to office admins.",
     whenOff: "No Sage Link item in the menu. Nothing else changes.",
+  },
+  {
+    name: FEATURE.sageExport,
+    title: "Export to Sage",
+    description:
+      "Adds an Export to Sage button to Dispatch > Completed Orders: pick one or more completed " +
+      "orders (Ctrl/Shift+click), run a pre-test that says what would be posted and what is in the " +
+      "way, then confirm to post them into Sage as sales orders through the Sage sidecar. Which Sage " +
+      "company they land in is decided on the server (Sage:ExportTarget): the TEST company unless " +
+      "that says Live, and the dialog says which before anything is sent.",
+    whenOff: "No Export to Sage button. Completed orders are keyed into Sage by hand, as now.",
   },
   {
     name: FEATURE.reports,

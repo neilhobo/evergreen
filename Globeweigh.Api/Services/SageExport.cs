@@ -20,6 +20,16 @@ public static class SageExport
     public static bool AutoExportEnabled(IConfiguration config) =>
         config.GetValue<bool>("Sage:ExportEnabled");
 
+    // Sage:ExportTarget - which Sage company queued orders are posted into. "Live" must be
+    // spelled out in the server's appsettings.json; anything else, including nothing at
+    // all, is Test: the sidecar's separate test company, so nothing done while the export
+    // is being tried out can reach the client's real accounts. (The sidecar has its own
+    // second lock: it refuses Live jobs unless LiveExportEnabled is set in ITS config.)
+    public static string ExportTarget(IConfiguration config) =>
+        string.Equals(config["Sage:ExportTarget"]?.Trim(), SageExportJob.TargetLive, StringComparison.OrdinalIgnoreCase)
+            ? SageExportJob.TargetLive
+            : SageExportJob.TargetTest;
+
     public static readonly JsonSerializerOptions PayloadJson = new(JsonSerializerDefaults.Web);
 
     // ---- The contract with the sidecar -------------------------------------------------
@@ -65,7 +75,10 @@ public static class SageExport
         // What actually left, by the rule StockDepletion uses: picked pallets when the order
         // was picked, the ordered quantity when the whole order went out without picking.
         public int Pallets { get; set; }
-        public int Units { get; set; }                   // Pallets × Upp
+        // What the unit price multiplies: Pallets × Upp (bags) for a product sold by the
+        // pallet; the ordered m³ for one sold by the cubic metre, whose price is per m³.
+        public decimal Units { get; set; }
+        public string SoldBy { get; set; } = "Pallet";   // Product.SoldBy: Pallet | CubicMeter
         public decimal WeightKg { get; set; }
         // Per UNIT (bag) — the trade price, e.g. £3.28 for a 60L compost — so it pairs with
         // Units, not Pallets (the sidecar's QuantityBasis). The order line's own price when
@@ -169,7 +182,8 @@ public static class SageExport
                 PalletsOrdered = ordered,
                 PalletsPicked = picked,
                 Pallets = pallets,
-                Units = pallets * r.Upp,
+                Units = r.SoldBy == "CubicMeter" ? (r.Quantity ?? 0) : pallets * r.Upp,
+                SoldBy = r.SoldBy,
                 WeightKg = r.PickedWeight,
                 UnitPrice = price,
                 PriceSource = priceSource,
@@ -212,12 +226,12 @@ public static class SageExport
         };
     }
 
-    // Queue an export for each order that does not already have a live (non-Failed) job.
-    // Adds rows to the context — the CALLER saves — and returns the order ids actually
-    // queued. Orders that have since been deleted are skipped.
+    // Queue an export for each order that does not already have a live (non-Failed) job
+    // for this target. Adds rows to the context — the CALLER saves — and returns the order
+    // ids actually queued. Orders that have since been deleted are skipped.
     public static async Task<List<int>> EnqueueAsync(
         GbEvergreenContext db, IEnumerable<int> orderIds, string reason, DateTime? dispatchedAt,
-        CancellationToken ct)
+        string target, string? requestedBy, CancellationToken ct)
     {
         var ids = orderIds.Distinct().ToList();
         if (ids.Count == 0) return [];
@@ -226,6 +240,7 @@ public static class SageExport
         // orders already queued or done, so a re-completed load doesn't fail on the index.
         var live = await db.Set<SageExportJob>().AsNoTracking()
             .Where(j => j.DocType == SageExportJob.SalesOrder
+                && j.Target == target
                 && ids.Contains(j.DispatchOrderId)
                 && j.Status != SageExportJob.Failed)
             .Select(j => j.DispatchOrderId)
@@ -246,6 +261,8 @@ public static class SageExport
                 Payload = JsonSerializer.Serialize(payload, PayloadJson),
                 Status = SageExportJob.Queued,
                 Reason = reason,
+                Target = target,
+                RequestedBy = requestedBy,
                 CreatedUtc = createdUtc,
             });
             queued.Add(orderId);

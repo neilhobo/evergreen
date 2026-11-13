@@ -936,7 +936,7 @@ public class PickingController : ControllerBase
         var sageQueued = SageExport.AutoExportEnabled(_config)
             ? await SageExport.EnqueueAsync(_db,
                 orders.Where(o => o.DateDeleted == null).Select(o => o.Id),
-                SageExportJob.Dispatch, now, ct)
+                SageExportJob.Dispatch, now, SageExport.ExportTarget(_config), null, ct)
             : new List<int>();
 
         await _db.SaveChangesAsync(ct);

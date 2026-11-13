@@ -39,8 +39,28 @@ public class SidecarKeyAttribute : Attribute, IAuthorizationFilter
 
         var given = ctx.HttpContext.Request.Headers[HeaderName].ToString();
         if (!KeysMatch(given, expected))
+        {
             ctx.Result = new UnauthorizedResult();
+            return;
+        }
+
+        // A sidecar that knows about export targets says so on every call. Noting it here
+        // is what tells the Export to Sage pre-test that one is alive and where it can post.
+        var req = ctx.HttpContext.Request;
+        if (req.Headers.ContainsKey(TargetsHeader))
+            Services.SageSidecarPresence.Record(
+                req.Headers["X-Sidecar-Machine"].ToString(), DeclaredTargets(req),
+                req.Headers["X-Sidecar-Test-Company"].ToString());
     }
+
+    // "Test", "Live", both or neither: the Sage companies the calling sidecar can post into
+    // (X-Sidecar-Targets, comma-separated). No header = a sidecar from before targets existed.
+    public const string TargetsHeader = "X-Sidecar-Targets";
+
+    public static List<string> DeclaredTargets(HttpRequest req) =>
+        req.Headers[TargetsHeader].ToString()
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
 
     // Constant-time compare — a key check should not leak how much of the key was right.
     private static bool KeysMatch(string given, string expected)

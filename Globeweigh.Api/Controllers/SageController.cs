@@ -113,9 +113,11 @@ public class SageController : ControllerBase
         if (order.DateDispatched == null)
             return Conflict(new { message = $"Order #{order.OrderNo} has not been dispatched yet." });
 
+        var target = SageExport.ExportTarget(_config);
         var existing = await _db.Set<SageExportJob>().AsNoTracking()
             .Where(j => j.DispatchOrderId == orderId
                 && j.DocType == SageExportJob.SalesOrder
+                && j.Target == target
                 && j.Status != SageExportJob.Failed)
             .OrderByDescending(j => j.Id)
             .FirstOrDefaultAsync(ct);
@@ -128,16 +130,82 @@ public class SageController : ControllerBase
                 job = ToDto(existing),
             });
 
-        var queued = await SageExport.EnqueueAsync(_db, [orderId], SageExportJob.Manual, null, ct);
+        var queued = await SageExport.EnqueueAsync(_db, [orderId], SageExportJob.Manual, null, target, UserName(), ct);
         if (queued.Count == 0) return NotFound();
         await _db.SaveChangesAsync(ct);
 
         var job = await _db.Set<SageExportJob>().AsNoTracking()
-            .Where(j => j.DispatchOrderId == orderId)
+            .Where(j => j.DispatchOrderId == orderId && j.Target == target)
             .OrderByDescending(j => j.Id)
             .FirstAsync(ct);
         return ToDto(job);
     }
+
+    // ---- Export to Sage (Completed Orders > pick orders > Export to Sage) ---------------
+
+    // POST /api/sage/export/pretest { orderIds } — would exporting these orders work, and
+    // what would it do that someone should see first? Writes nothing. The answer names the
+    // target (Test or Live company) so the dialog can say where the orders would go.
+    [HttpPost("export/pretest")]
+    public async Task<ActionResult<SageExportPretest.Result>> ExportPretest(
+        [FromBody] ExportOrdersInput input, CancellationToken ct = default)
+    {
+        if (input.OrderIds is not { Count: > 0 }) return BadRequest(new { message = "No orders given." });
+        if (input.OrderIds.Count > MaxExportBatch)
+            return BadRequest(new { message = $"At most {MaxExportBatch} orders at a time." });
+        return await SageExportPretest.RunAsync(_db, _config, input.OrderIds, ct);
+    }
+
+    // POST /api/sage/export { orderIds } — queue them. The pre-test is run AGAIN here, on
+    // the data as it is now, and only the orders it does not block are queued; the rest
+    // come back as skipped with the reason. Refused outright (409) when nothing could be
+    // posted at all (no sidecar, or a sidecar without this target).
+    [HttpPost("export")]
+    public async Task<ActionResult<ExportOrdersResult>> ExportOrders(
+        [FromBody] ExportOrdersInput input, CancellationToken ct = default)
+    {
+        if (input.OrderIds is not { Count: > 0 }) return BadRequest(new { message = "No orders given." });
+        if (input.OrderIds.Count > MaxExportBatch)
+            return BadRequest(new { message = $"At most {MaxExportBatch} orders at a time." });
+
+        var test = await SageExportPretest.RunAsync(_db, _config, input.OrderIds, ct);
+        if (test.Blockers.Count > 0)
+            return Conflict(new { message = string.Join(" ", test.Blockers) });
+
+        var go = test.Orders.Where(o => o.Status != SageExportPretest.Blocked).Select(o => o.OrderId).ToList();
+        var queued = await SageExport.EnqueueAsync(_db, go, SageExportJob.Manual, null, test.Target, UserName(), ct);
+        await _db.SaveChangesAsync(ct);
+
+        var skipped = test.Orders
+            .Where(o => !queued.Contains(o.OrderId))
+            .Select(o => new ExportSkipped(o.OrderId, o.OrderNo,
+                o.Issues.FirstOrDefault(i => i.Severity == SageExportPretest.Block)?.Text ?? "Already queued."))
+            .ToList();
+        return new ExportOrdersResult(test.Target, await LatestJobsAsync(queued, test.Target, ct), skipped);
+    }
+
+    // POST /api/sage/export/progress { orderIds } — each order's newest export job for the
+    // current target (Failed ones included), for the dialog to follow the posts through.
+    [HttpPost("export/progress")]
+    public async Task<ActionResult<List<SageJobDto>>> ExportProgress(
+        [FromBody] ExportOrdersInput input, CancellationToken ct = default)
+        => await LatestJobsAsync(input.OrderIds ?? [], SageExport.ExportTarget(_config), ct);
+
+    private const int MaxExportBatch = 200;
+
+    private async Task<List<SageJobDto>> LatestJobsAsync(List<int> orderIds, string target, CancellationToken ct)
+    {
+        if (orderIds.Count == 0) return [];
+        var jobs = await _db.Set<SageExportJob>().AsNoTracking()
+            .Where(j => j.DocType == SageExportJob.SalesOrder && j.Target == target && orderIds.Contains(j.DispatchOrderId))
+            .ToListAsync(ct);
+        return jobs.GroupBy(j => j.DispatchOrderId)
+            .Select(g => ToDto(g.OrderByDescending(j => j.Id).First()))
+            .OrderBy(j => j.OrderNo)
+            .ToList();
+    }
+
+    private string? UserName() => User.FindFirst("name")?.Value;
 
     // POST /api/sage/jobs/{id}/retry — put a Failed job back on the queue with a fresh set
     // of attempts. The payload is NOT rebuilt: it is the order as dispatched and that is
@@ -191,11 +259,28 @@ public class SageController : ControllerBase
     [HttpPost("sidecar/claim")]
     public async Task<ActionResult> Claim([FromBody] ClaimInput? input, CancellationToken ct = default)
     {
+        // Which companies this sidecar says it can post into. A sidecar from before targets
+        // existed sends none — it knows only the live company — and so is handed nothing:
+        // that is what keeps an un-upgraded sidecar from posting a test export for real.
+        // (Sent as a header on every sidecar call — SidecarKeyAttribute records it — so the
+        // pre-test knows a sidecar is alive even while it is busy on a long mirror read.)
+        var targets = SidecarKeyAttribute.DeclaredTargets(Request);
+        var canTest = targets.Contains(SageExportJob.TargetTest, StringComparer.OrdinalIgnoreCase);
+        var canLive = targets.Contains(SageExportJob.TargetLive, StringComparer.OrdinalIgnoreCase);
+        if (!canTest && !canLive) return NoContent();
+
         var conn = _db.Database.GetDbConnection();
         int? id;
         await using (var cmd = conn.CreateCommand())
         {
             cmd.CommandText = ClaimSql;
+            foreach (var (name, on) in new[] { ("@test", canTest), ("@live", canLive) })
+            {
+                var flag = cmd.CreateParameter();
+                flag.ParameterName = name;
+                flag.Value = on;
+                cmd.Parameters.Add(flag);
+            }
             var machine = cmd.CreateParameter();
             machine.ParameterName = "@machine";
             machine.Value = (object?)Truncate(input?.Machine, 100) ?? DBNull.Value;
@@ -218,6 +303,7 @@ public class SageController : ControllerBase
             job.OrderNo,
             job.Attempts,
             job.Reason,
+            job.Target,
             Payload = ParsePayload(job.Payload),
         });
     }
@@ -232,8 +318,9 @@ OUTPUT inserted.id
   FROM dbo.SageExportJob j
  WHERE j.id = (SELECT TOP 1 id
                  FROM dbo.SageExportJob WITH (UPDLOCK, READPAST)
-                WHERE Status = 'Queued'
-                   OR (Status = 'Exporting' AND StartedUtc < DATEADD(minute, -@stale, GETUTCDATE()))
+                WHERE (Status = 'Queued'
+                       OR (Status = 'Exporting' AND StartedUtc < DATEADD(minute, -@stale, GETUTCDATE())))
+                  AND ((@test = 1 AND Target = 'Test') OR (@live = 1 AND Target = 'Live'))
                 ORDER BY id)
    AND (j.Status = 'Queued'
         OR (j.Status = 'Exporting' AND j.StartedUtc < DATEADD(minute, -@stale, GETUTCDATE())));";
@@ -317,7 +404,11 @@ OUTPUT inserted.id
 
     private static SageJobDto ToDto(SageExportJob j) => new(
         j.Id, j.DocType, j.DispatchOrderId, j.OrderNo, j.Status, j.Attempts, j.LastError, j.Reason,
-        j.SageOrderNo, j.ClaimedBy, j.CreatedUtc, j.StartedUtc, j.CompletedUtc);
+        j.SageOrderNo, j.ClaimedBy, Utc(j.CreatedUtc), Utc(j.StartedUtc), Utc(j.CompletedUtc), j.Target, j.RequestedBy);
+
+    // DATETIME columns come back Kind=Unspecified; stamp them UTC so the JSON carries "Z".
+    private static DateTime Utc(DateTime d) => DateTime.SpecifyKind(d, DateTimeKind.Utc);
+    private static DateTime? Utc(DateTime? d) => d == null ? null : Utc(d.Value);
 
     private static JsonElement ParsePayload(string json)
     {
@@ -353,9 +444,20 @@ public record SageJobDto(
     string? ClaimedBy,
     DateTime CreatedUtc,
     DateTime? StartedUtc,
-    DateTime? CompletedUtc);
+    DateTime? CompletedUtc,
+    string Target,
+    string? RequestedBy);
 
 public record SageJobDetailDto(SageJobDto Job, JsonElement Payload);
+
+public class ExportOrdersInput
+{
+    public List<int>? OrderIds { get; set; }
+}
+
+public record ExportSkipped(int OrderId, int OrderNo, string Reason);
+
+public record ExportOrdersResult(string Target, List<SageJobDto> Jobs, List<ExportSkipped> Skipped);
 
 public class ClaimInput
 {

@@ -37,6 +37,9 @@ public class DispatchOrderRow
     // The sales order (My Orders) this order was approved from, for Open Orders ⋮ > Un-approve
     // order. Filled by DispatchController.Orders; not in the view.
     [NotMapped] public int? SalesOrderId { get; set; }
+    // On hold (Open Orders ⋮ > Put on hold): cannot be put on a load. Filled by
+    // DispatchController.Orders; not in the view.
+    [NotMapped] public bool OnHold { get; set; }
 
     public class Config : IEntityTypeConfiguration<DispatchOrderRow>
     {

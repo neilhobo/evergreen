@@ -146,8 +146,20 @@ namespace Globeweigh.SageSidecar
                 return no;
             }
 
-            // 2. Connect (kept across consecutive jobs; dropped when the queue empties).
-            EnsureSage(ref sage);
+            // 2. Which company? Anything that is not exactly "Live" is Test. The API only hands
+            //    out targets this sidecar declared, so these two refusals should never fire -
+            //    they are the second lock, for the day something upstream is wrong. Final:
+            //    the job is parked as Failed, not retried into the wrong company.
+            var target = string.Equals(job.Target, SidecarConfig.TargetLive, StringComparison.OrdinalIgnoreCase)
+                ? SidecarConfig.TargetLive : SidecarConfig.TargetTest;
+            if (target == SidecarConfig.TargetLive && !_cfg.LiveExportEnabled)
+                throw new SageValidationException("This is a LIVE export, and posting to the live Sage company is switched off on this sidecar (LiveExportEnabled=false). Not posted.");
+            if (target == SidecarConfig.TargetTest && !_cfg.TestExportAvailable)
+                throw new SageValidationException("This is a TEST export, and this sidecar has no test company (TestSageDataPath). Not posted.");
+
+            //    Connect (kept across consecutive jobs; dropped when the queue empties).
+            EnsureSage(ref sage, target);
+            Log.Info("Job " + job.Id + ": posting to the " + target.ToUpperInvariant() + " company - " + sage.Describe());
 
             // 3. Already in Sage from an attempt whose marker is gone?
             var existing = sage.FindExistingOrder(job.Payload.Reference);
@@ -407,14 +419,18 @@ namespace Globeweigh.SageSidecar
 
         // ---- shared ----------------------------------------------------------------------
 
-        private void EnsureSage(ref SageSopWriter sage)
+        // A connection to the company the target names - Live for the mirror reads, the
+        // job's own target for an export. One company at a time: a connection to the other
+        // one is closed first, so there is never any doubt which company `sage` is.
+        private void EnsureSage(ref SageSopWriter sage, string target = SidecarConfig.TargetLive)
         {
-            if (sage != null) return;
-            var w = new SageSopWriter(_cfg);
+            if (sage != null && string.Equals(sage.Target, target, StringComparison.OrdinalIgnoreCase)) return;
+            DisposeSage(ref sage);
+            var w = new SageSopWriter(_cfg, target);
             try { w.Connect(); }
             catch { w.Dispose(); throw; }
             sage = w;
-            Log.Info("Connected: " + sage.Describe());
+            Log.Info("Connected (" + sage.Target + "): " + sage.Describe());
         }
 
         private void PingApi()

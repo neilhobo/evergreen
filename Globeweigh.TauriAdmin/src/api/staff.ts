@@ -12,6 +12,23 @@ export interface StaffRow {
   disabled: boolean;
   costingAccess: boolean;
   roleIds: number[];
+  /** STAFF_TAGS keys: extra features switched on for this person (not roles). */
+  tags: string[];
+}
+
+// The tags a Staff user can be given (mirrors the API's StaffTags). A tag is NOT a role: it
+// switches on one extra feature for that person, whatever their role. A fixed list, because each
+// tag arrives with the feature behind it; `gives` says what that is, in the editor.
+export const STAFF_TAGS: { key: string; label: string; gives: string }[] = [
+  {
+    key: "PosCreator",
+    label: "POS creator",
+    gives: "Mobile app: a POS Boards list of the open orders with a POS board, to mark each product's board made up.",
+  },
+];
+
+export function tagLabel(key: string): string {
+  return STAFF_TAGS.find((t) => t.key === key)?.label ?? key;
 }
 
 // Writable fields (mirrors StaffInput).
@@ -25,6 +42,7 @@ export interface StaffInput {
   disabled: boolean;
   costingAccess: boolean;
   roleIds: number[];
+  tags: string[];
 }
 
 // Mirrors Globeweigh.Model eUserType.

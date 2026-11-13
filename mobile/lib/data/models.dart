@@ -19,6 +19,13 @@ abstract final class UserRole {
   };
 }
 
+/// Staff tags (the API's StaffTags, TauriAdmin's STAFF_TAGS). A tag is not a
+/// role: it switches on one extra feature for the person, set in Admin > Staff.
+abstract final class StaffTag {
+  /// POS Boards: the open orders with a POS board, to mark each made up.
+  static const posCreator = 'PosCreator';
+}
+
 /// The signed-in user: AdminUserDto from POST /api/auth/admin-login, less
 /// the token.
 class User {
@@ -27,6 +34,10 @@ class User {
   final String? surname;
   final String username;
   final List<int> roleIds;
+
+  /// [StaffTag] keys as they were at sign-in. Home asks the server for the
+  /// current ones (myTagsProvider); these stand in until it answers.
+  final List<String> tags;
   final bool disabled;
 
   /// Set while an admin is signed in AS this user (Switch user): the admin's
@@ -40,6 +51,7 @@ class User {
     this.surname,
     required this.username,
     this.roleIds = const [],
+    this.tags = const [],
     this.disabled = false,
     this.impersonatedByUserId,
     this.impersonatedByName,
@@ -85,6 +97,7 @@ class User {
     surname: json['surname'] as String?,
     username: json['username'] as String? ?? '',
     roleIds: (json['roleIds'] as List? ?? const []).cast<int>(),
+    tags: (json['tags'] as List? ?? const []).cast<String>(),
     disabled: json['disabled'] as bool? ?? false,
     impersonatedByUserId: json['impersonatedByUserId'] as int?,
     impersonatedByName: json['impersonatedByName'] as String?,
@@ -96,6 +109,7 @@ class User {
     'surname': surname,
     'username': username,
     'roleIds': roleIds,
+    'tags': tags,
     'disabled': disabled,
     'impersonatedByUserId': impersonatedByUserId,
     'impersonatedByName': impersonatedByName,
@@ -124,6 +138,10 @@ class SwitchUserRow {
   final List<int> roleIds;
   final bool disabled;
 
+  /// One of MY most used switch targets: the server lists these first, most
+  /// used at the top (it counts the signed-in admin's own switches).
+  final bool frequent;
+
   const SwitchUserRow({
     required this.id,
     this.firstName,
@@ -131,6 +149,7 @@ class SwitchUserRow {
     this.username,
     this.roleIds = const [],
     this.disabled = false,
+    this.frequent = false,
   });
 
   String get name => '${firstName ?? ''} ${surname ?? ''}'.trim();
@@ -143,5 +162,6 @@ class SwitchUserRow {
     username: json['username'] as String?,
     roleIds: (json['roleIds'] as List? ?? const []).cast<int>(),
     disabled: json['disabled'] as bool? ?? false,
+    frequent: json['frequent'] as bool? ?? false,
   );
 }

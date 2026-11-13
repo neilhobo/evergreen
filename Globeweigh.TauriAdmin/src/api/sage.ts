@@ -177,3 +177,70 @@ export const ignoreSageAccounts = (accountRefs: string[]) =>
   apiPost<{ changed: number }>("/sage/comparison/ignore", { accountRefs });
 export const unignoreSageAccounts = (accountRefs: string[]) =>
   apiPost<{ changed: number }>("/sage/comparison/unignore", { accountRefs });
+
+// ---- Export to Sage: completed orders -> Sage sales orders (Controllers/SageController.cs,
+// Services/SageExportPretest.cs). The API only queues; the sidecar on the Sage machine posts.
+
+/** Which Sage company the orders go into. "Test" = the sidecar's test company: nothing
+ *  reaches the client's live accounts. Decided on the server, never by the page. */
+export type SageExportTarget = "Test" | "Live";
+
+export interface SageExportIssue {
+  severity: "block" | "warn";
+  text: string;
+}
+
+export interface SageExportOrderCheck {
+  orderId: number;
+  orderNo: number;
+  customerName: string | null;
+  accountRef: string | null;
+  dispatched: string | null;
+  lines: number; // lines that shipped something
+  netTotal: number;
+  status: "Ready" | "Warning" | "Blocked";
+  issues: SageExportIssue[];
+}
+
+export interface SageExportPretest {
+  target: SageExportTarget;
+  sidecar: {
+    online: boolean;
+    lastSeenUtc: string | null;
+    machine: string | null;
+    supportsTarget: boolean;
+    testCompany: string | null; // the test ACCDATA folder, as the sidecar reports it
+  };
+  blockers: string[]; // what stops the whole batch (no sidecar, no test company, ...)
+  orders: SageExportOrderCheck[];
+  ready: number;
+  warnings: number;
+  blocked: number;
+  canExport: boolean;
+}
+
+export interface SageExportJob {
+  id: number;
+  dispatchOrderId: number;
+  orderNo: number;
+  status: "Queued" | "Exporting" | "Done" | "Failed";
+  attempts: number;
+  lastError: string | null;
+  sageOrderNo: number | null;
+  target: SageExportTarget;
+  createdUtc: string;
+  completedUtc: string | null;
+}
+
+export interface SageExportResult {
+  target: SageExportTarget;
+  jobs: SageExportJob[];
+  skipped: { orderId: number; orderNo: number; reason: string }[];
+}
+
+export const pretestSageExport = (orderIds: number[]) =>
+  apiPost<SageExportPretest>("/sage/export/pretest", { orderIds });
+export const exportOrdersToSage = (orderIds: number[]) =>
+  apiPost<SageExportResult>("/sage/export", { orderIds });
+export const getSageExportProgress = (orderIds: number[]) =>
+  apiPost<SageExportJob[]>("/sage/export/progress", { orderIds });

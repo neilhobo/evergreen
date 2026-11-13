@@ -89,7 +89,17 @@ public class AuthController : ControllerBase
             .ToListAsync(ct);
         var roles = await RoleIdsByUserAsync(users.Select(u => u.Id).ToList(), ct);
 
-        return users
+        // How often THIS admin has switched into each user, from the login history (LoginEvent:
+        // a SwitchUser row is the target's, ByUserId the admin). Their most used come first, so
+        // each admin's list is their own; nothing extra is stored.
+        var myId = me.Value.User.Id;
+        var counts = await _db.Set<LoginEvent>().AsNoTracking()
+            .Where(e => e.Kind == LoginEvent.KindSwitchUser && e.ByUserId == myId && e.UserId != null)
+            .GroupBy(e => e.UserId!.Value)
+            .Select(g => new { UserId = g.Key, Count = g.Count(), Last = g.Max(e => e.DateLogged) })
+            .ToDictionaryAsync(g => g.UserId, ct);
+
+        var rows = users
             .Select(u => new SwitchUserRow
             {
                 Id = u.Id,
@@ -103,7 +113,19 @@ public class AuthController : ControllerBase
             .OrderBy(r => $"{r.FirstName} {r.Surname}".Trim() is { Length: > 0 } n ? n : r.Username,
                 StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        // The top few by count (then most recent), marked Frequent; everyone else stays A to Z.
+        var frequent = rows
+            .Where(r => !r.Disabled && counts.ContainsKey(r.Id))
+            .OrderByDescending(r => counts[r.Id].Count).ThenByDescending(r => counts[r.Id].Last)
+            .Take(FrequentSwitchUsers)
+            .ToList();
+        foreach (var r in frequent) r.Frequent = true;
+        return frequent.Concat(rows.Where(r => !r.Frequent)).ToList();
     }
+
+    // How many of the admin's most used switch targets lead the Switch user list.
+    private const int FrequentSwitchUsers = 5;
 
     /// <summary>Sign in as another user. The returned session replaces the admin's.</summary>
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -215,6 +237,7 @@ public class AuthController : ControllerBase
             RoleId               = user.RoleId,
             RoleIds              = EffectiveRoles(user, await RoleIdsByUserAsync(new List<int> { user.Id }, ct)),
             CostingAccess        = user.CostingAccess,
+            Tags                 = await TagsOfAsync(user.Id, ct),
             Disabled             = user.Disabled,
             ImpersonatedByUserId = by?.Id,
             ImpersonatedByName   = by?.Name,
@@ -222,6 +245,22 @@ public class AuthController : ControllerBase
             ExpiresUtc           = exp
         };
     }
+
+    private Task<string[]> TagsOfAsync(int userId, CancellationToken ct) =>
+        _db.Set<UserTagEntity>().AsNoTracking()
+            .Where(t => t.UserId == userId)
+            .Select(t => t.Tag)
+            .OrderBy(t => t)
+            .ToArrayAsync(ct);
+
+    /// <summary>
+    /// The signed-in user's Staff tags as they are now (Admin > Staff > Edit > Tags), so an app
+    /// with a stored session picks up a tag given since it signed in.
+    /// </summary>
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("tags")]
+    public async Task<ActionResult<string[]>> MyTags(CancellationToken ct = default) =>
+        await TagsOfAsync(User.GetUserId(), ct);
 
     /// <summary>
     /// Self-service password / Touch-passcode change for the signed-in user.
@@ -351,6 +390,8 @@ public class SwitchUserRow
     public string? Username { get; set; }
     public int[] RoleIds { get; set; } = Array.Empty<int>();
     public bool Disabled { get; set; }
+    // One of the signed-in admin's most used switch targets: listed first, most used at the top.
+    public bool Frequent { get; set; }
 }
 
 public class SwitchUserRequest
@@ -388,6 +429,8 @@ public class AdminUserDto
     public int RoleId { get; set; }
     public int[] RoleIds { get; set; } = Array.Empty<int>();
     public bool CostingAccess { get; set; }
+    // StaffTags keys: extra features switched on for this person (not roles).
+    public string[] Tags { get; set; } = Array.Empty<string>();
     public bool Disabled { get; set; }
     // Set while an admin is signed in AS this user (Switch user).
     public int? ImpersonatedByUserId { get; set; }

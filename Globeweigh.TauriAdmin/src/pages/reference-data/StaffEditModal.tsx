@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Modal from "../../components/Modal";
 import { messageDialog } from "../../components/confirmDialog";
 import {
   ASSIGNABLE_ROLES,
+  STAFF_TAGS,
   StaffInput,
   StaffRow,
   UserType,
@@ -40,7 +42,9 @@ const NO_LEAVE: LeaveProfile = {
   notes: null,
 };
 
-const USER_TYPES: { id: number; label: string }[] = [
+const TAG_POP_WIDTH = 260; // the tag "i" popup
+
+const USER_TYPES:{ id: number; label: string }[] = [
   { id: UserType.Office, label: "Office" },
   { id: UserType.Touch, label: "Touch" },
   { id: UserType.Both, label: "Both" },
@@ -67,6 +71,12 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
   const [roleId, setRoleId] = useState<number>(
     (existing?.roleIds ?? []).find((id) => ASSIGNABLE_ROLES.some((r) => r.id === id)) ?? 0
   );
+  // Tags (not roles): each switches on one extra feature for this person. See api/staff.ts.
+  const [tags, setTags] = useState<string[]>(existing?.tags ?? []);
+  const toggleTag = (key: string) =>
+    setTags((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
+  // The tag whose "i" popup is open, and where on the window it is drawn.
+  const [infoTag, setInfoTag] = useState<{ key: string; left: number; top?: number; bottom?: number } | null>(null);
   const [busy, setBusy] = useState(false);
   // Annual Leave: the profile as loaded (null until it is), what is on screen, and the lists.
   const [leaveLoaded, setLeaveLoaded] = useState<LeaveProfile | null>(null);
@@ -133,6 +143,7 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
       disabled,
       costingAccess,
       roleIds: showOfficeFields ? [roleId] : [],
+      tags: showOfficeFields ? tags : [],
     };
     setBusy(true);
     try {
@@ -249,6 +260,8 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
             </section>
 
             <div className="us-right">
+            {/* Access and Tags share a row: the role on the left, the tags on the right. */}
+            <div className={cx("us-access-row", showOfficeFields && "us-access-split")}>
             <section className={cx(styles.section, "us-access")}>
               {/* Held to the status tag's height, so the rule falls level with USER DETAILS'. */}
               <h3 className={cx(styles.sectionTitle, styles.sectionTitleRow)}>
@@ -280,6 +293,65 @@ export default function StaffEditModal({ existing, onClose, canManageLeave = fal
                 )}
               </div>
             </section>
+            {/* Tags, beside the role: a tag is not a role, it switches on one extra feature. They
+                need an office login (the features sign in with it), so Touch / No login have none. */}
+            {showOfficeFields && (
+              <section className={cx(styles.section, "us-tags")}>
+                <h3 className={cx(styles.sectionTitle, styles.sectionTitleRow)}>
+                  <span>Tags</span>
+                  <span className="us-title-strut" />
+                </h3>
+                {/* One short tick per tag, one under another, so the list can grow. The "i" beside each
+                    opens a popup saying what the tag switches on; it shuts on a click elsewhere. */}
+                <div className="us-tag-list">
+                  {STAFF_TAGS.map((t) => (
+                    <div key={t.key} className="us-tag">
+                      <label className="ld-check">
+                        <input type="checkbox" checked={tags.includes(t.key)} onChange={() => toggleTag(t.key)} />
+                        <span>{t.label}</span>
+                      </label>
+                      <button
+                        type="button"
+                        className="us-tag-info"
+                        aria-label={`What ${t.label} gives`}
+                        aria-expanded={infoTag?.key === t.key}
+                        onClick={(e) => {
+                          if (infoTag?.key === t.key) return setInfoTag(null);
+                          // Placed against the window (and drawn on <body>, below), so it neither
+                          // grows the dialog's scroll area nor is cut off by it: under the "i",
+                          // pulled left to stay on screen, or above it when there is no room below.
+                          const r = e.currentTarget.getBoundingClientRect();
+                          const left = Math.max(8, Math.min(r.left, window.innerWidth - TAG_POP_WIDTH - 8));
+                          const below = r.bottom + 6;
+                          setInfoTag(
+                            below + 130 > window.innerHeight
+                              ? { key: t.key, left, bottom: window.innerHeight - r.top + 6 }
+                              : { key: t.key, left, top: below },
+                          );
+                        }}
+                        onBlur={() => setInfoTag((cur) => (cur?.key === t.key ? null : cur))}
+                      >
+                        i
+                      </button>
+                      {infoTag?.key === t.key &&
+                        createPortal(
+                          <div
+                            className="us-tag-pop"
+                            role="tooltip"
+                            style={{ left: infoTag.left, top: infoTag.top, bottom: infoTag.bottom, width: TAG_POP_WIDTH }}
+                          >
+                            <strong>{t.label}</strong>
+                            <span>{t.gives}</span>
+                            <span className="us-tag-pop-note">A tag is not a role: it adds this one feature.</span>
+                          </div>,
+                          document.body,
+                        )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            </div>
             {canManageLeave && (
               <section className={cx(styles.section, "us-leave")}>
                 <h3 className={cx(styles.sectionTitle, styles.sectionTitleRow)}>

@@ -23,6 +23,43 @@ namespace Globeweigh.SageSidecar
         public string SagePassword { get; set; }
         public string SageWorkspaceName { get; set; }
 
+        // ---- Where exported orders go ----
+        // Every export job names a target, Test or Live. SageDataPath above is the LIVE
+        // company: the mirrors (customers, sales) are always read from it, but an order is
+        // only ever WRITTEN to it when the job says Live AND LiveExportEnabled is true here.
+        // Test jobs go to this second company - the demo data, or a copy of the live one.
+        public string TestSageDataPath { get; set; }
+        public string TestSageUsername { get; set; }
+        public string TestSagePassword { get; set; }
+        // Test only: an account to post to when the order's own customer is not in the test
+        // company (the demo data knows none of Evergreen's). Blank = such an order fails.
+        public string TestFallbackAccountRef { get; set; }
+        public bool LiveExportEnabled { get; set; }
+
+        public const string TargetTest = "Test";
+        public const string TargetLive = "Live";
+
+        // The test company is offered when it is set and is NOT the live one.
+        public bool TestExportAvailable
+        {
+            get { return !string.IsNullOrWhiteSpace(TestSageDataPath) && !SamePath(TestSageDataPath, SageDataPath); }
+        }
+
+        // What this sidecar tells the API it can post into; the API hands out nothing else.
+        public List<string> ExportTargets()
+        {
+            var t = new List<string>();
+            if (TestExportAvailable) t.Add(TargetTest);
+            if (LiveExportEnabled) t.Add(TargetLive);
+            return t;
+        }
+
+        private static bool SamePath(string a, string b)
+        {
+            Func<string, string> norm = p => (p ?? "").Trim().TrimEnd('\\', '/').Replace('/', '\\').ToUpperInvariant();
+            return norm(a) == norm(b);
+        }
+
         public QuantityBasis QuantityBasis { get; set; }
         public string ReferenceField { get; set; }
         public string NonStockCode { get; set; }
@@ -74,6 +111,12 @@ namespace Globeweigh.SageSidecar
             c.SagePassword = Read("SagePassword", "");
             c.SageWorkspaceName = Read("SageWorkspaceName", "Globeweigh");
 
+            c.TestSageDataPath = Read("TestSageDataPath", "");
+            c.TestSageUsername = Read("TestSageUsername", "manager");
+            c.TestSagePassword = Read("TestSagePassword", "");
+            c.TestFallbackAccountRef = Read("TestFallbackAccountRef", "").ToUpperInvariant();
+            c.LiveExportEnabled = ReadBool("LiveExportEnabled", false);
+
             // Units by default: Evergreen's unit prices are per bag (see App.config).
             c.QuantityBasis = string.Equals(Read("QuantityBasis", "Units"), "Pallets", StringComparison.OrdinalIgnoreCase)
                 ? QuantityBasis.Pallets : QuantityBasis.Units;
@@ -106,6 +149,8 @@ namespace Globeweigh.SageSidecar
             if (string.IsNullOrWhiteSpace(SidecarKey))
                 yield return "SidecarKey is empty - copy Sage:SidecarKey from the API's appsettings.json on the server.";
             foreach (var p in SageProblems()) yield return p;
+            if (!string.IsNullOrWhiteSpace(TestSageDataPath) && SamePath(TestSageDataPath, SageDataPath))
+                yield return "TestSageDataPath is the same folder as SageDataPath - the test company must be a different one from the live company.";
             if (ReferenceField.Length > 0 && ReferenceField != "ANALYSIS_1" && ReferenceField != "ANALYSIS_2" && ReferenceField != "ANALYSIS_3")
                 yield return "ReferenceField must be ANALYSIS_1, ANALYSIS_2, ANALYSIS_3 or blank.";
         }
@@ -126,6 +171,11 @@ namespace Globeweigh.SageSidecar
             sb.AppendLine("  api        : " + ApiBaseUrl + (string.IsNullOrEmpty(SidecarKey) ? "   *** NO KEY ***" : ""));
             sb.AppendLine("  sage data  : " + (string.IsNullOrEmpty(SageDataPath) ? "*** NOT SET ***" : SageDataPath));
             sb.AppendLine("  sage user  : " + SageUsername + (string.IsNullOrEmpty(SagePassword) ? " (no password)" : ""));
+            sb.AppendLine("  exports    : LIVE company " + (LiveExportEnabled ? "*** ENABLED ***" : "off (LiveExportEnabled=false)")
+                + "; TEST company " + (TestExportAvailable
+                    ? TestSageDataPath + " as " + TestSageUsername
+                        + (TestFallbackAccountRef.Length > 0 ? ", unknown customers -> " + TestFallbackAccountRef : "")
+                    : "not set (TestSageDataPath)"));
             sb.AppendLine("  quantity   : " + QuantityBasis + ", reference in " + (ReferenceField.Length == 0 ? "(none)" : ReferenceField)
                 + ", non-stock as " + (string.IsNullOrEmpty(NonStockCode) ? "(fail)" : NonStockCode)
                 + " / N" + DefaultNominalCode + " / T" + DefaultTaxCode);

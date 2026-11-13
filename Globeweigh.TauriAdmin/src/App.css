@@ -2737,6 +2737,19 @@ input[type="datetime-local"].form-input::-webkit-datetime-edit {
 .type-badge.ut-3 { background: #ede9fe; color: #5b21b6; }   /* Both */
 .type-badge.ut-4 { background: #fee2e2; color: #b91c1c; }   /* No login */
 
+/* A Staff tag in the Staff grid's Tags column (not a role: an extra feature for the person). */
+.staff-tag {
+  display: inline-block;
+  padding: 0 8px;
+  margin-right: 4px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  background: #e0f2fe;
+  color: #075985;
+}
+
 /* Inline editable grid cell (e.g. costing supplier price) */
 .cell-input {
   height: 22px;
@@ -3860,6 +3873,41 @@ body.data-table-resizing * {
   height: auto;
   padding: 0;
   border: 0;
+}
+
+/* Completed Orders: the Selected Order column folds away to a narrow rail (remembered per user).
+   The toggle sits at the right of the column's title; folded, it tops the rail with the title
+   reading down it. */
+.completed-orders .co-side-toggle {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.completed-orders .co-side-toggle:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+}
+.completed-orders .po-side.co-side-collapsed {
+  width: 36px;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  background: #f8fafc;
+}
+.completed-orders .co-side-rail-label {
+  writing-mode: vertical-rl;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
 }
 
 /* Left-hand section rail (Admin, Super Admin) — ported from the ClonakiltyFoods TauriAdmin:

@@ -36,6 +36,13 @@ public class SageExportJob
     // Manual = an admin asked for it (SageController.ExportOrder).
     public string Reason { get; set; } = Dispatch;
 
+    // Which Sage company the sidecar posts this into: Test (its TestSageDataPath - nothing
+    // reaches the client's live accounts) or Live. Stamped from Sage:ExportTarget when the
+    // job is queued; a job is only handed to a sidecar that declares the target
+    // (SageController.Claim). Migrations/AddSageExportJobTarget.sql.
+    public string Target { get; set; } = TargetTest;
+    public string? RequestedBy { get; set; }               // who pressed Export to Sage
+
     public int? SageOrderNo { get; set; }                  // Sage's ORDER_NUMBER once posted
     public string? ClaimedBy { get; set; }                 // sidecar machine name
 
@@ -49,6 +56,9 @@ public class SageExportJob
     public const string Exporting = "Exporting";
     public const string Done = "Done";
     public const string Failed = "Failed";
+
+    public const string TargetTest = "Test";
+    public const string TargetLive = "Live";
 
     public const string Dispatch = "Dispatch";
     public const string Manual = "Manual";

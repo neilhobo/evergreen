@@ -50,7 +50,12 @@ public class StaffController : ControllerBase
             .Where(r => ids.Contains(r.UserId))
             .ToListAsync(ct);
 
-        var rows = users.Select(u => ToRow(u, roles.Where(r => r.UserId == u.Id).Select(r => r.RoleId)));
+        var tags = (await _db.Set<UserTagEntity>().AsNoTracking()
+                .Where(t => ids.Contains(t.UserId))
+                .ToListAsync(ct))
+            .ToLookup(t => t.UserId, t => t.Tag);
+
+        var rows = users.Select(u => ToRow(u, roles.Where(r => r.UserId == u.Id).Select(r => r.RoleId), tags[u.Id]));
         return Ok(rows);
     }
 
@@ -78,9 +83,10 @@ public class StaffController : ControllerBase
         await _db.SaveChangesAsync(ct);
 
         await SyncRoles(user.Id, input, ct);
+        var tags = await SyncTags(user.Id, input, ct);
         await _db.SaveChangesAsync(ct);
 
-        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
+        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>(), tags);
     }
 
     // PUT /api/staff/{id} — update a staff user (+ resync role rows).
@@ -106,9 +112,10 @@ public class StaffController : ControllerBase
         var existing = await _db.Set<UserRoleEntity>().Where(r => r.UserId == id).ToListAsync(ct);
         _db.RemoveRange(existing);
         await SyncRoles(id, input, ct);
+        var tags = await SyncTags(id, input, ct);
         await _db.SaveChangesAsync(ct);
 
-        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>());
+        return ToRow(user, HasNoOfficeLogin(input.UserTypeId) ? Array.Empty<int>() : input.RoleIds ?? Array.Empty<int>(), tags);
     }
 
     // DELETE /api/staff/{id} — soft delete (DateDeleted).
@@ -131,6 +138,23 @@ public class StaffController : ControllerBase
             _db.Add(new UserRoleEntity { UserId = userId, RoleId = roleId, DateCreated = DateTime.Now });
         }
         await Task.CompletedTask;
+    }
+
+    // Brings the user's tags into line with input.Tags and returns them. Tags left out of the
+    // request (null: a client from before tags) stay as they are. Unknown keys are dropped. A
+    // user with no office login keeps none: the features behind tags need one.
+    private async Task<List<string>> SyncTags(int userId, StaffInput input, CancellationToken ct)
+    {
+        var existing = await _db.Set<UserTagEntity>().Where(t => t.UserId == userId).ToListAsync(ct);
+        if (input.Tags == null) return existing.Select(t => t.Tag).ToList();
+
+        var wanted = HasNoOfficeLogin(input.UserTypeId)
+            ? new List<string>()
+            : StaffTags.All.Where(k => input.Tags.Contains(k, StringComparer.OrdinalIgnoreCase)).ToList();
+        _db.RemoveRange(existing.Where(t => !wanted.Contains(t.Tag)));
+        foreach (var tag in wanted.Where(k => existing.All(t => t.Tag != k)))
+            _db.Add(new UserTagEntity { UserId = userId, Tag = tag, DateCreated = DateTime.Now });
+        return wanted;
     }
 
     // Mirrors AddEditGlobeweighUserViewModel.CanSave.
@@ -162,7 +186,7 @@ public class StaffController : ControllerBase
         return null;
     }
 
-    private static StaffRow ToRow(GlobeweighUser u, IEnumerable<int> roleIds) => new()
+    private static StaffRow ToRow(GlobeweighUser u, IEnumerable<int> roleIds, IEnumerable<string> tags) => new()
     {
         Id            = u.Id,
         UserTypeId    = u.UserTypeId,
@@ -174,6 +198,7 @@ public class StaffController : ControllerBase
         Disabled      = u.Disabled,
         CostingAccess = u.CostingAccess,
         RoleIds       = roleIds.Distinct().OrderBy(r => r).ToArray(),
+        Tags          = tags.Distinct().OrderBy(t => t).ToArray(),
     };
 }
 
@@ -189,6 +214,8 @@ public class StaffRow
     public bool Disabled { get; set; }
     public bool CostingAccess { get; set; }
     public int[] RoleIds { get; set; } = Array.Empty<int>();
+    // StaffTags keys: extra features switched on for this person (not roles).
+    public string[] Tags { get; set; } = Array.Empty<string>();
 }
 
 public class StaffInput
@@ -202,4 +229,6 @@ public class StaffInput
     public bool Disabled { get; set; }
     public bool CostingAccess { get; set; }
     public int[]? RoleIds { get; set; }
+    // null = leave the user's tags as they are.
+    public string[]? Tags { get; set; }
 }

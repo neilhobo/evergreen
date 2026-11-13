@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Modal from "./Modal";
 import styles from "./SwitchUser.module.css";
 import { SwitchUserRow, getSwitchUsers, switchToUser } from "../api/auth";
@@ -71,12 +71,21 @@ export default function SwitchUserDialog({ onClose }: Props) {
         <div className={styles.list}>
           {users === null && <div className={styles.muted}>Loading…</div>}
           {users !== null && shown.length === 0 && <div className={styles.muted}>No users.</div>}
-          {shown.map((u) => {
+          {/* The server sends my most used first (it counts my own switches), then everyone A to
+              Z; a heading marks each part when there is a most-used part to mark. */}
+          {shown.map((u, i) => {
             const name = displayName(u);
             const role = u.roleIds.length ? u.roleIds.map(roleLabel).join(", ") : null;
+            const heading =
+              !shown[0].frequent || (i > 0 && !!shown[i - 1].frequent === !!u.frequent)
+                ? null
+                : u.frequent
+                  ? "Most used"
+                  : "Everyone else";
             return (
+              <Fragment key={u.id}>
+              {heading && <div className={styles.groupLabel}>{heading}</div>}
               <button
-                key={u.id}
                 type="button"
                 className={styles.userRow}
                 disabled={u.disabled || switchingId != null}
@@ -85,7 +94,6 @@ export default function SwitchUserDialog({ onClose }: Props) {
               >
                 <span className={styles.userMeta}>
                   <span className={styles.userName}>{name || u.username}</span>
-                  {name && u.username && <span className={styles.userEmail}>{u.username}</span>}
                 </span>
                 <span className={styles.userActions}>
                   {role && <span className={styles.roleTag}>{role}</span>}
@@ -96,6 +104,7 @@ export default function SwitchUserDialog({ onClose }: Props) {
                   )}
                 </span>
               </button>
+              </Fragment>
             );
           })}
         </div>

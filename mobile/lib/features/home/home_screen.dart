@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models.dart';
 import '../../theme/colors.dart';
+import '../pos/pos_boards_screen.dart';
+import '../pos/pos_providers.dart';
 import '../account/account_sheet.dart';
 import '../auth/auth_controller.dart';
 import '../sales/sales_shell.dart';
@@ -25,6 +28,12 @@ class HomeScreen extends ConsumerWidget {
     if (user != null && user.roleIds.contains(salesRoleId)) return SalesShell(key: ValueKey(user.sessionKey));
     // The super-admin and Colin: Home with every module they have (Sales today).
     if (user != null && user.canSeeSalesOverview) return TodayScreen(key: ValueKey(user.sessionKey), user: user);
+    // A Staff tag (not a role) gives its own dashboard: POS creator → POS Boards. The server's
+    // current tags win over the ones stored at sign-in, so a tag given since still lands.
+    if (user != null) {
+      final tags = ref.watch(myTagsProvider).valueOrNull ?? user.tags;
+      if (tags.contains(StaffTag.posCreator)) return PosBoardsScreen(key: ValueKey(user.sessionKey), user: user);
+    }
 
     return Scaffold(
       appBar: AppBar(

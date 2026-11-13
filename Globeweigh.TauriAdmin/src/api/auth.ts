@@ -25,6 +25,8 @@ export interface SwitchUserRow {
   username: string | null;
   roleIds: number[];
   disabled: boolean;
+  /** One of MY most used switch targets: the server lists these first, most used at the top. */
+  frequent?: boolean;
 }
 
 export const getSwitchUsers = () => apiGet<SwitchUserRow[]>("/auth/switch-users");

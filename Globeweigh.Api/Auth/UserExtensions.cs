@@ -66,6 +66,18 @@ public static class UserExtensions
         return usernames.Any(u => string.Equals(u, username?.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
+    // Whether the signed-in user holds a Staff tag (Admin > Staff > Edit > Tags; StaffTags).
+    public static async Task<bool> HasTagAsync(
+        this ControllerBase controller, GbEvergreenContext db, string tag, CancellationToken ct)
+    {
+        var id = controller.GetUserId();
+        if (id == 0) return false;
+        return await db.Set<Globeweigh.Api.Data.Entities.UserTagEntity>().AsNoTracking()
+            .AnyAsync(t => t.UserId == id && t.Tag == tag, ct)
+            && await db.GlobeweighUsers.AsNoTracking()
+                .AnyAsync(u => u.Id == id && u.DateDeleted == null && !u.Disabled, ct);
+    }
+
     // The signed-in user's GlobeweighUser.Id, from the JWT "sub" claim (0 if absent). The same
     // answer off the principal itself — for middleware, which has a request but no controller —
     // is ClaimsExtensions.GetUserId in Auth/Jwt.cs.

@@ -51,7 +51,34 @@ namespace Globeweigh.SageSidecar
         private bool _connected;
         private bool _referenceScanBroken;
 
-        public SageSopWriter(SidecarConfig cfg) { _cfg = cfg; }
+        private readonly string _dataPath, _username, _password;
+
+        // The LIVE company (SageDataPath): the mirrors' reads, the diagnostics, Live exports.
+        public SageSopWriter(SidecarConfig cfg) : this(cfg, SidecarConfig.TargetLive) { }
+
+        // The company an export target names. Test = TestSageDataPath, never the live one.
+        public SageSopWriter(SidecarConfig cfg, string target)
+        {
+            _cfg = cfg;
+            IsTest = string.Equals(target, SidecarConfig.TargetTest, StringComparison.OrdinalIgnoreCase);
+            if (IsTest)
+            {
+                if (!cfg.TestExportAvailable)
+                    throw new SageConnectException("No test company is configured (TestSageDataPath), or it is the live company's folder.");
+                _dataPath = cfg.TestSageDataPath;
+                _username = cfg.TestSageUsername;
+                _password = cfg.TestSagePassword;
+            }
+            else
+            {
+                _dataPath = cfg.SageDataPath;
+                _username = cfg.SageUsername;
+                _password = cfg.SagePassword;
+            }
+        }
+
+        public bool IsTest { get; private set; }
+        public string Target { get { return IsTest ? SidecarConfig.TargetTest : SidecarConfig.TargetLive; } }
 
         // Asked during the long mirror reads (customers, sales) whether to stop — Admin pressed
         // Cancel. Called at most every CancelCheckEvery, since each call is a trip to the API.
@@ -92,14 +119,14 @@ namespace Globeweigh.SageSidecar
             bool ok;
             try
             {
-                ok = _ws.Connect(_cfg.SageDataPath, _cfg.SageUsername, _cfg.SagePassword ?? "", _cfg.SageWorkspaceName);
+                ok = _ws.Connect(_dataPath, _username, _password ?? "", _cfg.SageWorkspaceName);
             }
             catch (Exception ex)
             {
-                throw new SageConnectException("Could not connect to Sage data at '" + _cfg.SageDataPath + "': " + Describe(ex), ex);
+                throw new SageConnectException("Could not connect to Sage data at '" + _dataPath + "': " + Describe(ex), ex);
             }
             if (!ok)
-                throw new SageConnectException("Sage refused the connection to '" + _cfg.SageDataPath + "' (" + LastError()
+                throw new SageConnectException("Sage refused the connection to '" + _dataPath + "' (" + LastError()
                     + "). Check the data path, the Sage user and password, and that the user is not logged in elsewhere.");
             _connected = true;
         }
@@ -823,9 +850,19 @@ namespace Globeweigh.SageSidecar
                 throw new SageValidationException("Order " + p.OrderNo + " has no lines.");
 
             var customer = FindCustomer(p.AccountRef);
+            // The test company may not know Evergreen's customers (the demo data knows none):
+            // there, and only there, an unknown account can fall back to a configured one so
+            // the rest of the order can still be tried. The real name stays on the delivery side.
+            if (customer == null && IsTest && _cfg.TestFallbackAccountRef.Length > 0)
+            {
+                customer = FindCustomer(_cfg.TestFallbackAccountRef);
+                if (customer != null)
+                    Log.Warn("Order " + p.OrderNo + ": account '" + p.AccountRef.Trim().ToUpperInvariant() + "' is not in the test company - posting to "
+                        + _cfg.TestFallbackAccountRef + " (TestFallbackAccountRef) instead");
+            }
             if (customer == null)
                 throw new SageValidationException("Customer account '" + p.AccountRef.Trim().ToUpperInvariant()
-                    + "' does not exist in Sage (order " + p.OrderNo + ", " + p.CustomerName + ").");
+                    + "' does not exist in " + (IsTest ? "the Sage test company" : "Sage") + " (order " + p.OrderNo + ", " + p.CustomerName + ").");
 
             var stock = (StockRecord)_ws.CreateObject("StockRecord");
             var post = (SopPost)_ws.CreateObject("SopPost");
@@ -863,7 +900,9 @@ namespace Globeweigh.SageSidecar
             var skipped = new List<string>();
             foreach (var line in p.Lines)
             {
-                var qty = _cfg.QuantityBasis == QuantityBasis.Units ? line.Units : line.Pallets;
+                var cubic = string.Equals(line.SoldBy, "CubicMeter", StringComparison.OrdinalIgnoreCase);
+                // A cubic-metre product is priced per m³ and Units carries the m³, whatever the basis.
+                var qty = cubic || _cfg.QuantityBasis == QuantityBasis.Units ? (double)line.Units : line.Pallets;
                 if (qty <= 0)
                 {
                     skipped.Add(FirstNonEmpty(line.Description, line.StockCode, "product " + line.ProductId));
@@ -881,14 +920,14 @@ namespace Globeweigh.SageSidecar
                 Sdo.Set(item.Fields, "DESCRIPTION", res.Description);
                 Sdo.Set(item.Fields, "NOMINAL_CODE", res.Nominal);
                 Sdo.Set(item.Fields, "TAX_CODE", res.TaxCode);
-                Sdo.Set(item.Fields, "QTY_ORDER", (double)qty);
+                Sdo.Set(item.Fields, "QTY_ORDER", qty);
                 Sdo.Set(item.Fields, "UNIT_PRICE", unitPrice);
                 Sdo.Set(item.Fields, "NET_AMOUNT", net);
                 Sdo.Set(item.Fields, "FULL_NET_AMOUNT", net);
                 Sdo.Set(item.Fields, "TAX_RATE", TaxRate(res.TaxCode));
                 Sdo.Set(item.Fields, "COMMENT_1", LineComment(line));
                 Sdo.Set(item.Fields, "COMMENT_2", "");
-                Sdo.Set(item.Fields, "UNIT_OF_SALE", _cfg.QuantityBasis == QuantityBasis.Units ? "Bag" : "Pallet");
+                Sdo.Set(item.Fields, "UNIT_OF_SALE", cubic ? "m3" : _cfg.QuantityBasis == QuantityBasis.Units ? "Bag" : "Pallet");
                 Sdo.Set(item.Fields, "EXT_ORDER_REF", p.Reference ?? "");
                 added++;
             }
@@ -1014,9 +1053,11 @@ namespace Globeweigh.SageSidecar
         private static string LineComment(SalesOrderLine l)
         {
             var kg = l.WeightKg > 0 ? ", " + l.WeightKg.ToString("N0", CultureInfo.InvariantCulture) + " kg" : "";
+            if (string.Equals(l.SoldBy, "CubicMeter", StringComparison.OrdinalIgnoreCase))
+                return l.Units.ToString("0.##", CultureInfo.InvariantCulture) + " m3" + kg;
             if (l.IsBulkBag)
                 return l.Pallets + " bulk bag" + (l.Pallets == 1 ? "" : "s") + kg;
-            return l.Pallets + " pallet" + (l.Pallets == 1 ? "" : "s") + " x " + l.Upp + " = " + l.Units + " bags" + kg;
+            return l.Pallets + " pallet" + (l.Pallets == 1 ? "" : "s") + " x " + l.Upp + " = " + l.Units.ToString("0.##", CultureInfo.InvariantCulture) + " bags" + kg;
         }
 
         private static string FirstNonEmpty(params string[] values)

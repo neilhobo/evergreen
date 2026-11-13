@@ -28,6 +28,13 @@ namespace Globeweigh.SageSidecar
             };
             _http.DefaultRequestHeaders.Add("X-Sidecar-Key", cfg.SidecarKey ?? "");
             _http.DefaultRequestHeaders.Add("User-Agent", "Globeweigh.SageSidecar (" + Environment.MachineName + ")");
+            // Which Sage companies this sidecar can post into. On every call, so the API knows
+            // one is alive (and what it can do) even while it is busy on a long mirror read;
+            // the claim hands out only jobs for these targets. Present-but-empty = "none".
+            _http.DefaultRequestHeaders.TryAddWithoutValidation("X-Sidecar-Targets", string.Join(",", cfg.ExportTargets()));
+            _http.DefaultRequestHeaders.TryAddWithoutValidation("X-Sidecar-Machine", Environment.MachineName);
+            if (cfg.TestExportAvailable)
+                _http.DefaultRequestHeaders.TryAddWithoutValidation("X-Sidecar-Test-Company", Ascii(cfg.TestSageDataPath));
         }
 
         // ---- export queue ----
@@ -139,6 +146,14 @@ namespace Globeweigh.SageSidecar
             catch { return ""; }
         }
 
+        // Header values must be plain ASCII.
+        private static string Ascii(string s)
+        {
+            var sb = new StringBuilder();
+            foreach (var ch in s ?? "") sb.Append(ch >= 32 && ch < 127 ? ch : '?');
+            return sb.ToString();
+        }
+
         private static Exception Root(Exception ex)
         {
             // A timeout surfaces as a cancellation with no inner exception; say what it was.
@@ -174,6 +189,8 @@ namespace Globeweigh.SageSidecar
         public int OrderNo { get; set; }
         public int Attempts { get; set; }
         public string Reason { get; set; }
+        // "Test" or "Live": the Sage company to post into. Anything else is treated as Test.
+        public string Target { get; set; }
         public SalesOrderPayload Payload { get; set; }
     }
 

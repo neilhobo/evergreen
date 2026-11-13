@@ -27,6 +27,10 @@ public class DispatchOrderEntity
     // A POS (point-of-sale) board goes with the order. Not a product line - no stock, no
     // picking, no price - and an order has at most one, so it is a flag, not an item.
     public bool HasPos { get; set; }
+    // Held back by the office (Open Orders > row menu > Put on hold): it cannot be put on a load
+    // until it is taken off hold, and only an order not on a load can be put on hold. See
+    // Migrations/AddDispatchOrderOnHold.sql.
+    public bool OnHold { get; set; }
     // The sales rep the order is credited to (Migrations/AddDispatchOrderSalesRep.sql). Fixed
     // for an order approved from My Orders (the rep who sent it); otherwise the office's choice.
     public int? SalesRepId { get; set; }

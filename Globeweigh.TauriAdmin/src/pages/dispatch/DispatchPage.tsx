@@ -12,6 +12,7 @@ import {
   getDispatchPending,
   getDispatchCompleted,
   deleteOrder,
+  setOrderHold,
   deleteLoad,
   deletePending,
   getPendingLinkedOrders,
@@ -221,7 +222,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
       // that is already spoken for.
       const [open, hauliers] = await Promise.all([getOpenOrders(), getHauliers()]);
       // The same rule Create Load offers: an order with no weighbridge record is unassigned.
-      const free = open.filter((o) => o.weighbridgeRecordId <= 0);
+      const free = open.filter((o) => o.weighbridgeRecordId <= 0 && !o.onHold);
       if (free.length < 2) {
         void messageDialog(
           `A load needs two unassigned orders — ${free.length === 0 ? "none are" : "only 1 is"} free. ` +
@@ -377,6 +378,19 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
       setSalesReload((n) => n + 1);
     } catch (err) {
       void messageDialog("Failed to un-approve the order.\n" + (err as Error).message);
+    }
+  }
+  // "Put on hold" / "Take off hold": an order on hold cannot be put on a load, and only an order
+  // that is not on a load can be put on hold (the menu item is disabled otherwise, and the API
+  // checks again). No confirm: it is undone from the same menu.
+  async function onSetOrderHold(row: DispatchOrder, onHold: boolean) {
+    try {
+      await setOrderHold(row.id, onHold);
+      await refreshOrders();
+    } catch (err) {
+      void messageDialog(
+        `Failed to ${onHold ? "put the order on hold" : "take the order off hold"}.\n` + (err as Error).message,
+      );
     }
   }
   const [pendingMenu, pendingMenuApi] = useRowMenu<WbPending>();
@@ -549,7 +563,23 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
       fit: true,
       render: (r) => <span title={fmtDateTime(r.dateCreated)}>{fmtDate(r.dateCreated)}</span>,
     },
-    { key: "assigned", header: "Assigned", fit: true, align: "center", render: (r) => (r.assigned ? "✓" : "") },
+    {
+      // An order on hold is never on a load, so the tick's place carries the On hold tag.
+      key: "assigned",
+      header: "Assigned",
+      fit: true,
+      align: "center",
+      render: (r) =>
+        r.onHold ? (
+          <span className="dsp-hold-tag" title="On hold — cannot be put on a load until taken off hold">
+            On hold
+          </span>
+        ) : r.assigned ? (
+          "✓"
+        ) : (
+          ""
+        ),
+    },
     {
       // The order confirmation has gone to the customer (the toolbar's Send Email); the tooltip
       // says when and to whom.
@@ -853,6 +883,7 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
               overdueLoadIds.has(r.weighbridgeRecordId) ? "row-overdue" : "",
               selectedLoad && r.weighbridgeRecordId === selectedLoad.id ? "row-on-load" : "",
               pendingMark === "hatched" && isOnPending(r) ? "row-on-pending" : "",
+              r.onHold ? "row-on-hold" : "",
             ]
               .filter(Boolean)
               .join(" ") || undefined
@@ -1064,6 +1095,37 @@ export default function DispatchPage(_props: { user: AdminUserDto }) {
           >
             Un-approve order
           </button>
+          {orderMenu.row.onHold ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="dsp-row-menu-item"
+              onClick={() => {
+                orderMenuApi.close();
+                void onSetOrderHold(orderMenu.row, false);
+              }}
+            >
+              Take off hold
+            </button>
+          ) : (
+            <button
+              type="button"
+              role="menuitem"
+              className="dsp-row-menu-item"
+              disabled={orderMenu.row.weighbridgeRecordId > 0}
+              title={
+                orderMenu.row.weighbridgeRecordId > 0
+                  ? "This order is on a load — take it off the load before putting it on hold"
+                  : "An order on hold cannot be put on a load"
+              }
+              onClick={() => {
+                orderMenuApi.close();
+                void onSetOrderHold(orderMenu.row, true);
+              }}
+            >
+              Put on hold
+            </button>
+          )}
         </div>
       )}
 

@@ -116,11 +116,35 @@ class _SwitchUserSheetState extends ConsumerState<_SwitchUserSheet> {
                   padding: const EdgeInsets.only(bottom: 16),
                   itemCount: shown.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 4),
-                  itemBuilder: (_, i) => _UserRow(
-                    user: shown[i],
-                    switching: _switchingId == shown[i].id,
-                    onTap: shown[i].disabled || _switchingId != null ? null : () => _pick(shown[i]),
-                  ),
+                  // The server sends my most used first, then everyone A to Z; a heading
+                  // marks each part when there is a most-used part to mark.
+                  itemBuilder: (_, i) {
+                    final row = _UserRow(
+                      user: shown[i],
+                      switching: _switchingId == shown[i].id,
+                      onTap: shown[i].disabled || _switchingId != null ? null : () => _pick(shown[i]),
+                    );
+                    final starts = shown[0].frequent && (i == 0 || shown[i - 1].frequent != shown[i].frequent);
+                    if (!starts) return row;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(2, i == 0 ? 0 : 10, 2, 6),
+                          child: Text(
+                            shown[i].frequent ? 'MOST USED' : 'EVERYONE ELSE',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.6,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                        row,
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -155,26 +179,18 @@ class _UserRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
+                // One line: the name, then the role to its right (before the Switch tag).
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.displayName,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (user.name.isNotEmpty && (user.username ?? '').isNotEmpty)
-                        Text(
-                          user.username!,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (roles.isNotEmpty)
-                        Text(roles, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                    ],
+                  child: Text(
+                    user.displayName,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (roles.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Text(roles, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                ],
                 const SizedBox(width: 8),
                 _Tag(
                   user.disabled
